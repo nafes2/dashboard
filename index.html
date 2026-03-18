@@ -1,191 +1,141 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين</title>
-
-<style>
-/* ==== نفس التنسيق بدون تغيير ==== */
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);
-color:#fff;min-height:100vh;padding:20px
-}
-.container{max-width:1200px;margin:0 auto}
-header{text-align:center;padding:20px 0}
-header h1{font-size:2em;margin-bottom:10px}
-.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:25px 0}
-.btn{
-background:rgba(255,255,255,.15);
-border:2px solid rgba(255,255,255,.3);
-color:#fff;padding:12px 20px;border-radius:25px;
-cursor:pointer;font-weight:600
-}
-.btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
-.card{background:#fff;color:#333;border-radius:20px;padding:25px}
-.link-btn{
-display:block;width:100%;text-align:center;margin-top:15px;
-background:#2a5298;color:#fff;padding:14px;border-radius:12px;
-text-decoration:none;font-weight:600
-}
-.loading{text-align:center;padding:60px 20px}
-.spinner{
-width:50px;height:50px;border:4px solid rgba(255,255,255,.3);
-border-top-color:#ffd700;border-radius:50%;
-animation:spin 1s linear infinite;margin:0 auto 20px
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.last-update{
-text-align:center;margin-top:30px;padding:15px;
-background:rgba(255,255,255,.1);border-radius:10px
-}
-.refresh-btn{
-background:rgba(255,255,255,.2);
-border:1px solid rgba(255,255,255,.3);
-color:#fff;padding:8px 16px;border-radius:20px;
-cursor:pointer;margin-right:10px
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<header>
-<h1>📊 لوحة متابعة المشرفين</h1>
-<p>متابعة تنفيذ المؤشرات الأسبوعية</p>
-</header>
-
-<div class="nav" id="weeks">
-<div class="loading">
-<div class="spinner"></div>
-<p>جاري تحميل البيانات...</p>
-</div>
-</div>
-
-<div class="grid" id="cards"></div>
-
-<div class="last-update" id="footer" style="display:none;">
-🕐 آخر تحديث: <span id="updateTime">--</span>
-<button class="refresh-btn" onclick="loadData()">🔄 تحديث</button>
-</div>
-
-</div>
-
 <script>
 
-// ===== البروكسيات =====
+// ===== الوسطاء =====
 const PROXIES = [
-"https://api.allorigins.win/raw?url=",
-"https://corsproxy.io/?",
-"https://api.codetabs.com/v1/proxy?quest="
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?",
+  "https://api.codetabs.com/v1/proxy?quest="
 ];
 
-// رابط الشيت
 const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 
 let appData = { allData: [] };
 
-// ===== التحميل السريع (التعديل هنا فقط) =====
-async function loadData(){
 
-document.getElementById("weeks").innerHTML=`
-<div class="loading">
-<div class="spinner"></div>
-<p>جاري الاتصال بالخادم...</p>
-</div>`;
+// ===== التحميل الذكي السريع =====
+async function loadData() {
 
-// تشغيل كل البروكسيات معاً
-const requests = PROXIES.map(p =>
-fetchWithProxy(p).catch(()=>null)
-);
+  document.getElementById("weeks").innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>جاري الاتصال بالخادم...</p>
+    </div>
+  `;
 
-const results = await Promise.all(requests);
-const data = results.find(d=>d && d.length);
+  // ===== المحاولة 1: اتصال مباشر =====
+  try {
+    const res = await fetch(SHEET_URL + "&t=" + Date.now());
+    if (res.ok) {
+      const text = await res.text();
+      if (!text.includes("<!DOCTYPE")) {
+        appData.allData = parseCSV(text);
+        render();
+        updateTimestamp();
+        return;
+      }
+    }
+  } catch (e) {}
 
-if(!data){ showError("فشل الاتصال"); return }
+  // ===== المحاولة 2: جميع البروكسيات معاً =====
+  try {
 
-appData.allData = data;
+    const requests = PROXIES.map(p =>
+      fetchWithProxy(p).catch(() => null)
+    );
 
-render();
-updateTimestamp();
+    const results = await Promise.all(requests);
+    const data = results.find(d => d && d.length);
+
+    if (!data) throw new Error();
+
+    appData.allData = data;
+
+    render();
+    updateTimestamp();
+
+  } catch {
+    showError("فشل الاتصال");
+  }
 }
 
-// ===== جلب البيانات =====
-async function fetchWithProxy(proxy){
 
-const url = proxy + encodeURIComponent(SHEET_URL + "&t=" + Date.now());
+// ===== جلب عبر بروكسي =====
+async function fetchWithProxy(proxy) {
 
-const res = await fetch(url,{headers:{Accept:"text/csv"}});
+  const url = proxy + encodeURIComponent(SHEET_URL + "&t=" + Date.now());
 
-if(!res.ok) throw new Error();
+  const res = await fetch(url, { headers: { Accept: "text/csv" } });
 
-const text = await res.text();
+  if (!res.ok) throw new Error();
 
-if(text.includes("<!DOCTYPE")) throw new Error();
+  const text = await res.text();
 
-return parseCSV(text);
+  if (text.includes("<!DOCTYPE")) throw new Error();
+
+  return parseCSV(text);
 }
+
 
 // ===== تحويل CSV =====
-function parseCSV(csv){
+function parseCSV(csv) {
 
-const lines = csv.trim().split("\n");
-const headers = lines[0].split(",");
+  const lines = csv.trim().split("\n");
+  const headers = lines[0].split(",");
 
-return lines.slice(1).map(line=>{
-const vals = line.split(",");
-let obj = {};
-headers.forEach((h,i)=>obj[h.trim()]=vals[i]?.trim());
-return obj;
-});
+  return lines.slice(1).map(line => {
+    const vals = line.split(",");
+    let obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = vals[i]?.trim());
+    return obj;
+  });
 
 }
 
-// ===== عرض بسيط =====
-function render(){
 
-const cards = document.getElementById("cards");
-cards.innerHTML="";
+// ===== عرض =====
+function render() {
 
-appData.allData.forEach(row=>{
+  const cards = document.getElementById("cards");
+  cards.innerHTML = "";
 
-const div = document.createElement("div");
-div.className="card";
+  appData.allData.forEach(row => {
 
-div.innerHTML=`
-<h3>${row["اسم المشرف"]||"بدون اسم"}</h3>
-<p>الأسبوع: ${row["الأسبوع"]||"-"}</p>
-<p>الحالة: ${row["الحالة"]||"-"}</p>
-`;
+    const div = document.createElement("div");
+    div.className = "card";
 
-cards.appendChild(div);
+    div.innerHTML = `
+      <h3>${row["اسم المشرف"] || "بدون اسم"}</h3>
+      <p>الأسبوع: ${row["الأسبوع"] || "-"}</p>
+      <p>الحالة: ${row["الحالة"] || "-"}</p>
+    `;
 
-});
+    cards.appendChild(div);
 
-document.getElementById("footer").style.display="block";
+  });
+
+  document.getElementById("footer").style.display = "block";
 }
+
 
 // ===== أخطاء =====
-function showError(msg){
-document.getElementById("weeks").innerHTML=
-<h3 style="color:#ff5252">${msg}</h3>;
+function showError(msg) {
+  document.getElementById("weeks").innerHTML =
+    <h3 style="color:#ff5252">${msg}</h3>;
 }
 
+
 // ===== وقت التحديث =====
-function updateTimestamp(){
-document.getElementById("updateTime").textContent =
-new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+function updateTimestamp() {
+  document.getElementById("updateTime").textContent =
+    new Date().toLocaleTimeString('ar-SA', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
 }
+
 
 // تشغيل
 loadData();
 
 </script>
-
-</body>
-</html>
