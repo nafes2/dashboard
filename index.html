@@ -1,1 +1,187 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة المشرفين</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; min-height: 100vh; padding: 20px; }
+.container { max-width: 1200px; margin: 0 auto; }
+header { text-align: center; padding: 20px 0; }
+header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+header p { opacity: 0.9; font-size: 1.1em; }
+.nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; padding: 0 10px; }
+.btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s ease; backdrop-filter: blur(10px); }
+.btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding: 10px; }
+.card { background: #fff; color: #333; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: transform 0.3s ease; position: relative; overflow: hidden; }
+.card-header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+.card-header h3 { color: #1e3c72; font-size: 1.4em; }
+.week-badge { display: inline-block; background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 15px; font-size: 0.85em; font-weight: 600; }
+.indicators-toggle { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 12px 15px; border-radius: 10px; cursor: pointer; margin: 15px 0 10px; font-weight: 600; color: #fff; width: 100%; font-size: 0.95em; }
+.indicators-list { display: none; background: #f8f9fa; border-radius: 12px; padding: 12px; margin: 10px 0; max-height: 220px; overflow-y: auto; border: 1px solid #e0e0e0; }
+.indicators-list.show { display: block; }
+.indicator-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; border-bottom: 1px solid #e0e0e0; font-size: 0.9em; }
+.status-done { color: #4caf50; }
+.status-pending { color: #ff9800; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+.stat-box { text-align: center; padding: 12px 8px; border-radius: 12px; }
+.stat-box.done { background: #e8f5e9; color: #2e7d32; }
+.stat-box.pending { background: #fff3e0; color: #ef6c00; }
+.stat-box.total { background: #e3f2fd; color: #1565c0; }
+.stat-number { font-size: 1.6em; font-weight: bold; display: block; }
+.progress-section { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 12px; }
+.progress { background: #e0e0e0; height: 28px; border-radius: 14px; overflow: hidden; position: relative; }
+.bar { height: 100%; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 13px; transition: width 1s ease; }
+.bar.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
+.bar.purple { background: linear-gradient(90deg, #9c27b0, #ab47bc); }
+.summary-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: center; }
+.link-btn { display: block; width: 100%; text-align: center; margin-top: 15px; background: #2a5298; color: #fff; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header><h1>📊 لوحة متابعة المشرفين</h1><p>متابعة تنفيذ المؤشرات الأسبوعية</p></header>
+  <div class="nav" id="weeks"></div>
+  <div class="grid" id="cards"></div>
+  <div class="last-update" id="footer" style="display:none; text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:20px;">
+    <span>🕐 آخر تحديث: <span id="updateTime">--</span></span>
+  </div>
+</div>
 
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwKT8vgMNdGWUOj-3JxY-WUQuxrV2rCroxSNrkhp1tlAR5PRlbDnhmRgOkSVSEFbaidDg/exec";
+const TOTAL_INDICATORS = 44;
+const WEEK_NAMES = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر", "الحادي عشر", "الثاني عشر", "الثالث عشر", "الرابع عشر", "الخامس عشر"];
+
+let appData = { allData: [], currentWeek: 1 };
+
+async function loadData() {
+  try {
+    const response = await fetch(API_URL + "?t=" + Date.now());
+    if (response.ok) {
+      appData.allData = await response.json();
+      render();
+      document.getElementById("updateTime").textContent = new Date().toLocaleTimeString('ar-SA');
+      document.getElementById("footer").style.display = "block";
+    }
+  } catch (err) { 
+    console.error("Error:", err);
+    document.getElementById("cards").innerHTML = "<p style='text-align:center;color:#fff'>خطأ في تحميل البيانات</p>";
+  }
+}
+
+function getWeekNumber(weekName) {
+  if (!weekName) return 1;
+  const index = WEEK_NAMES.indexOf(weekName.trim());
+  return index >= 0 ? index + 1 : 1;
+}
+
+function render() {
+  renderWeeks();
+  renderCards();
+}
+
+function renderWeeks() {
+  const container = document.getElementById("weeks");
+  container.innerHTML = "";
+  for(let w=1; w<=15; w++) {
+    const btn = document.createElement("button");
+    btn.className = "btn" + (w === appData.currentWeek ? " active" : "");
+    btn.textContent = w;
+    btn.onclick = () => { appData.currentWeek = w; render(); };
+    container.appendChild(btn);
+  }
+}
+
+function toggleIndicators(idx) {
+  const el = document.getElementById(indicators-${idx});
+  el.classList.toggle('show');
+}
+
+function parseIndicators(indicatorsText) {
+  if(!indicatorsText) return [];
+  const matches = indicatorsText.match(/\d+-\d+-\d+-\d+/g);
+  return matches ? matches.map((m, i) => ({ num: i+1, text: m, status: "تم التنفيذ" })) : [];
+}
+
+function renderCards() {
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+  
+  if (!appData.allData || appData.allData.length === 0) {
+    container.innerHTML = "<p style='text-align:center;color:#fff'>لا توجد بيانات</p>";
+    return;
+  }
+  
+  const sample = appData.allData[0];
+  const keys = Object.keys(sample);
+  
+  const weekCol = keys.find(k => k.includes("الأسبوع")) || keys[0];
+  const nameCol = keys.find(k => k.includes("اسم المشرف")) || keys[1];
+  const totalCol = keys.find(k => k.includes("عدد المؤشرات")) || keys[2];
+  const doneCol = keys.find(k => k.includes("تم التنفيذ")) || keys[3];
+  const pendingCol = keys.find(k => k.includes("جارٍ") || k.includes("جاري")) || keys[4];
+  const notDoneCol = keys.find(k => k.includes("لم ينفذ")) || keys[5];
+  const weekPercentCol = keys.find(k => k.includes("نسبة الإنجاز على الأسبوع")) || keys[6];
+  const totalPercentCol = keys.find(k => k.includes("نسبة الإنجاز من 44")) || keys[7];
+  const linkCol = keys.find(k => k.includes("رابط")) || keys[8];
+  const indicatorsCol = keys.find(k => k.includes("المؤشرات التي عمل عليها")) || keys[9];
+
+  const weekData = appData.allData.filter(row => {
+    const weekNum = getWeekNumber(row[weekCol]);
+    return weekNum === appData.currentWeek;
+  });
+
+  if (weekData.length === 0) {
+    container.innerHTML = "<p style='text-align:center;color:#fff'>لا توجد بيانات لهذا الأسبوع</p>";
+    return;
+  }
+
+  weekData.forEach((row, idx) => {
+    const name = row[nameCol] || "غير معروف";
+    const total = parseInt(row[totalCol]) || 0;
+    const done = parseInt(row[doneCol]) || 0;
+    const pending = parseInt(row[pendingCol]) || 0;
+    const notDone = parseInt(row[notDoneCol]) || 0;
+    const weekPercent = row[weekPercentCol] || "0%";
+    const totalPercent = row[totalPercentCol] || "0%";
+    const link = row[linkCol] || "";
+    const indicatorsText = row[indicatorsCol] || "";
+    
+    const indicators = parseIndicators(indicatorsText);
+
+    container.innerHTML += `
+      <div class="card">
+        <div class="card-header"><h3>${name}</h3><span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek-1]}</span></div>
+        <button class="indicators-toggle" onclick="toggleIndicators(${idx})">📋 عرض المؤشرات (${total}) ▼</button>
+        <div class="indicators-list" id="indicators-${idx}">
+          ${indicators.length > 0 ? indicators.map(i => <div class="indicator-item"><span>مؤشر ${i.num}: ${i.text}</span><span class="status-done">${i.status}</span></div>).join('') : '<div class="indicator-item">لا توجد تفاصيل</div>'}
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box done"><span class="stat-number">${done}</span><div class="stat-label">✅ تم</div></div>
+          <div class="stat-box pending"><span class="stat-number">${pending}</span><div class="stat-label">⏳ جاري</div></div>
+          <div class="stat-box total"><span class="stat-number">${notDone}</span><div class="stat-label">📋 لم ينفذ</div></div>
+        </div>
+        <div class="summary-box">
+          <h4>📊 إجمالي المؤشرات المنفذة</h4>
+          <div class="big-number" style="font-size:2em; font-weight:bold;">${done}</div>
+          <div class="small-text">من ${TOTAL_INDICATORS} مؤشر (${totalPercent})</div>
+        </div>
+        <div class="progress-section">
+          <div style="display:flex; justify-content:space-between; color:#555; font-size:0.9em; margin-bottom:5px;"><span>إنجاز الأسبوع</span><span>${weekPercent}</span></div>
+          <div class="progress"><div class="bar high" style="width:${weekPercent}">${weekPercent}</div></div>
+          <div style="display:flex; justify-content:space-between; color:#555; font-size:0.9em; margin:10px 0 5px;"><span>النسبة من إجمالي الـ 44</span><span>${totalPercent}</span></div>
+          <div class="progress"><div class="bar purple" style="width:${totalPercent}">${totalPercent}</div></div>
+        </div>
+        <a href="${link || '#'}" target="_blank" class="link-btn">${link ? '🔗 فتح الاستمارة' : '🔗 لا يوجد رابط'}</a>
+      </div>
+    `;
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
