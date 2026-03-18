@@ -1,161 +1,153 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - الإدارة</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
-            background-attachment: fixed;
-            color: #fff; min-height: 100vh; padding: 15px;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { text-align: center; padding: 25px 0; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
-        h1 { font-size: 1.8rem; margin-bottom: 10px; }
-        
-        /* أزرار الأسابيع */
-        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
-        .btn {
-            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
-            color: #fff; padding: 8px 15px; border-radius: 20px; cursor: pointer;
-            transition: 0.3s; backdrop-filter: blur(5px); font-weight: bold;
-        }
-        .btn.active { background: #fff; color: #1a2a6c; border-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-
-        /* البطاقات */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card {
-            background: rgba(255, 255, 255, 0.95); color: #333; border-radius: 15px; 
-            padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;
-            overflow: hidden; border-top: 6px solid #1a2a6c;
-        }
-        .card h3 { color: #1a2a6c; text-align: center; margin-bottom: 15px; font-size: 1.3rem; }
-        
-        /* الإحصائيات */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .stat-box { text-align: center; padding: 10px; border-radius: 10px; font-weight: bold; }
-        .done { background: #e8f5e9; color: #2e7d32; }
-        .target { background: #e3f2fd; color: #1565c0; }
-        .rem { background: #fff3e0; color: #e65100; }
-        .stat-num { display: block; font-size: 1.4rem; }
-        .stat-label { font-size: 0.75rem; }
-
-        /* شريط الإنجاز */
-        .progress-cont { background: #eee; height: 25px; border-radius: 12px; overflow: hidden; margin: 10px 0; position: relative; }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: 1s ease-in-out; }
-        .progress-text { position: absolute; width: 100%; text-align: center; line-height: 25px; font-weight: bold; color: #000; font-size: 0.85rem; }
-
-        .link-btn {
-            display: block; width: 100%; text-align: center; background: #1a2a6c;
-            color: #fff; padding: 12px; border-radius: 8px; text-decoration: none;
-            margin-top: 10px; font-weight: bold; transition: 0.3s;
-        }
-        .link-btn:hover { background: #b21f1f; }
-        
-        .loading { text-align: center; font-size: 1.2rem; margin-top: 50px; }
-        .error { background: #ff5252; color: white; padding: 15px; border-radius: 10px; text-align: center; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة المشرفين - الإدارة</title>
+<style>
+  /* التنسيقات مدمجة لضمان عمل الملف بشكل مستقل */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff; min-height: 100vh; padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header { text-align: center; padding: 20px 0; }
+  .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; }
+  .btn {
+    background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3);
+    color: #fff; padding: 10px 18px; border-radius: 25px; cursor: pointer; transition: 0.3s;
+  }
+  .btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; font-weight: bold; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .card {
+    background: #fff; color: #333; border-radius: 20px; padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; border-top: 5px solid #4caf50;
+  }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+  .stat-box { text-align: center; padding: 10px; border-radius: 12px; }
+  .stat-box.done { background: #e8f5e9; color: #2e7d32; }
+  .stat-number { font-size: 1.4em; font-weight: bold; display: block; }
+  .progress-bar { height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+  .progress-fill { height: 100%; background: #4caf50; transition: 1s; }
+  .loading-box { text-align: center; padding: 50px; }
+  .error-box { background: #ff5252; padding: 20px; border-radius: 10px; text-align: center; }
+</style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>📊 لوحة متابعة المشرفين</h1>
-        <p>تحديث مباشر من ورقة المعادلات</p>
-    </header>
-
-    <div class="nav" id="weekNav"></div>
-    <div class="grid" id="mainGrid">
-        <div class="loading">جاري مزامنة البيانات من جوجل شيت...</div>
-    </div>
+  <header>
+    <h1>📊 لوحة متابعة المشرفين</h1>
+    <p>تحديث مباشر من ورقة المدير</p>
+  </header>
+  
+  <div class="nav" id="weeksNav"></div>
+  <div class="grid" id="cardsContainer">
+    <div class="loading-box" id="loader">جاري تحميل البيانات...</div>
+  </div>
 </div>
 
 <script>
-// الرابط المباشر لورقة "المدير" باستخدام الرقم الذي زودتني به
+// الإعدادات الأساسية
 const SHEET_ID = "2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT";
-const GID = "1526100112"; // الرقم الذي أرسلته لورقة المدير
+const GID = "1526100112"; // الرقم الذي زودتنا به لورقة المدير
 const CSV_URL = https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${GID}&single=true&output=csv;
 
 let allData = [];
 let currentWeek = 1;
 
 async function loadData() {
-    try {
-        const response = await fetch(CSV_URL + "&cache=" + Date.now());
-        const data = await response.text();
-        allData = parseCSV(data);
-        renderNav();
-        renderCards();
-    } catch (e) {
-        document.getElementById('mainGrid').innerHTML = "<div class='error'>حدث خطأ في الاتصال. تأكد من إعدادات النشر على الويب.</div>";
+  const container = document.getElementById('cardsContainer');
+  try {
+    // محاولة الجلب باستخدام وسيط لتجنب الحظر (CORS)
+    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(CSV_URL + "&t=" + Date.now());
+    const response = await fetch(proxyUrl);
+    const csvText = await response.text();
+    
+    allData = parseCSV(csvText);
+    if (allData.length > 0) {
+      render();
+    } else {
+      showError("الورقة فارغة أو غير منشورة بشكل صحيح.");
     }
+  } catch (e) {
+    showError("فشل الاتصال بجوجل شيت. تأكد من أن الملف 'منشور للويب'.");
+  }
 }
 
 function parseCSV(text) {
-    const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim().replace(/"/g, '')));
-    const headers = rows[0];
-    return rows.slice(1).map(row => {
-        let obj = {};
-        headers.forEach((h, i) => obj[h] = row[i]);
-        return obj;
-    });
+  const lines = text.split('\n').filter(l => l.trim() !== "");
+  if (lines.length === 0) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  return lines.slice(1).map(line => {
+    const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+    let obj = {};
+    headers.forEach((h, i) => obj[h] = values[i]);
+    return obj;
+  });
 }
 
-function renderNav() {
-    const nav = document.getElementById('weekNav');
-    nav.innerHTML = "";
-    // إنشاء أزرار لـ 12 أسبوع
-    for(let i=1; i<=12; i++) {
-        const b = document.createElement('button');
-        b.className = btn ${currentWeek == i ? 'active' : ''};
-        b.textContent = الأسبوع ${i};
-        b.onclick = () => { currentWeek = i; renderNav(); renderCards(); };
-        nav.appendChild(b);
-    }
+function render() {
+  renderWeeks();
+  renderCards();
+}
+
+function renderWeeks() {
+  const nav = document.getElementById('weeksNav');
+  nav.innerHTML = "";
+  for (let i = 1; i <= 15; i++) {
+    const btn = document.createElement('button');
+    btn.className = btn ${currentWeek == i ? 'active' : ''};
+    btn.textContent = i;
+    btn.onclick = () => { currentWeek = i; render(); };
+    nav.appendChild(btn);
+  }
 }
 
 function renderCards() {
-    const grid = document.getElementById('mainGrid');
-    grid.innerHTML = "";
-    
-    // تصفية البيانات حسب الأسبوع المختار
-    const filtered = allData.filter(d => d["الأسبوع"] == currentWeek || d["الاسبوع"] == currentWeek);
+  const container = document.getElementById('cardsContainer');
+  container.innerHTML = "";
+  
+  // تصفية البيانات (البحث في عمود "الأسبوع" أو "الاسبوع")
+  const filtered = allData.filter(d => d["الأسبوع"] == currentWeek || d["الاسبوع"] == currentWeek);
 
-    if (filtered.length === 0) {
-        grid.innerHTML = <div class='loading'>لا توجد بيانات مسجلة في ورقة المدير للأسبوع ${currentWeek}</div>;
-        return;
-    }
+  if (filtered.length === 0) {
+    container.innerHTML = <div class="loading-box">لا توجد بيانات للأسبوع ${currentWeek}</div>;
+    return;
+  }
 
-    filtered.forEach(row => {
-        const done = parseInt(row["تم"] || row["تم التنفيذ"] || 0);
-        const total = 44; 
-        const percent = Math.min(((done / total) * 100), 100).toFixed(1);
+  filtered.forEach(row => {
+    const done = parseInt(row["تم"] || row["تم التنفيذ"] || 0);
+    const total = 44;
+    const percent = ((done / total) * 100).toFixed(1);
 
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <h3>${row["اسم المشرف"] || "غير معروف"}</h3>
-            <div class="stats-grid">
-                <div class="stat-box done"><span class="stat-num">${done}</span><span class="stat-label">تم</span></div>
-                <div class="stat-box target"><span class="stat-num">${total}</span><span class="stat-label">هدف</span></div>
-                <div class="stat-box rem"><span class="stat-num">${total - done}</span><span class="stat-label">باقي</span></div>
-            </div>
-            <div class="progress-cont">
-                <div class="progress-text">${percent}% إنجاز</div>
-                <div class="progress-bar" style="width: ${percent}%"></div>
-            </div>
-            <a href="${row["الرابط"] || row["رابط الاستمارة"] || '#'}" target="_blank" class="link-btn">🔗 فتح التفاصيل</a>
-        `;
-        grid.appendChild(card);
-    });
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div style="text-align:center; margin-bottom:15px;">
+        <h3>${row["اسم المشرف"] || "مشرف غير مسمى"}</h3>
+        <small>الأسبوع ${currentWeek}</small>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box done"><span class="stat-number">${done}</span>تم</div>
+        <div class="stat-box" style="background:#f5f5f5;"><span class="stat-number">${total}</span>هدف</div>
+        <div class="stat-box" style="background:#fff3e0;"><span class="stat-number">${total - done}</span>باقي</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+      <p style="text-align:center; font-size:12px;">نسبة الإنجاز: ${percent}%</p>
+      <a href="${row["الرابط"] || '#'}" target="_blank" style="display:block; text-align:center; background:#1e3c72; color:#fff; padding:10px; border-radius:10px; text-decoration:none; margin-top:10px;">فتح الاستمارة</a>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function showError(msg) {
+  document.getElementById('cardsContainer').innerHTML = <div class="error-box">${msg}</div>;
 }
 
 loadData();
-// تحديث تلقائي كل دقيقتين
-setInterval(loadData, 120000);
 </script>
 </body>
 </html>
