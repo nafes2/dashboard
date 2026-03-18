@@ -95,54 +95,42 @@ header p { opacity:0.9; font-size:1.1em; }
 </div>
 
 <script>
-const PROXIES = ["https://api.allorigins.win/raw?url=","https://corsproxy.io/?","https://api.codetabs.com/v1/proxy?quest="];
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const TOTAL_INDICATORS = 44;
 const ALL_WEEKS=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 const WEEK_NAMES={1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
 let appData={allData:[],currentWeek:1,lastUpdate:null};
 
-function weekTextToNumber(text){if(!text)return null;const t=text.toString().trim();const num=parseInt(t);if(!isNaN(num))return num;for(const [k,v] of Object.entries(WEEK_NAMES)){if(t===v||t.includes(v))return parseInt(k);}return null;}
-
 async function loadData(){
-document.getElementById("weeks").innerHTML=<div class="loading"><div class="spinner"></div><p>جاري الاتصال بالخادم...</p></div>;
-for(let proxy of PROXIES){
+document.getElementById("weeks").innerHTML=<div class="loading"><div class="spinner"></div><p>جاري تحميل البيانات...</p></div>;
 try{
-const data=await fetchWithProxy(proxy);
-if(data && data.length>0){ appData.allData=data; appData.currentWeek=1; render(); updateTimestamp(); return; }
-}catch(err){ console.warn("فشل:",err.message); continue;}
-}
-showError("فشل الاتصال");
-}
-
-async function fetchWithProxy(proxy){
-const url=proxy + encodeURIComponent(SHEET_URL+"&t="+Date.now());
-const response=await fetch(url,{headers:{'Accept':'text/csv'}});
-if(!response.ok)throw new Error("HTTP "+response.status);
+const response=await fetch(SHEET_URL);
 const text=await response.text();
-if(text.includes("<!DOCTYPE"))throw new Error("HTML");
-return parseCSV(text);
+appData.allData=parseCSV(text);
+appData.currentWeek=1;
+render();
+updateTimestamp();
+}catch(err){
+document.getElementById("weeks").innerHTML=<div class="error-box">فشل تحميل البيانات.<br><button class="retry-btn" onclick="loadData()">إعادة المحاولة</button></div>;
+console.error(err);
+}
 }
 
 function parseCSV(csv){
 const lines=csv.trim().split('\n');
 if(lines.length<2)return[];
 const headers=parseLine(lines[0]);
-const data=[];
-for(let i=1;i<lines.length;i++){
-const values=parseLine(lines[i]);
-if(values.length===0)continue;
+return lines.slice(1).map(line=>{
+const values=parseLine(line);
 let row={};
-headers.forEach((h,idx)=>row[h.trim()]=values[idx]?values[idx].trim():"");
-data.push(row);
-}
-return data;
+headers.forEach((h,i)=>row[h.trim()]=values[i]?values[i].trim():"");
+return row;
+});
 }
 
 function parseLine(line){
 const result=[];let current='',inQuotes=false;
 for(let char of line){
-if(char==='"')inQuotes=!inQuotes;
+if(char==='"') inQuotes=!inQuotes;
 else if(char===',' && !inQuotes){ result.push(current); current=''; }
 else current+=char;
 }
@@ -150,7 +138,6 @@ result.push(current);
 return result;
 }
 
-// ======== عرض البيانات ========
 function render(){
 renderWeeks();
 renderCards();
@@ -169,8 +156,45 @@ container.appendChild(btn);
 });
 }
 
-// ... هنا باقي منطق renderCards وتفاصيل المشرفين كما في الكود السابق
-// يمكنك نسخ كل وظيفة renderCards و toggleIndicators كما أرسلتها سابقًا
+function renderCards(){
+const container=document.getElementById("cards"); container.innerHTML="";
+if(!appData.allData || appData.allData.length===0){
+container.innerHTML=<div class="empty-state"><div class="empty-state-icon">😕</div>لا توجد بيانات</div>;
+return;
+}
+appData.allData.forEach(row=>{
+const card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<div class="card-header">
+<h3>${row['المشرف']||'---'}</h3>
+<span class="week-badge">الأسبوع ${row['الأسبوع']||'-'}</span>
+</div>
+<button class="indicators-toggle" onclick="toggleIndicators(this)">عرض المؤشرات</button>
+<div class="indicators-list"></div>
+`;
+const list=card.querySelector(".indicators-list");
+for(let i=1;i<=15;i++){
+if(row['مؤشر'+i]){
+const item=document.createElement("div");
+item.className="indicator-item";
+item.innerHTML=<span class="indicator-name">${row['مؤشر'+i]}</span><span class="indicator-number">${i}</span>;
+list.appendChild(item);
+}
+}
+container.appendChild(card);
+});
+}
+
+function toggleIndicators(btn){
+const list=btn.nextElementSibling;
+list.classList.toggle("show");
+}
+
+function updateTimestamp(){
+const now=new Date();
+document.getElementById("updateTime").textContent=now.toLocaleString('ar-EG');
+}
 
 // تشغيل
 loadData();
