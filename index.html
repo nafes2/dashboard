@@ -400,33 +400,27 @@ header p {
 </div>
 
 <script>
-// ✅ الوسطاء
+// ✅ CORS Proxies موثوقة
 const PROXIES = [
-  "https://api.allorigins.win/raw?url=",
+  "https://api.allorigins.win/get?url=",
   "https://corsproxy.io/?",
   "https://api.codetabs.com/v1/proxy?quest="
 ];
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 
-// ✅ إجمالي المؤشرات (44)
 const TOTAL_INDICATORS = 44;
-
-// ✅ جميع الأسابيع 1-15
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
-// ✅ أسماء الأسابيع بالعربي
 const WEEK_NAMES = {
   1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس",
   6: "السادس", 7: "السابع", 8: "الثامن", 9: "التاسع", 10: "العاشر",
   11: "الحادي عشر", 12: "الثاني عشر", 13: "الثالث عشر", 14: "الرابع عشر", 15: "الخامس عشر"
 };
 
-// ✅ تحويل النص العربي إلى رقم
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
-  
   const num = parseInt(t);
   if (!isNaN(num)) return num;
   
@@ -454,8 +448,6 @@ let appData = {
   lastUpdate: null
 };
 
-// ========== التحميل ==========
-
 async function loadData() {
   document.getElementById("weeks").innerHTML = `
     <div class="loading">
@@ -464,10 +456,9 @@ async function loadData() {
     </div>
   `;
   
-  // محاولة مباشرة أولاً (بدون proxy)
+  // محاولة مباشرة أولاً
   try {
-    const directUrl = SHEET_URL + "&t=" + Date.now();
-    const response = await fetch(directUrl);
+    const response = await fetch(SHEET_URL + "&t=" + Date.now());
     if (response.ok) {
       const text = await response.text();
       const data = parseCSV(text);
@@ -480,7 +471,7 @@ async function loadData() {
       }
     }
   } catch (e) {
-    console.log("Direct fetch failed, trying proxies...");
+    console.log("Direct fetch failed");
   }
   
   // محاولة الوسطاء
@@ -500,26 +491,28 @@ async function loadData() {
     }
   }
   
-  showError("فشل الاتصال بجميع الخوادم");
+  showError("فشل الاتصال. تأكد من اتصال الإنترنت وأن Google Sheets منشور للعام");
 }
 
 async function fetchWithProxy(proxy) {
-  try {
-    const url = proxy + encodeURIComponent(SHEET_URL + "&t=" + Date.now());
-    const response = await fetch(url, { 
-      method: 'GET',
-      headers: { 
-        'Accept': 'text/csv, text/plain, /'
-      }
-    });
-    if (!response.ok) throw new Error("HTTP " + response.status);
-    const text = await response.text();
-    if (text.includes("<!DOCTYPE")) throw new Error("HTML");
-    if (text.includes("<html")) throw new Error("HTML response");
-    return parseCSV(text);
-  } catch (e) {
-    throw e;
+  const url = proxy + encodeURIComponent(SHEET_URL + "&t=" + Date.now());
+  
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  
+  let text = await response.text();
+  
+  // allorigins يعيد JSON
+  if (proxy.includes("allorigins")) {
+    const json = JSON.parse(text);
+    text = json.contents || text;
   }
+  
+  if (text.includes("<!DOCTYPE") || text.includes("<html")) {
+    throw new Error("HTML response");
+  }
+  
+  return parseCSV(text);
 }
 
 function parseCSV(csv) {
@@ -552,8 +545,6 @@ function parseLine(line) {
   return result;
 }
 
-// ========== العرض ==========
-
 function render() {
   renderWeeks();
   renderCards();
@@ -580,7 +571,6 @@ function renderWeeks() {
   });
 }
 
-// ✅ دالة عرض/إخفاء المؤشرات
 function toggleIndicators(index) {
   const list = document.getElementById(indicators-${index});
   const btn = list.previousElementSibling;
@@ -603,16 +593,12 @@ function renderCards() {
     return;
   }
   
-  // البحث عن الأعمدة
   const sample = appData.allData[0];
   const nameCol = findCol(sample, ["اسم المشرف", "المشرف", "الاسم"]);
   const weekCol = findCol(sample, ["الأسبوع", "الاسبوع", "أسابيع", "week"]);
   const statusCol = findCol(sample, ["الحالة", "حالة", "status"]);
   const countCol = findCol(sample, ["عدد", "count", "العدد", "مؤشرات"]) || findColByValue(sample, ["3", "2", "1"]);
   
-  console.log("الأعمدة:", { nameCol, weekCol, statusCol, countCol });
-  
-  // ✅ حساب إجمالي المؤشرات لكل مشرف من جميع الأسابيع
   const supervisorTotals = {};
   
   appData.allData.forEach(row => {
@@ -642,7 +628,6 @@ function renderCards() {
     }
   });
   
-  // تصفية حسب الأسبوع الحالي
   const weekData = appData.allData.filter(row => {
     const rowWeek = row[weekCol];
     const rowWeekNum = weekTextToNumber(rowWeek);
@@ -659,7 +644,6 @@ function renderCards() {
     return;
   }
   
-  // تجميع حسب المشرف
   const supervisors = {};
   
   weekData.forEach(row => {
@@ -718,7 +702,6 @@ function renderCards() {
     }
   });
   
-  // عرض البطاقات
   Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name)).forEach((sup, index) => {
     const totalDoneAll = supervisorTotals[sup.name]?.totalDoneAll || 0;
     const weekPercent = ((sup.doneCount / TOTAL_INDICATORS) * 100).toFixed(2);
@@ -828,7 +811,10 @@ function findColByValue(sample, values) {
 
 function showError(msg) {
   document.getElementById("weeks").innerHTML = `
-    <div class="error-box"><h3>⚠️ ${msg}</h3><button class="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button></div>
+    <div class="error-box">
+      <h3>⚠️ ${msg}</h3>
+      <button class="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button>
+    </div>
   `;
 }
 
