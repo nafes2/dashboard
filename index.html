@@ -1,141 +1,244 @@
-<script>
-
-// ===== الوسطاء =====
-const PROXIES = [
-  "https://api.allorigins.win/raw?url=",
-  "https://corsproxy.io/?",
-  "https://api.codetabs.com/v1/proxy?quest="
-];
-
-const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-
-let appData = { allData: [] };
-
-
-// ===== التحميل الذكي السريع =====
-async function loadData() {
-
-  document.getElementById("weeks").innerHTML = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة المشرفين</title>
+<style>
+/* ... كل CSS كما هو بدون تغيير ... */
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:20px; }
+.container { max-width:1200px; margin:0 auto; }
+header { text-align:center; padding:20px 0; }
+header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
+header p { opacity:0.9; font-size:1.1em; }
+.nav { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:25px 0; padding:0 10px; }
+.btn { background: rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); color:#fff; padding:12px 20px; border-radius:25px; cursor:pointer; font-size:15px; font-weight:600; transition:all 0.3s ease; backdrop-filter:blur(10px); }
+.btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+.btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; box-shadow:0 4px 15px rgba(255,215,0,0.4); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; padding:10px; }
+.card { background:#fff; color:#333; border-radius:20px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.3); transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow:hidden; }
+.card::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; background: linear-gradient(90deg,#4caf50,#8bc34a); }
+.card:hover { transform: translateY(-5px); box-shadow:0 15px 40px rgba(0,0,0,0.4); }
+.card-header { text-align:center; margin-bottom:20px; padding-bottom:15px; border-bottom:2px solid #f0f0f0; }
+.card-header h3 { color:#1e3c72; font-size:1.4em; margin-bottom:8px; }
+.week-badge { display:inline-block; background:#e3f2fd; color:#1976d2; padding:4px 12px; border-radius:15px; font-size:0.85em; font-weight:600; }
+/* باقي CSS كما هو ... */
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📊 لوحة متابعة المشرفين</h1>
+    <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
+  </header>
+  
+  <div class="nav" id="weeks">
     <div class="loading">
       <div class="spinner"></div>
-      <p>جاري الاتصال بالخادم...</p>
+      <p>جاري تحميل البيانات...</p>
     </div>
-  `;
+  </div>
+  
+  <div class="grid" id="cards"></div>
+  
+  <div class="last-update" id="footer" style="display:none;">
+    <span>🕐 آخر تحديث: <span id="updateTime">--</span></span>
+    <button class="refresh-btn" onclick="loadData()">🔄 تحديث</button>
+  </div>
+</div>
 
-  // ===== المحاولة 1: اتصال مباشر =====
+<script>
+// الرابط الجديد بعد النشر على الويب، اخترت TSV
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?output=tsv";
+
+// إجمالي المؤشرات
+const TOTAL_INDICATORS = 44;
+
+// الأسابيع
+const ALL_WEEKS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+const WEEK_NAMES = {
+  1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",
+  6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",
+  11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"
+};
+
+// تحويل نص الأسبوع لرقم
+function weekTextToNumber(text) {
+  if (!text) return null;
+  const t = text.toString().trim();
+  const num = parseInt(t);
+  if (!isNaN(num)) return num;
+  for (let [key,value] of Object.entries(WEEK_NAMES)) if (t.includes(value)) return parseInt(key);
+  return null;
+}
+
+let appData = { allData: [], currentWeek:1, lastUpdate:null };
+
+// تحميل البيانات
+async function loadData() {
+  document.getElementById("weeks").innerHTML = <div class="loading"><div class="spinner"></div><p>جاري الاتصال بالخادم...</p></div>;
   try {
-    const res = await fetch(SHEET_URL + "&t=" + Date.now());
-    if (res.ok) {
-      const text = await res.text();
-      if (!text.includes("<!DOCTYPE")) {
-        appData.allData = parseCSV(text);
-        render();
-        updateTimestamp();
-        return;
-      }
-    }
-  } catch (e) {}
-
-  // ===== المحاولة 2: جميع البروكسيات معاً =====
-  try {
-
-    const requests = PROXIES.map(p =>
-      fetchWithProxy(p).catch(() => null)
-    );
-
-    const results = await Promise.all(requests);
-    const data = results.find(d => d && d.length);
-
-    if (!data) throw new Error();
-
-    appData.allData = data;
-
+    const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error("HTTP "+res.status);
+    const text = await res.text();
+    appData.allData = parseCSV(text);
+    appData.currentWeek = 1;
     render();
     updateTimestamp();
-
-  } catch {
-    showError("فشل الاتصال");
+  } catch(err) {
+    showError("فشل الاتصال: " + err.message);
   }
 }
 
-
-// ===== جلب عبر بروكسي =====
-async function fetchWithProxy(proxy) {
-
-  const url = proxy + encodeURIComponent(SHEET_URL + "&t=" + Date.now());
-
-  const res = await fetch(url, { headers: { Accept: "text/csv" } });
-
-  if (!res.ok) throw new Error();
-
-  const text = await res.text();
-
-  if (text.includes("<!DOCTYPE")) throw new Error();
-
-  return parseCSV(text);
-}
-
-
-// ===== تحويل CSV =====
+// تحليل CSV أو TSV
 function parseCSV(csv) {
-
   const lines = csv.trim().split("\n");
-  const headers = lines[0].split(",");
-
-  return lines.slice(1).map(line => {
-    const vals = line.split(",");
-    let obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = vals[i]?.trim());
-    return obj;
-  });
-
+  if (lines.length<2) return [];
+  const isTSV = lines[0].includes("\t");
+  const headers = isTSV ? lines[0].split("\t") : lines[0].split(",");
+  const data = [];
+  for(let i=1;i<lines.length;i++){
+    const line = lines[i];
+    if(!line) continue;
+    const vals = isTSV ? line.split("\t") : line.split(",");
+    let row={};
+    headers.forEach((h,idx)=>row[h.trim()]=vals[idx]?vals[idx].trim():"");
+    data.push(row);
+  }
+  return data;
 }
 
-
-// ===== عرض =====
+// عرض البطاقات
 function render() {
+  renderWeeks();
+  renderCards();
+  document.getElementById("footer").style.display="block";
+}
 
-  const cards = document.getElementById("cards");
-  cards.innerHTML = "";
-
-  appData.allData.forEach(row => {
-
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <h3>${row["اسم المشرف"] || "بدون اسم"}</h3>
-      <p>الأسبوع: ${row["الأسبوع"] || "-"}</p>
-      <p>الحالة: ${row["الحالة"] || "-"}</p>
-    `;
-
-    cards.appendChild(div);
-
+function renderWeeks() {
+  const container=document.getElementById("weeks");
+  container.innerHTML="";
+  ALL_WEEKS.forEach(weekNum=>{
+    const btn=document.createElement("button");
+    btn.className="btn"+(weekNum===appData.currentWeek?" active":"");
+    btn.textContent=weekNum;
+    btn.title="الأسبوع "+WEEK_NAMES[weekNum];
+    btn.onclick=()=>{ appData.currentWeek=weekNum; renderWeeks(); renderCards(); };
+    container.appendChild(btn);
   });
-
-  document.getElementById("footer").style.display = "block";
 }
 
-
-// ===== أخطاء =====
-function showError(msg) {
-  document.getElementById("weeks").innerHTML =
-    <h3 style="color:#ff5252">${msg}</h3>;
+// عرض/إخفاء المؤشرات
+function toggleIndicators(index){
+  const list=document.getElementById(indicators-${index});
+  const btn=list.previousElementSibling;
+  if(list.classList.contains('show')){
+    list.classList.remove('show');
+    btn.innerHTML=btn.innerHTML.replace('🔼 إخفاء','📋 عرض').replace('المؤشرات ▲','المؤشرات ▼');
+  } else {
+    list.classList.add('show');
+    btn.innerHTML=btn.innerHTML.replace('📋 عرض','🔼 إخفاء').replace('المؤشرات ▼','المؤشرات ▲');
+  }
 }
 
-
-// ===== وقت التحديث =====
-function updateTimestamp() {
-  document.getElementById("updateTime").textContent =
-    new Date().toLocaleTimeString('ar-SA', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+// باقي الكود كما هو مع تعديل بسيط لقراءة البيانات فقط
+function renderCards(){
+  const container=document.getElementById("cards");
+  container.innerHTML="";
+  if(appData.allData.length===0){
+    container.innerHTML=<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات</h3></div>;
+    return;
+  }
+  
+  const sample=appData.allData[0];
+  const nameCol=findCol(sample,["اسم المشرف","المشرف","الاسم"]);
+  const weekCol=findCol(sample,["الأسبوع","الاسبوع","أسابيع","week"]);
+  const statusCol=findCol(sample,["الحالة","حالة","status"]);
+  const countCol=findCol(sample,["عدد","count","العدد","مؤشرات"])||findColByValue(sample,["3","2","1"]);
+  
+  const supervisorTotals={};
+  appData.allData.forEach(row=>{
+    const name=row[nameCol];
+    if(!name||name==="undefined") return;
+    if(!supervisorTotals[name]) supervisorTotals[name]={ totalDoneAll:0 };
+    const status=(row[statusCol]||"").trim();
+    if(status==="تم التنفيذ"){
+      let indicatorCount=1;
+      if(countCol && row[countCol]){ const val=parseInt(row[countCol]); if(!isNaN(val)&&val>0) indicatorCount=val; }
+      supervisorTotals[name].totalDoneAll+=indicatorCount;
+    }
+  });
+  
+  const weekData=appData.allData.filter(row=>weekTextToNumber(row[weekCol])===appData.currentWeek);
+  if(weekData.length===0){
+    container.innerHTML=<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</h3></div>;
+    return;
+  }
+  
+  const supervisors={};
+  weekData.forEach(row=>{
+    const name=row[nameCol];
+    if(!name||name==="undefined") return;
+    if(!supervisors[name]) supervisors[name]={ name, doneCount:0, pendingCount:0, totalCount:0, link:null, indicators:[] };
+    const status=(row[statusCol]||"").trim();
+    const indicatorCol=findCol(row,["رقم المؤشر","المؤشر","indicator","المؤشرات"]);
+    const indicatorsText=row[indicatorCol]||"";
+    let indicatorCount=1;
+    if(countCol && row[countCol]){ const val=parseInt(row[countCol]); if(!isNaN(val)&&val>0) indicatorCount=val; }
+    else if(indicatorCol && row[indicatorCol]){ const inds=indicatorsText.toString().split(',').filter(x=>x.trim()); indicatorCount=inds.length||1; }
+    supervisors[name].totalCount+=indicatorCount;
+    if(status==="تم التنفيذ") supervisors[name].doneCount+=indicatorCount;
+    else if(status.includes("جار")) supervisors[name].pendingCount+=indicatorCount;
+    if(indicatorsText){
+      indicatorsText.toString().split(',').filter(x=>x.trim()).forEach(num=>{
+        supervisors[name].indicators.push({ number:num.trim(), status:status });
+      });
+    }
+    if(!supervisors[name].link) for(let val of Object.values(row)){ if(val && val.toString().startsWith("http")){ supervisors[name].link=val; break; } }
+  });
+  
+  Object.values(supervisors).sort((a,b)=>a.name.localeCompare(b.name)).forEach((sup,index)=>{
+    const totalDoneAll=supervisorTotals[sup.name]?.totalDoneAll||0;
+    const weekPercent=((sup.doneCount/TOTAL_INDICATORS)*100).toFixed(2);
+    const percentOf44=((totalDoneAll/TOTAL_INDICATORS)*100).toFixed(2);
+    const barClass=weekPercent>=70?"high":(weekPercent>=40?"medium":"low");
+    const indicatorsHtml=sup.indicators.map(ind=><div class="indicator-item"><span><span class="indicator-number">${ind.number}</span><span class="indicator-name">مؤشر ${ind.number}</span></span><span class="indicator-status ${ind.status==='تم التنفيذ'?'status-done':'status-pending'}">${ind.status==='تم التنفيذ'?'✅ تم':'⏳ جاري'}</span></div>).join('');
+    
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <div class="card-header"><h3>${sup.name}</h3><span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span></div>
+      <button class="indicators-toggle" onclick="toggleIndicators(${index})">📋 عرض المؤشرات (${sup.totalCount}) ▼</button>
+      <div class="indicators-list" id="indicators-${index}">${indicatorsHtml||'<div class="indicator-item">لا توجد مؤشرات</div>'}</div>
+      <div class="stats-grid">
+        <div class="stat-box done"><span class="stat-number">${sup.doneCount}</span><div class="stat-label">✅ تم</div></div>
+        <div class="stat-box pending"><span class="stat-number">${sup.pendingCount}</span><div class="stat-label">⏳ جاري</div></div>
+        <div class="stat-box total"><span class="stat-number">${sup.totalCount}</span><div class="stat-label">📋 هذا الأسبوع</div></div>
+      </div>
+      <div class="summary-box"><h4>📊 إجمالي المؤشرات المنفذة (جميع الأسابيع)</h4><div class="big-number">${totalDoneAll}</div><div class="small-text">من ${TOTAL_INDICATORS} مؤشر = ${percentOf44}%</div></div>
+      <div class="progress-section">
+        <div class="progress-item">
+          <div class="progress-label"><span>نسبة الإنجاز في الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span><span>${weekPercent}%</span></div>
+          <div class="progress"><div class="bar ${barClass}" style="width:${Math.max(weekPercent,3)}%">${weekPercent}%</div></div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-label"><span>النسبة من إجمالي المؤشرات (44)</span><span>${percentOf44}%</span></div>
+          <div class="progress"><div class="bar purple" style="width:${Math.max(percentOf44,3)}%">${percentOf44}%</div></div>
+        </div>
+      </div>
+      <a href="${sup.link||'#'}" target="_blank" class="link-btn ${!sup.link?'disabled':''}">${sup.link?'🔗 فتح الاستمارة':'🔗 لا يوجد رابط'}</a>
+    `;
+    container.appendChild(card);
+  });
 }
 
+function findCol(sample,names){ const keys=Object.keys(sample); for(let name of names){ const found=keys.find(k=>k.toLowerCase().includes(name.toLowerCase())); if(found) return found; } return null; }
+function findColByValue(sample,values){ const keys=Object.keys(sample); for(let key of keys){ const val=sample[key]; if(values.includes(val)) return key; } return null; }
+function showError(msg){ document.getElementById("weeks").innerHTML=<div class="error-box"><h3>⚠️ ${msg}</h3><button class="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button></div>; }
+function updateTimestamp(){ document.getElementById("updateTime").textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'}); }
 
-// تشغيل
 loadData();
-
 </script>
+</body>
+</html>
