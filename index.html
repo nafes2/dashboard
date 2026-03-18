@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة متابعة المشرفين</title>
 <style>
-/* التنسيقات */
+/* التنسيقات لجعل الموقع احترافياً وسريعاً */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; min-height: 100vh; padding: 20px; }
 .container { max-width: 1200px; margin: 0 auto; }
 header { text-align: center; padding: 20px 0; margin-bottom: 20px; }
 .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
 .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-.btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; }
+.btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; box-shadow: 0 4px 15px rgba(255,215,0,0.3); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
 .card { background: #fff; color: #333; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; border-top: 5px solid #4caf50; }
 .card-header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -35,14 +35,18 @@ header { text-align: center; padding: 20px 0; margin-bottom: 20px; }
 </head>
 <body>
 <div class="container">
-  <header><h1>📊 لوحة متابعة المشرفين</h1><p>تحديث مباشر من Google Sheets</p></header>
+  <header>
+    <h1>📊 لوحة متابعة المشرفين</h1>
+    <p>تحديث فوري من Google Sheets</p>
+  </header>
+  
   <div class="nav" id="weeks"></div>
   <div class="grid" id="cards"></div>
-  <div id="status" class="loading">جاري تحميل البيانات...</div>
+  <div id="status" class="loading">جاري جلب البيانات...</div>
 </div>
 
 <script>
-// ⚠️ ضع رابط السكريبت الخاص بك هنا
+// ⚠️ ضع رابط السكريبت الخاص بك هنا بين القوسين
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDN17xdacGO76HqkY66cCkYNPEofM1zX_TeYH-BFwtJVXbhN_2PM1tMf8LizAgrBForw/exec";
 
 let appData = { allData: [], currentWeek: 1 };
@@ -55,7 +59,7 @@ async function loadData() {
     document.getElementById("status").style.display = "none";
     render();
   } catch (err) {
-    document.getElementById("status").innerHTML = "❌ فشل الاتصال بجوجل سكريبت";
+    document.getElementById("status").innerHTML = "❌ خطأ في تحميل البيانات. تأكد من نشر السكريبت كـ Anyone.";
   }
 }
 
@@ -73,10 +77,14 @@ function render() {
   const container = document.getElementById("cards");
   container.innerHTML = "";
   
-  const weekData = appData.allData.filter(row => row["الأسابيع"].includes(WEEK_NAMES[appData.currentWeek]));
+  // تصفية البيانات حسب الأسبوع المختار
+  const weekData = appData.allData.filter(row => {
+    const weekText = row["الأسابيع"] || "";
+    return weekText.includes(WEEK_NAMES[appData.currentWeek]);
+  });
 
   weekData.forEach(sup => {
-    // تنظيف النسب المئوية وتحويلها لأرقام للبار (مثلاً 6.82% تصبح 6.82)
+    // معالجة النسب (إزالة علامة % وتحويلها لرقم للبار)
     const weekP = parseFloat(sup["نسبة الأسبوع"]) || 0;
     const totalP = parseFloat(sup["نسبة الكلية"]) || 0;
 
@@ -92,11 +100,11 @@ function render() {
 
         <div class="percent-section">
           <div class="percent-row">
-            <div class="percent-label"><span>نسبة إنجاز الأسبوع</span><span>${sup["نسبة الأسبوع"]}</span></div>
+            <div class="percent-label"><span>إنجاز الأسبوع</span><span>${sup["نسبة الأسبوع"]}</span></div>
             <div class="progress-bar"><div class="fill" style="width:${weekP}%"></div></div>
           </div>
           <div class="percent-row">
-            <div class="percent-label"><span>النسبة التراكمية (من 44)</span><span>${sup["نسبة الكلية"]}</span></div>
+            <div class="percent-label"><span>التراكمي (من 44)</span><span>${sup["نسبة الكلية"]}</span></div>
             <div class="progress-bar"><div class="fill purple" style="width:${totalP}%"></div></div>
           </div>
         </div>
