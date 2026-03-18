@@ -1,470 +1,161 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  color: #fff;
-  min-height: 100vh;
-  padding: 20px;
-}
-.container { max-width: 1200px; margin: 0 auto; }
-header { text-align: center; padding: 20px 0; }
-header h1 { font-size: 2em; margin-bottom: 10px; }
-.nav {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin: 25px 0;
-}
-.btn {
-  background: rgba(255,255,255,0.15);
-  border: 2px solid rgba(255,255,255,0.3);
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  transition: all 0.3s;
-}
-.btn.active {
-  background: #ffd700;
-  color: #1e3c72;
-  border-color: #ffd700;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 20px;
-}
-.card {
-  background: #fff;
-  color: #333;
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-.card-header {
-  text-align: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0f0f0;
-}
-.card-header h3 {
-  color: #1e3c72;
-  font-size: 1.4em;
-  margin-bottom: 8px;
-}
-.week-badge {
-  display: inline-block;
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 4px 12px;
-  border-radius: 15px;
-  font-size: 0.85em;
-  font-weight: 600;
-}
-/* ✅ زر عرض/إخفاء المؤشرات */
-.indicators-toggle {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  padding: 12px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin: 15px 0 10px;
-  font-weight: 600;
-  color: #fff;
-  width: 100%;
-  transition: all 0.3s;
-  font-size: 0.95em;
-}
-.indicators-toggle:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-/* ✅ قائمة المؤشرات */
-.indicators-list {
-  display: none;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 12px;
-  margin: 10px 0;
-  max-height: 220px;
-  overflow-y: auto;
-  border: 1px solid #e0e0e0;
-}
-.indicators-list.show {
-  display: block;
-  animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.indicator-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 8px;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 0.9em;
-}
-.indicator-item:last-child {
-  border-bottom: none;
-}
-.indicator-number {
-  background: #1976d2;
-  color: white;
-  padding: 3px 10px;
-  border-radius: 15px;
-  font-size: 0.85em;
-  font-weight: bold;
-  margin-left: 8px;
-}
-.indicator-status {
-  font-size: 0.85em;
-  font-weight: 600;
-}
-.status-done { color: #4caf50; }
-.status-pending { color: #ff9800; }
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 20px 0;
-}
-.stat-box {
-  text-align: center;
-  padding: 12px 8px;
-  border-radius: 12px;
-}
-.stat-box.done { background: #e8f5e9; color: #2e7d32; }
-.stat-box.pending { background: #fff3e0; color: #ef6c00; }
-.stat-box.total { background: #e3f2fd; color: #1565c0; }
-.stat-number { font-size: 1.6em; font-weight: bold; display: block; }
-.stat-label { font-size: 0.8em; margin-top: 5px; font-weight: 600; }
-.summary-box {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 15px;
-  border-radius: 12px;
-  margin: 15px 0;
-  text-align: center;
-}
-.summary-box .big-number { font-size: 2.2em; font-weight: bold; }
-.progress-section {
-  margin: 20px 0;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 12px;
-}
-.progress-label {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #555;
-}
-.progress {
-  background: #e0e0e0;
-  height: 28px;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.bar {
-  height: 100%;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: bold;
-  font-size: 13px;
-}
-.bar.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
-.bar.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة متابعة المشرفين - الإدارة</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+            background-attachment: fixed;
+            color: #fff; min-height: 100vh; padding: 15px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; padding: 25px 0; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+        h1 { font-size: 1.8rem; margin-bottom: 10px; }
+        
+        /* أزرار الأسابيع */
+        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
+        .btn {
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+            color: #fff; padding: 8px 15px; border-radius: 20px; cursor: pointer;
+            transition: 0.3s; backdrop-filter: blur(5px); font-weight: bold;
+        }
+        .btn.active { background: #fff; color: #1a2a6c; border-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        /* البطاقات */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card {
+            background: rgba(255, 255, 255, 0.95); color: #333; border-radius: 15px; 
+            padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;
+            overflow: hidden; border-top: 6px solid #1a2a6c;
+        }
+        .card h3 { color: #1a2a6c; text-align: center; margin-bottom: 15px; font-size: 1.3rem; }
+        
+        /* الإحصائيات */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .stat-box { text-align: center; padding: 10px; border-radius: 10px; font-weight: bold; }
+        .done { background: #e8f5e9; color: #2e7d32; }
+        .target { background: #e3f2fd; color: #1565c0; }
+        .rem { background: #fff3e0; color: #e65100; }
+        .stat-num { display: block; font-size: 1.4rem; }
+        .stat-label { font-size: 0.75rem; }
+
+        /* شريط الإنجاز */
+        .progress-cont { background: #eee; height: 25px; border-radius: 12px; overflow: hidden; margin: 10px 0; position: relative; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: 1s ease-in-out; }
+        .progress-text { position: absolute; width: 100%; text-align: center; line-height: 25px; font-weight: bold; color: #000; font-size: 0.85rem; }
+
+        .link-btn {
+            display: block; width: 100%; text-align: center; background: #1a2a6c;
+            color: #fff; padding: 12px; border-radius: 8px; text-decoration: none;
+            margin-top: 10px; font-weight: bold; transition: 0.3s;
+        }
+        .link-btn:hover { background: #b21f1f; }
+        
+        .loading { text-align: center; font-size: 1.2rem; margin-top: 50px; }
+        .error { background: #ff5252; color: white; padding: 15px; border-radius: 10px; text-align: center; }
+    </style>
 </head>
 <body>
+
 <div class="container">
-  <header>
-    <h1>📊 لوحة متابعة المشرفين</h1>
-    <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
-  </header>
-  
-  <div class="nav" id="weeks"></div>
-  <div class="grid" id="cards"></div>
+    <header>
+        <h1>📊 لوحة متابعة المشرفين</h1>
+        <p>تحديث مباشر من ورقة المعادلات</p>
+    </header>
+
+    <div class="nav" id="weekNav"></div>
+    <div class="grid" id="mainGrid">
+        <div class="loading">جاري مزامنة البيانات من جوجل شيت...</div>
+    </div>
 </div>
 
 <script>
-// ✅ بيانات مدمجة - تعمل فوراً بدون Google Sheets
-const appData = {
-  1: [
-    { 
-      name: "خالد عبدالله", 
-      done: 2, 
-      pending: 0, 
-      total: 2, 
-      totalAll: 15,
-      indicators: [
-        { number: "1", status: "تم التنفيذ" },
-        { number: "5", status: "تم التنفيذ" }
-      ]
-    },
-    { 
-      name: "محمد أحمد", 
-      done: 2, 
-      pending: 1, 
-      total: 3, 
-      totalAll: 20,
-      indicators: [
-        { number: "2", status: "تم التنفيذ" },
-        { number: "7", status: "تم التنفيذ" },
-        { number: "12", status: "جاري التنفيذ" }
-      ]
-    },
-    { 
-      name: "صالح علي", 
-      done: 1, 
-      pending: 0, 
-      total: 1, 
-      totalAll: 12,
-      indicators: [
-        { number: "3", status: "تم التنفيذ" }
-      ]
-    }
-  ],
-  2: [
-    { 
-      name: "خالد عبدالله", 
-      done: 3, 
-      pending: 1, 
-      total: 4, 
-      totalAll: 18,
-      indicators: [
-        { number: "4", status: "تم التنفيذ" },
-        { number: "8", status: "تم التنفيذ" },
-        { number: "15", status: "تم التنفيذ" },
-        { number: "22", status: "جاري التنفيذ" }
-      ]
-    },
-    { 
-      name: "محمد أحمد", 
-      done: 2, 
-      pending: 0, 
-      total: 2, 
-      totalAll: 22,
-      indicators: [
-        { number: "6", status: "تم التنفيذ" },
-        { number: "9", status: "تم التنفيذ" }
-      ]
-    }
-  ],
-  3: [
-    { 
-      name: "خالد عبدالله", 
-      done: 1, 
-      pending: 0, 
-      total: 1, 
-      totalAll: 19,
-      indicators: [
-        { number: "10", status: "تم التنفيذ" }
-      ]
-    },
-    { 
-      name: "محمد أحمد", 
-      done: 2, 
-      pending: 3, 
-      total: 5, 
-      totalAll: 27,
-      indicators: [
-        { number: "11", status: "تم التنفيذ" },
-        { number: "14", status: "تم التنفيذ" },
-        { number: "18", status: "جاري التنفيذ" },
-        { number: "25", status: "جاري التنفيذ" },
-        { number: "30", status: "جاري التنفيذ" }
-      ]
-    }
-  ],
-  4: [
-    { 
-      name: "خالد عبدالله", 
-      done: 3, 
-      pending: 0, 
-      total: 3, 
-      totalAll: 22,
-      indicators: [
-        { number: "13", status: "تم التنفيذ" },
-        { number: "16", status: "تم التنفيذ" },
-        { number: "20", status: "تم التنفيذ" }
-      ]
-    }
-  ],
-  5: [
-    { 
-      name: "خالد عبدالله", 
-      done: 0, 
-      pending: 2, 
-      total: 2, 
-      totalAll: 24,
-      indicators: [
-        { number: "21", status: "جاري التنفيذ" },
-        { number: "24", status: "جاري التنفيذ" }
-      ]
-    },
-    { 
-      name: "محمد أحمد", 
-      done: 3, 
-      pending: 0, 
-      total: 3, 
-      totalAll: 31,
-      indicators: [
-        { number: "17", status: "تم التنفيذ" },
-        { number: "19", status: "تم التنفيذ" },
-        { number: "23", status: "تم التنفيذ" }
-      ]
-    }
-  ]
-};
+// الرابط المباشر لورقة "المدير" باستخدام الرقم الذي زودتني به
+const SHEET_ID = "2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT";
+const GID = "1526100112"; // الرقم الذي أرسلته لورقة المدير
+const CSV_URL = https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${GID}&single=true&output=csv;
 
-const TOTAL_INDICATORS = 44;
-const WEEK_NAMES = {
-  1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس",
-  6: "السادس", 7: "السابع", 8: "الثامن", 9: "التاسع", 10: "العاشر",
-  11: "الحادي عشر", 12: "الثاني عشر", 13: "الثالث عشر", 14: "الرابع عشر", 15: "الخامس عشر"
-};
-
+let allData = [];
 let currentWeek = 1;
 
-function init() {
-  renderWeeks();
-  renderCards();
+async function loadData() {
+    try {
+        const response = await fetch(CSV_URL + "&cache=" + Date.now());
+        const data = await response.text();
+        allData = parseCSV(data);
+        renderNav();
+        renderCards();
+    } catch (e) {
+        document.getElementById('mainGrid').innerHTML = "<div class='error'>حدث خطأ في الاتصال. تأكد من إعدادات النشر على الويب.</div>";
+    }
 }
 
-function renderWeeks() {
-  const container = document.getElementById("weeks");
-  container.innerHTML = "";
-  
-  for (let i = 1; i <= 15; i++) {
-    const btn = document.createElement("button");
-    btn.className = "btn" + (i === currentWeek ? " active" : "");
-    btn.textContent = i;
-    btn.onclick = () => {
-      currentWeek = i;
-      renderWeeks();
-      renderCards();
-    };
-    container.appendChild(btn);
-  }
+function parseCSV(text) {
+    const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim().replace(/"/g, '')));
+    const headers = rows[0];
+    return rows.slice(1).map(row => {
+        let obj = {};
+        headers.forEach((h, i) => obj[h] = row[i]);
+        return obj;
+    });
 }
 
-// ✅ دالة عرض/إخفاء المؤشرات
-function toggleIndicators(index) {
-  const list = document.getElementById(indicators-${index});
-  const btn = list.previousElementSibling;
-  
-  if (list.classList.contains('show')) {
-    list.classList.remove('show');
-    btn.innerHTML = 📋 عرض المؤشرات (${btn.dataset.count}) ▼;
-  } else {
-    list.classList.add('show');
-    btn.innerHTML = 🔼 إخفاء المؤشرات (${btn.dataset.count}) ▲;
-  }
+function renderNav() {
+    const nav = document.getElementById('weekNav');
+    nav.innerHTML = "";
+    // إنشاء أزرار لـ 12 أسبوع
+    for(let i=1; i<=12; i++) {
+        const b = document.createElement('button');
+        b.className = btn ${currentWeek == i ? 'active' : ''};
+        b.textContent = الأسبوع ${i};
+        b.onclick = () => { currentWeek = i; renderNav(); renderCards(); };
+        nav.appendChild(b);
+    }
 }
 
 function renderCards() {
-  const container = document.getElementById("cards");
-  container.innerHTML = "";
-  
-  const weekData = appData[currentWeek] || [];
-  
-  if (weekData.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column:1/-1; text-align:center; padding:40px; color:rgba(255,255,255,0.8);">
-        لا توجد بيانات للأسبوع ${WEEK_NAMES[currentWeek]}
-      </div>
-    `;
-    return;
-  }
-  
-  weekData.forEach((sup, index) => {
-    const weekPercent = ((sup.done / TOTAL_INDICATORS) * 100).toFixed(1);
-    const totalPercent = ((sup.totalAll / TOTAL_INDICATORS) * 100).toFixed(1);
-    const barClass = weekPercent >= 70 ? "high" : "medium";
+    const grid = document.getElementById('mainGrid');
+    grid.innerHTML = "";
     
-    // ✅ إنشاء قائمة المؤشرات HTML
-    const indicatorsHtml = sup.indicators.map(ind => `
-      <div class="indicator-item">
-        <span>
-          <span class="indicator-number">${ind.number}</span>
-          <span>مؤشر ${ind.number}</span>
-        </span>
-        <span class="indicator-status ${ind.status === 'تم التنفيذ' ? 'status-done' : 'status-pending'}">
-          ${ind.status === 'تم التنفيذ' ? '✅ تم' : '⏳ جاري'}
-        </span>
-      </div>
-    `).join('');
-    
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header">
-        <h3>${sup.name}</h3>
-        <span class="week-badge">الأسبوع ${WEEK_NAMES[currentWeek]}</span>
-      </div>
-      
-      <button class="indicators-toggle" onclick="toggleIndicators(${index})" data-count="${sup.total}">
-        📋 عرض المؤشرات (${sup.total}) ▼
-      </button>
-      
-      <div class="indicators-list" id="indicators-${index}">
-        ${indicatorsHtml || '<div class="indicator-item">لا توجد مؤشرات</div>'}
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-box done">
-          <span class="stat-number">${sup.done}</span>
-          <div class="stat-label">✅ تم</div>
-        </div>
-        <div class="stat-box pending">
-          <span class="stat-number">${sup.pending}</span>
-          <div class="stat-label">⏳ جاري</div>
-        </div>
-        <div class="stat-box total">
-          <span class="stat-number">${sup.total}</span>
-          <div class="stat-label">📋 الأسبوع</div>
-        </div>
-      </div>
-      
-      <div class="summary-box">
-        <div class="big-number">${sup.totalAll}</div>
-        <div>من ${TOTAL_INDICATORS} مؤشر = ${totalPercent}%</div>
-      </div>
-      
-      <div class="progress-section">
-        <div class="progress-label">
-          <span>نسبة الإنجاز</span>
-          <span>${weekPercent}%</span>
-        </div>
-        <div class="progress">
-          <div class="bar ${barClass}" style="width: ${Math.max(weekPercent, 5)}%">
-            ${weekPercent}%
-          </div>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
+    // تصفية البيانات حسب الأسبوع المختار
+    const filtered = allData.filter(d => d["الأسبوع"] == currentWeek || d["الاسبوع"] == currentWeek);
+
+    if (filtered.length === 0) {
+        grid.innerHTML = <div class='loading'>لا توجد بيانات مسجلة في ورقة المدير للأسبوع ${currentWeek}</div>;
+        return;
+    }
+
+    filtered.forEach(row => {
+        const done = parseInt(row["تم"] || row["تم التنفيذ"] || 0);
+        const total = 44; 
+        const percent = Math.min(((done / total) * 100), 100).toFixed(1);
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <h3>${row["اسم المشرف"] || "غير معروف"}</h3>
+            <div class="stats-grid">
+                <div class="stat-box done"><span class="stat-num">${done}</span><span class="stat-label">تم</span></div>
+                <div class="stat-box target"><span class="stat-num">${total}</span><span class="stat-label">هدف</span></div>
+                <div class="stat-box rem"><span class="stat-num">${total - done}</span><span class="stat-label">باقي</span></div>
+            </div>
+            <div class="progress-cont">
+                <div class="progress-text">${percent}% إنجاز</div>
+                <div class="progress-bar" style="width: ${percent}%"></div>
+            </div>
+            <a href="${row["الرابط"] || row["رابط الاستمارة"] || '#'}" target="_blank" class="link-btn">🔗 فتح التفاصيل</a>
+        `;
+        grid.appendChild(card);
+    });
 }
 
-init();
+loadData();
+// تحديث تلقائي كل دقيقتين
+setInterval(loadData, 120000);
 </script>
 </body>
 </html>
