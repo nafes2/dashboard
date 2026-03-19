@@ -3,72 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة المتابعة الذكية</title>
+    <title>لوحة المتابعة - النسخة السريعة</title>
     <style>
-        :root { --main: #1e3c72; }
+        :root { --primary: #1e3c72; }
         body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 20px; text-align: center; }
-        .header { background: var(--main); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .header { background: var(--primary); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
         .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 25px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; background: white; color: var(--main); cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn.active { background: #ff9800; color: white; }
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 6px solid var(--main); text-align: right; }
-        #loading-zone { padding: 40px; background: white; border-radius: 15px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #ff9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 6px solid var(--primary); text-align: right; }
+        #loading { padding: 40px; background: white; border-radius: 15px; display: inline-block; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #ff9800; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>لوحة متابعة المؤشرات</h1>
-    <p>تحديث مباشر من قاعدة البيانات</p>
-</div>
-
+<div class="header"><h1>لوحة متابعة المشرفين</h1><p>تحديث فوري ذكي</p></div>
 <div id="weeks-nav" class="weeks-nav"></div>
-
-<div id="loading-zone">
-    <div class="spinner" id="loader-icon"></div>
-    <h3 id="status-text">جاري الاتصال بقاعدة البيانات...</h3>
-</div>
-
+<div id="loading"><div class="spinner"></div><h3 id="status">جاري تنظيف البيانات والعرض...</h3></div>
 <div id="cardsContainer" class="container"></div>
 
 <script>
-    // الرابط الخاص بك
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
-    
-    // استخدام وسيط Corsproxy.io وهو أسرع وأكثر استقراراً
-    const PROXY_URL = "https://corsproxy.io/?" + encodeURIComponent(SCRIPT_URL);
+    const PROXY = "https://api.allorigins.win/get?url=" + encodeURIComponent(SCRIPT_URL);
 
     let allData = [];
     let currentWeek = "الأسبوع الخامس";
 
-    async function fetchData() {
+    async function loadData() {
         try {
-            console.log("بدء الجلب...");
-            const response = await fetch(PROXY_URL);
-            if (!response.ok) throw new Error("فشل الوسيط");
+            const res = await fetch(PROXY);
+            const json = await res.json();
+            const raw = JSON.parse(json.contents);
             
-            allData = await response.json();
-            console.log("تم استلام البيانات:", allData.length);
-
-            // إخفاء منطقة التحميل وإظهار المحتوى
-            document.getElementById('loading-zone').style.display = 'none';
+            // قفزة الذكاء: تجاهل أي صف لا يحتوي على "اسم المشرف"
+            allData = raw.filter(row => row["اسم المشرف"] && row["اسم المشرف"].toString().trim() !== "");
+            
+            document.getElementById('loading').style.display = 'none';
             renderNav();
             renderCards();
-        } catch (error) {
-            console.error("خطأ:", error);
-            document.getElementById('status-text').innerHTML = "❌ فشل الاتصال. يرجى التأكد من الإنترنت أو تحديث الصفحة.";
-            document.getElementById('loader-icon').style.display = 'none';
+        } catch (e) {
+            document.getElementById('status').innerText = "❌ حدث خطأ، يرجى تحديث الصفحة.";
         }
     }
 
     function renderNav() {
         const nav = document.getElementById('weeks-nav');
         nav.innerHTML = "";
-        const weeks = ["الأسبوع الأول", "الأسبوع الثاني", "الأسبوع الثالث", "الأسبوع الرابع", "الأسبوع الخامس", "الأسبوع السادس", "الأسبوع السابع", "الأسبوع الثامن"];
-        weeks.forEach(w => {
+        ["الأسبوع الأول", "الأسبوع الثاني", "الأسبوع الثالث", "الأسبوع الرابع", "الأسبوع الخامس", "الأسبوع السادس"].forEach(w => {
             const btn = document.createElement('button');
             btn.className = btn ${w === currentWeek ? 'active' : ''};
             btn.innerText = w;
@@ -80,32 +64,25 @@
     function renderCards() {
         const container = document.getElementById('cardsContainer');
         container.innerHTML = "";
+        const filtered = allData.filter(row => String(row["الأسابيع"]).trim() === currentWeek);
         
-        // تصفية البيانات (تجاهل الصفوف الفارغة والبحث عن الأسبوع)
-        const filtered = allData.filter(row => {
-            return row["الأسابيع"] && String(row["الأسابيع"]).trim() === currentWeek;
-        });
-
         if (filtered.length === 0) {
-            container.innerHTML = <div style="grid-column:1/-1"><h3>لا توجد بيانات للأسبوع المختار</h3></div>;
+            container.innerHTML = <h3>لا توجد بيانات لـ ${currentWeek}</h3>;
             return;
         }
 
         filtered.forEach(item => {
             container.innerHTML += `
                 <div class="card">
-                    <h3 style="color:var(--main); margin-top:0;">${item["اسم المشرف"] || "غير معروف"}</h3>
+                    <h3>${item["اسم المشرف"]}</h3>
                     <p><b>تم التنفيذ:</b> ${item["تم التنفيذ"] || 0}</p>
-                    <p><b>نسبة الأسبوع:</b> ${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</p>
-                    <p><b>الإنجاز التراكمي:</b> ${Math.round((item["نسبة الكلية"] || 0) * 100)}%</p>
-                    <a href="${item["رابط"] || '#'}" target="_blank" style="color:#28a745; font-weight:bold; text-decoration:none;">🔗 عرض التفاصيل</a>
+                    <p><b>نسبة الإنجاز:</b> ${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</p>
+                    <a href="${item["رابط"] || '#'}" target="_blank" style="color:green; font-weight:bold;">🔗 التفاصيل</a>
                 </div>`;
         });
     }
 
-    // بدء العمل
-    fetchData();
+    loadData();
 </script>
-
 </body>
 </html>
