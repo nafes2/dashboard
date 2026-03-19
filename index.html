@@ -4,187 +4,191 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة متابعة المشرفين</title>
-
 <style>
-body{
-  font-family:Tah​oma;
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  color:#fff;
-  padding:20px;
-  text-align:center
-}
-
-h1{margin-bottom:15px}
-
-.nav{margin:20px 0}
-.btn{
-  padding:10px 18px;
-  margin:4px;
-  border:none;
-  border-radius:20px;
-  background:#ffffff33;
-  color:#fff;
-  cursor:pointer;
-  font-weight:bold
-}
-.btn.active{background:#ffd700;color:#000}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  gap:15px
-}
-
-.card{
-  background:#fff;
-  color:#000;
-  border-radius:15px;
-  padding:20px;
-  box-shadow:0 5px 25px rgba(0,0,0,.35)
-}
-
-.progress{
-  height:25px;
-  background:#eee;
-  border-radius:20px;
-  overflow:hidden;
-  margin:12px 0
-}
-
-.bar{
-  height:100%;
-  background:#4caf50;
-  color:#fff;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center
-}
-
-.spinner{
-  width:50px;height:50px;
-  border:4px solid #ccc;
-  border-top:4px solid #ffd700;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-  margin:40px auto
-}
-@keyframes spin{to{transform:rotate(360deg)}}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);color:#fff;min-height:100vh;padding:20px;}
+.container{max-width:1200px;margin:0 auto;}
+header{text-align:center;padding:20px 0;}
+header h1{font-size:2em;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,0.3);}
+header p{opacity:0.9;font-size:1.1em;}
+.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:25px 0;padding:0 10px;}
+.btn{background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);color:#fff;padding:12px 20px;border-radius:25px;cursor:pointer;font-size:15px;font-weight:600;transition:all 0.3s ease;backdrop-filter:blur(10px);}
+.btn:hover{background:rgba(255,255,255,0.25);transform:translateY(-2px);}
+.btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700;box-shadow:0 4px 15px rgba(255,215,0,0.4);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:10px;}
+.card{background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,0.3);transition:transform 0.3s ease,box-shadow 0.3s ease;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#4caf50,#8bc34a);}
+.card:hover{transform:translateY(-5px);box-shadow:0 15px 40px rgba(0,0,0,0.4);}
+.card-header{text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #f0f0f0;}
+.card-header h3{color:#1e3c72;font-size:1.4em;margin-bottom:8px;}
+.week-badge{display:inline-block;background:#e3f2fd;color:#1976d2;padding:4px 12px;border-radius:15px;font-size:0.85em;font-weight:600;}
+.indicators-toggle{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;padding:12px 15px;border-radius:10px;cursor:pointer;margin:15px 0 10px;font-weight:600;color:#fff;width:100%;transition:all 0.3s;font-size:0.95em;}
+.indicators-toggle:hover{transform:scale(1.02);box-shadow:0 4px 15px rgba(102,126,234,0.4);}
+.indicators-list{display:none;background:#f8f9fa;border-radius:12px;padding:12px;margin:10px 0;max-height:220px;overflow-y:auto;border:1px solid #e0e0e0;}
+.indicators-list.show{display:block;animation:slideDown 0.3s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.indicator-item{display:flex;justify-content:space-between;align-items:center;padding:10px 8px;border-bottom:1px solid #e0e0e0;font-size:0.9em;transition:background 0.2s;}
+.indicator-item:hover{background:#fff;border-radius:6px;}
+.indicator-item:last-child{border-bottom:none;}
+.indicator-number{background:#1976d2;color:white;padding:3px 10px;border-radius:15px;font-size:0.85em;font-weight:bold;margin-left:8px;}
+.indicator-name{color:#555;flex:1;text-align:right;}
+.indicator-status{font-size:0.85em;font-weight:600;}
+.status-done{color:#4caf50;}
+.status-pending{color:#ff9800;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+.stat-box{text-align:center;padding:12px 8px;border-radius:12px;}
+.stat-box.done{background:#e8f5e9;color:#2e7d32;}
+.stat-box.pending{background:#fff3e0;color:#ef6c00;}
+.stat-box.total{background:#e3f2fd;color:#1565c0;}
+.stat-number{font-size:1.6em;font-weight:bold;display:block;}
+.stat-label{font-size:0.8em;margin-top:5px;font-weight:600;}
+.progress-section{margin:20px 0;padding:15px;background:#f8f9fa;border-radius:12px;}
+.progress-item{margin-bottom:15px;}
+.progress-item:last-child{margin-bottom:0;}
+.progress-label{display:flex;justify-content:space-between;margin-bottom:6px;font-weight:600;color:#555;font-size:0.95em;}
+.progress{background:#e0e0e0;height:28px;border-radius:14px;overflow:hidden;position:relative;}
+.bar{height:100%;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:13px;transition:width 1s ease;}
+.bar.high{background:linear-gradient(90deg,#4caf50,#66bb6a);}
+.bar.medium{background:linear-gradient(90deg,#ff9800,#ffb74d);}
+.bar.low{background:linear-gradient(90deg,#f44336,#ef5350);}
+.bar.purple{background:linear-gradient(90deg,#9c27b0,#ab47bc);}
+.summary-box{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:15px;border-radius:12px;margin:15px 0;text-align:center;}
+.summary-box h4{font-size:0.9em;margin-bottom:8px;opacity:0.9;}
+.summary-box .big-number{font-size:2.2em;font-weight:bold;}
+.summary-box .small-text{font-size:0.85em;opacity:0.9;}
+.link-btn{display:block;width:100%;text-align:center;margin-top:15px;background:#2a5298;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:600;transition:all 0.3s ease;border:none;cursor:pointer;}
+.link-btn:hover{background:#1e3c72;transform:scale(1.02);}
+.link-btn.disabled{background:#ccc;color:#888;cursor:not-allowed;}
+.loading{text-align:center;padding:60px 20px;}
+.spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,0.3);border-top-color:#ffd700;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-box{background:#ff5252;color:white;padding:30px;border-radius:15px;text-align:center;margin:20px auto;max-width:500px;}
+.retry-btn{background:#fff;color:#ff5252;border:none;padding:12px 30px;border-radius:25px;cursor:pointer;font-weight:bold;font-size:16px;margin-top:15px;}
+.empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,0.8);}
+.empty-state-icon{font-size:4em;margin-bottom:20px;}
+.last-update{text-align:center;margin-top:30px;padding:15px;background:rgba(255,255,255,0.1);border-radius:10px;font-size:0.9em;}
+.refresh-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:10px;transition:all 0.3s;}
+.refresh-btn:hover{background:rgba(255,255,255,0.3);}
+@media(max-width:768px){header h1{font-size:1.5em;}.grid{grid-template-columns:1fr;}.btn{padding:10px 16px;font-size:14px;}}
 </style>
 </head>
-
 <body>
-
+<div class="container">
+<header>
 <h1>📊 لوحة متابعة المشرفين</h1>
+<p>متابعة تنفيذ المؤشرات الأسبوعية</p>
+</header>
 
-<div id="weeks" class="nav"></div>
+<div class="nav" id="weeks">
+<div class="loading">
+<div class="spinner"></div>
+<p>جاري تحميل البيانات...</p>
+</div>
+</div>
 
-<div id="cards" class="grid">
-  <div class="spinner"></div>
+<div class="grid" id="cards"></div>
+
+<div class="last-update" id="footer" style="display:none;">
+<span>🕐 آخر تحديث: <span id="updateTime">--</span></span>
+<button class="refresh-btn" onclick="loadData()">🔄 تحديث</button>
+</div>
 </div>
 
 <script>
+const SHEET_API = "https://script.google.com/macros/s/AKfycbwX2i4u34RfxhElxcF9lZ1fBCWNbhRiz4igxUudjck17bFHuM0tVr-NU7B-5Anus9bl6g/exec";
+const TOTAL_INDICATORS = 44;
+const ALL_WEEKS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+const WEEK_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
 
-// ⭐ رابط Apps Script الخاص بك
-const API =
-"https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
+let appData = {allData:[], currentWeek:1, lastUpdate:null};
 
-let allData = [];
-let currentWeek = 1;
-
-// ===== جلب البيانات =====
 async function loadData(){
-
-  document.getElementById("cards").innerHTML =
-    '<div class="spinner"></div>';
-
-  try{
-
-    const res = await fetch(API);
-    const data = await res.json();
-
-    allData = data;
-
-    buildWeeks();
-    render();
-
-  }catch(e){
-    document.getElementById("cards").innerHTML =
-      "❌ فشل الاتصال بالخادم";
-    console.error(e);
-  }
+    document.getElementById("weeks").innerHTML=<div class="loading"><div class="spinner"></div><p>جاري الاتصال بالخادم...</p></div>;
+    try{
+        const res = await fetch(SHEET_API);
+        const data = await res.json();
+        appData.allData = data;
+        appData.currentWeek = 1;
+        render();
+        updateTimestamp();
+    }catch(err){
+        console.warn(err);
+        showError("فشل الاتصال بالخادم");
+    }
 }
 
-// ===== أزرار الأسابيع =====
-function buildWeeks(){
-
-  const weeks =
-    [...new Set(allData.map(r => r.week))];
-
-  let html="";
-
-  weeks.forEach(w=>{
-    html += `
-      <button class="btn ${
-        w==currentWeek?'active':''
-      }" onclick="changeWeek(${w})">
-        الأسبوع ${w}
-      </button>`;
-  });
-
-  document.getElementById("weeks").innerHTML = html;
+function updateTimestamp(){
+    document.getElementById("updateTime").textContent=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 
-function changeWeek(w){
-  currentWeek = w;
-  buildWeeks();
-  render();
+function render(){renderWeeks(); renderCards(); document.getElementById("footer").style.display="block";}
+function renderWeeks(){
+    const container=document.getElementById("weeks"); container.innerHTML="";
+    ALL_WEEKS.forEach(weekNum=>{
+        const btn=document.createElement("button");
+        btn.className="btn"+(weekNum===appData.currentWeek?" active":"");
+        btn.textContent=weekNum;
+        btn.title="الأسبوع "+WEEK_NAMES[weekNum];
+        btn.onclick=()=>{appData.currentWeek=weekNum; renderWeeks(); renderCards();};
+        container.appendChild(btn);
+    });
 }
 
-// ===== عرض البطاقات =====
-function render(){
-
-  const data =
-    allData.filter(r => r.week == currentWeek);
-
-  if(!data.length){
-    document.getElementById("cards").innerHTML =
-      "لا توجد بيانات";
-    return;
-  }
-
-  let html="";
-
-  data.forEach(r=>{
-
-    const total = r.done + r.pending || 1;
-    const percent =
-      Math.round(r.done/total*100);
-
-    html += `
-      <div class="card">
-        <h3>${r.name}</h3>
-
-        <div class="progress">
-          <div class="bar" style="width:${percent}%">
-            ${percent}%
-          </div>
-        </div>
-
-        <p>✅ المنجز: ${r.done}</p>
-        <p>⏳ المتبقي: ${r.pending}</p>
-      </div>`;
-  });
-
-  document.getElementById("cards").innerHTML = html;
+function toggleIndicators(index){
+    const list=document.getElementById(indicators-${index});
+    const btn=list.previousElementSibling;
+    if(list.classList.contains('show')){
+        list.classList.remove('show');
+        btn.innerHTML=btn.innerHTML.replace('🔼 إخفاء','📋 عرض').replace('المؤشرات ▲','المؤشرات ▼');
+    }else{
+        list.classList.add('show');
+        btn.innerHTML=btn.innerHTML.replace('📋 عرض','🔼 إخفاء').replace('المؤشرات ▼','المؤشرات ▲');
+    }
 }
 
-loadData();
+function renderCards(){
+    const container=document.getElementById("cards"); container.innerHTML="";
+    if(appData.allData.length===0){
+        container.innerHTML=<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات</h3></div>; return;
+    }
+    const supervisors={};
+    appData.allData.filter(r=>parseInt(r.الأسبوع)===appData.currentWeek).forEach(row=>{
+        const name=row["اسم المشرف"];
+        if(!name) return;
+        if(!supervisors[name]) supervisors[name]={name,doneCount:0,pendingCount:0,totalCount:0,link:row["رابط الاستمارة"]||"#",indicators:[]};
+        const status=row["الحالة"]||"";
+        const count=parseInt(row["عدد المؤشرات"]||1);
+        supervisors[name].totalCount+=count;
+        if(status==="تم التنفيذ") supervisors[name].doneCount+=count;
+        else if(status.includes("جار")) supervisors[name].pendingCount+=count;
+        const inds=(row["المؤشرات المنفذة في الأسبوع"]||"").split(",").filter(x=>x.trim());
+        inds.forEach(num=>supervisors[name].indicators.push({number:num,status}));
+    });
 
-// تحديث تلقائي كل دقيقة
-setInterval(loadData,60000);
+    Object.values(supervisors).sort((a,b)=>a.name.localeCompare(b.name)).forEach((sup,index)=>{
+        const weekPercent=((sup.doneCount/TOTAL_INDICATORS)*100).toFixed(2);
+        const barClass=weekPercent>=70?"high":weekPercent>=40?"medium":"low";
+        const indicatorsHtml=sup.indicators.map(ind=><div class="indicator-item"><span><span class="indicator-number">${ind.number}</span><span class="indicator-name">مؤشر ${ind.number}</span></span><span class="indicator-status ${ind.status==='تم التنفيذ'?'status-done':'status-pending'}">${ind.status==='تم التنفيذ'?'✅ تم':'⏳ جاري'}</span></div>).join('');
+        const card=document.createElement("div");
+        card.className="card";
+        card.innerHTML=`
+        <div class="card-header"><h3>${sup.name}</h3><span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span></div>
+        <button class="indicators-toggle" onclick="toggleIndicators(${index})">📋 عرض المؤشرات (${sup.totalCount}) ▼</button>
+        <div class="indicators-list" id="indicators-${index}">${indicatorsHtml||'<div class="indicator-item">لا توجد مؤشرات</div>'}</div>
+        <div class="stats-grid">
+        <div class="stat-box done"><span class="stat-number">${sup.doneCount}</span><div class="stat-label">✅ تم</div></div>
+        <div class="stat-box pending"><span class="stat-number">${sup.pendingCount}</span><div class="stat-label">⏳ جاري</div></div>
+        <div class="stat-box total"><span class="stat-number">${sup.totalCount}</span><div class="stat-label">📋 هذا الأسبوع</div></div></div>
+        <a href="${sup.link}" target="_blank" class="link-btn ${sup.link=='#'?'disabled':''}">${sup.link=='#'?'🔗 لا يوجد رابط':'🔗 فتح الاستمارة'}</a>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function showError(msg){
+    document.getElementById("weeks").innerHTML=<div class="error-box"><h3>⚠️ ${msg}</h3><button class="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button></div>;
+}
 
 </script>
-
 </body>
 </html>
