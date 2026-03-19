@@ -3,42 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة المؤشرات - تحديث فوري</title>
+    <title>لوحة متابعة المؤشرات</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; padding: 20px; text-align: center; }
-        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; text-align: center; }
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn.active { background: #ff9800; color: white; transform: scale(1.05); }
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); text-align: right; }
-        .card h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .stat { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1em; }
-        .link-btn { display: block; text-align: center; background: #28a745; color: white; text-decoration: none; padding: 10px; border-radius: 8px; margin-top: 15px; font-weight: bold; }
-        #loading { background: white; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 12px 18px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn.active { background: #ff9800; color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); text-align: right; transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); }
+        .card h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; font-size: 1.2em; }
+        .stat-row { display: flex; justify-content: space-between; margin: 12px 0; font-size: 1.05em; color: #444; }
+        .stat-row b { color: #1e3c72; }
+        .link-btn { display: block; text-align: center; background: #28a745; color: white; text-decoration: none; padding: 12px; border-radius: 10px; margin-top: 20px; font-weight: bold; transition: 0.3s; }
+        .link-btn:hover { background: #218838; }
+        #loader { background: white; padding: 40px; border-radius: 20px; display: inline-block; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>لوحة متابعة المؤشرات</h1>
-    <p>تحديث مباشر من قاعدة البيانات</p>
+    <h1>لوحة متابعة المشرفين</h1>
+    <p>نظام التحديث المباشر للبيانات</p>
 </div>
 
 <div id="weeks-nav" class="weeks-nav"></div>
 
-<div id="loading">
-    <h3 id="status-text">⏳ جاري جلب البيانات عبر الاتصال الآمن...</h3>
+<div id="loader">
+    <h3 id="status-text">⏳ جاري الاتصال الآمن بقاعدة البيانات...</h3>
 </div>
 
 <div id="cardsContainer" class="container"></div>
 
 <script>
-    // الرابط الذي نجح في المتصفح لديك
+    // الرابط الذي يعمل لديك حالياً
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
     
-    // استخدام وسيط AllOrigins لتخطي حظر المتصفح (CORS)
+    // الوسيط لتخطي حظر المتصفح (CORS)
     const PROXY_URL = "https://api.allorigins.win/get?url=" + encodeURIComponent(SCRIPT_URL);
 
     let allData = [];
@@ -49,15 +52,15 @@
             const response = await fetch(PROXY_URL);
             const result = await response.json();
             
-            // تحويل البيانات من نص إلى JSON
+            // تحويل المحتوى المستلم من نص إلى بيانات منظمة
             allData = JSON.parse(result.contents);
             
-            document.getElementById('loading').style.display = 'none';
+            document.getElementById('loader').style.display = 'none';
             renderNav();
             renderCards();
         } catch (error) {
             console.error(error);
-            document.getElementById('status-text').innerHTML = "❌ حدث خطأ في الاتصال. يرجى تحديث الصفحة.";
+            document.getElementById('status-text').innerHTML = "❌ تعذر جلب البيانات. يرجى التأكد من اتصالك وتحديث الصفحة.";
         }
     }
 
@@ -77,11 +80,10 @@
         const container = document.getElementById('cardsContainer');
         container.innerHTML = "";
         
-        // تصفية البيانات للأسبوع المختار
         const filtered = allData.filter(row => String(row["الأسابيع"]) === String(currentWeek));
 
         if (filtered.length === 0) {
-            container.innerHTML = <div style="grid-column: 1/-1"><h3>⚠️ لا توجد بيانات مسجلة للأسبوع ${currentWeek}</h3></div>;
+            container.innerHTML = <div style="grid-column: 1/-1"><h3>⚠️ لا توجد بيانات حالية للأسبوع ${currentWeek}</h3></div>;
             return;
         }
 
@@ -89,10 +91,10 @@
             container.innerHTML += `
                 <div class="card">
                     <h3>${item["اسم المشرف"] || "مشرف"}</h3>
-                    <div class="stat"><span>تم التنفيذ:</span> <b>${item["تم التنفيذ"] || 0}</b></div>
-                    <div class="stat"><span>نسبة الأسبوع:</span> <b>${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</b></div>
-                    <div class="stat"><span>الإنجاز الكلي:</span> <b>${Math.round((item["نسبة الكلية"] || 0) * 100)}%</b></div>
-                    <a href="${item["رابط"] || '#'}" target="_blank" class="link-btn">🔗 فتح النموذج</a>
+                    <div class="stat-row"><span>تم التنفيذ:</span> <b>${item["تم التنفيذ"] || 0}</b></div>
+                    <div class="stat-row"><span>نسبة الأسبوع:</span> <b>${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</b></div>
+                    <div class="stat-row"><span>الإنجاز التراكمي:</span> <b>${Math.round((item["نسبة الكلية"] || 0) * 100)}%</b></div>
+                    <a href="${item["رابط"] || '#'}" target="_blank" class="link-btn">📂 عرض النموذج</a>
                 </div>`;
         });
     }
