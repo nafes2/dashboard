@@ -70,15 +70,6 @@ h1{margin-bottom:15px}
   margin:40px auto
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.refresh{
-  margin-top:20px;
-  padding:8px 18px;
-  border:none;
-  border-radius:20px;
-  background:#fff;
-  cursor:pointer
-}
 </style>
 </head>
 
@@ -92,13 +83,11 @@ h1{margin-bottom:15px}
   <div class="spinner"></div>
 </div>
 
-<button class="refresh" onclick="loadData()">🔄 تحديث</button>
-
 <script>
 
-// ⭐ معرف جدولك الصحيح
-const SHEET_ID =
-"17Bf1TEoRC2h_uWlh8ezOEo-Fius5IgVzaIyLU9ByR1o";
+// ⭐ رابط Apps Script الخاص بك
+const API =
+"https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
 
 let allData = [];
 let currentWeek = 1;
@@ -111,25 +100,17 @@ async function loadData(){
 
   try{
 
-    const url =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+    const res = await fetch(API);
+    const data = await res.json();
 
-    const res = await fetch(url);
-    const text = await res.text();
-
-    const json =
-      JSON.parse(text.substring(47).slice(0,-2));
-
-    allData = json.table.rows.map(r =>
-      r.c.map(c => c ? c.v : "")
-    );
+    allData = data;
 
     buildWeeks();
     render();
 
   }catch(e){
     document.getElementById("cards").innerHTML =
-      "❌ فشل الاتصال بالجدول";
+      "❌ فشل الاتصال بالخادم";
     console.error(e);
   }
 }
@@ -137,7 +118,8 @@ async function loadData(){
 // ===== أزرار الأسابيع =====
 function buildWeeks(){
 
-  const weeks = [...new Set(allData.map(r => r[1]))];
+  const weeks =
+    [...new Set(allData.map(r => r.week))];
 
   let html="";
 
@@ -162,11 +144,12 @@ function changeWeek(w){
 // ===== عرض البطاقات =====
 function render(){
 
-  const data = allData.filter(r => r[1]==currentWeek);
+  const data =
+    allData.filter(r => r.week == currentWeek);
 
   if(!data.length){
     document.getElementById("cards").innerHTML =
-      "لا توجد بيانات لهذا الأسبوع";
+      "لا توجد بيانات";
     return;
   }
 
@@ -174,15 +157,13 @@ function render(){
 
   data.forEach(r=>{
 
-    const name = r[0];
-    const done = Number(r[2] || 0);
-    const pending = Number(r[3] || 0);
-    const total = done + pending || 1;
-    const percent = Math.round(done/total*100);
+    const total = r.done + r.pending || 1;
+    const percent =
+      Math.round(r.done/total*100);
 
     html += `
       <div class="card">
-        <h3>${name}</h3>
+        <h3>${r.name}</h3>
 
         <div class="progress">
           <div class="bar" style="width:${percent}%">
@@ -190,8 +171,8 @@ function render(){
           </div>
         </div>
 
-        <p>✅ المنجز: ${done}</p>
-        <p>⏳ المتبقي: ${pending}</p>
+        <p>✅ المنجز: ${r.done}</p>
+        <p>⏳ المتبقي: ${r.pending}</p>
       </div>`;
   });
 
