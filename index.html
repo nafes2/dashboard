@@ -1,100 +1,105 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة متابعة المشرفين</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; min-height: 100vh; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { text-align: center; padding: 20px 0; margin-bottom: 20px; }
-        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
-        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.3s; font-size: 1.1em; }
-        .btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; box-shadow: 0 5px 15px rgba(255,215,0,0.4); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-        .card { background: #fff; color: #333; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-top: 5px solid #4caf50; transition: 0.3s; }
-        .card:hover { transform: translateY(-5px); }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
-        .stat-box { text-align: center; padding: 10px 5px; border-radius: 12px; font-size: 0.85em; }
-        .stat-box.done { background: #e8f5e9; color: #2e7d32; }
-        .stat-box.pending { background: #fff3e0; color: #ef6c00; }
-        .stat-box.failed { background: #ffebee; color: #c62828; }
-        .stat-number { font-size: 1.4em; font-weight: bold; display: block; }
-        .percent-section { background: #f8f9fa; padding: 15px; border-radius: 12px; }
-        .progress-bar { background: #e0e0e0; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        .fill { height: 100%; background: #4caf50; transition: width 1s; width: 0%; }
-        .link-btn { display: block; width: 100%; text-align: center; margin-top: 15px; background: #2a5298; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; }
-        #status { text-align:center; padding:50px; font-size: 1.2em; color: rgba(255,255,255,0.8); }
+        :root { --primary: #1e3c72; --secondary: #2a5298; --success: #28a745; --warning: #ffc107; --danger: #dc3545; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; margin: 0; padding: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn.active { background: var(--primary); color: white; }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; text-align: center; }
+        .stat-box { padding: 10px; border-radius: 8px; font-size: 0.9em; }
+        .done { background: #e8f5e9; color: var(--success); }
+        .pending { background: #fffde7; color: #f57f17; }
+        .failed { background: #ffebee; color: var(--danger); }
+        .stat-number { display: block; font-size: 1.4em; font-weight: bold; }
+        .percent-section { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 0.9em; }
+        .link-btn { display: block; text-align: center; background: var(--primary); color: white; text-decoration: none; padding: 10px; border-radius: 8px; margin-top: 15px; transition: 0.3s; }
+        .link-btn:hover { background: var(--secondary); }
+        #loading { text-align: center; font-size: 1.2em; color: var(--primary); margin-top: 50px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header><h1>📊 لوحة متابعة المشرفين</h1><p>تحديث فوري من صفحة Dashboard</p></header>
-        <div class="nav" id="weeks"></div>
-        <div class="grid" id="cards"></div>
-        <div id="status">جاري جلب البيانات...</div>
-    </div>
-    <script>
-        // ✅ ضع الرابط الجديد الذي ينتهي بـ /exec هنا
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWST9GaR_UyF5Jq6E-ww8q-gPEQPkzzQFAUXYxs8MVoLJ2KpE1Yygf97U3XcK6TMf71A/exec";
-        let appData = { allData: [], currentWeek: 5 }; // الأسبوع الافتراضي: 5
 
-        async function loadData() {
-            try {
-                const response = await fetch(SCRIPT_URL);
-                if (!response.ok) throw new Error("فشل الشبكة");
-                appData.allData = await response.json();
-                document.getElementById("status").style.display = "none";
+<div class="header">
+    <h1>لوحة متابعة المشرفين</h1>
+    <p>تحديث فوري من صفحة Dashboard</p>
+</div>
+
+<div id="weeks" class="weeks-nav"></div>
+
+<div id="loading">جاري جلب البيانات...</div>
+<div id="cardsContainer" class="container"></div>
+
+<script>
+    // 1. ضع رابط الـ exec الخاص بك هنا بين علامتي التنصيص
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMreXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
+
+    let appData = { allData: [], currentWeek: 5 };
+
+    async function fetchData() {
+        try {
+            const response = await fetch(SCRIPT_URL);
+            appData.allData = await response.json();
+            document.getElementById('loading').style.display = 'none';
+            render();
+        } catch (error) {
+            document.getElementById('loading').innerHTML = "❌ خطأ في تحميل البيانات. تأكد من إعدادات النشر في جوجل.";
+        }
+    }
+
+    function render() {
+        const nav = document.getElementById("weeks");
+        nav.innerHTML = "";
+        // إنشاء أزرار الأسابيع من 1 إلى 15
+        for(let i=1; i<=15; i++) {
+            const btn = document.createElement("button");
+            btn.className = btn ${i === appData.currentWeek ? 'active' : ''};
+            btn.textContent = i;
+            btn.onclick = () => {
+                appData.currentWeek = i;
                 render();
-            } catch (err) {
-                document.getElementById("status").innerHTML = "❌ خطأ في تحميل البيانات. تأكد من نشر السكريبت كـ Anyone.";
-            }
+            };
+            nav.appendChild(btn);
         }
 
-        function render() {
-            const nav = document.getElementById("weeks");
-            nav.innerHTML = "";
-            for(let i=1; i<=15; i++) {
-                const btn = document.createElement("button");
-                btn.className = "btn" + (i === appData.currentWeek ? " active" : "");
-                btn.textContent = i;
-                btn.onclick = () => { appData.currentWeek = i; render(); };
-                nav.appendChild(btn);
-            }
-            const container = document.getElementById("cards");
-            container.innerHTML = "";
-            
-            // ✅ الفلترة تعتمد على الأرقام المجردة (1-15)
-            const weekData = appData.allData.filter(row => String(row["الأسابيع"]) === String(appData.currentWeek));
-            
-            if (weekData.length === 0) {
-                container.innerHTML = <div style="text-align:center; grid-column: 1/-1; padding: 30px;">لا توجد بيانات للأسبوع ${appData.currentWeek} في صفحة Dashboard.</div>;
-                return;
-            }
+        const container = document.getElementById("cardsContainer");
+        container.innerHTML = "";
 
-            weekData.forEach(sup => {
-                const weekP = sup["نسبة الأسبوع"] || 0;
-                const totalP = sup["نسبة الكلية"] || 0;
-                container.innerHTML += `
-                    <div class="card">
-                        <div style="text-align:center; margin-bottom:15px; color:#1e3c72;"><h3>${sup["اسم المشرف"]}</h3></div>
-                        <div class="stats-grid">
-                            <div class="stat-box done"><span class="stat-number">${sup["تم التنفيذ"] || 0}</span>تم</div>
-                            <div class="stat-box pending"><span class="stat-number">${sup["جار التنفيذ"] || 0}</span>جاري</div>
-                            <div class="stat-box failed"><span class="stat-number">${sup["لم ينفذ"] || 0}</span>لم ينفذ</div>
-                        </div>
-                        <div class="percent-section">
-                            <div style="font-size:0.8em; display:flex; justify-content:space-between;"><span>إنجاز الأسبوع</span><span>${weekP}</span></div>
-                            <div class="progress-bar"><div class="fill" style="width:${parseFloat(weekP)}%"></div></div>
-                            <div style="font-size:0.8em; display:flex; justify-content:space-between; margin-top:10px;"><span>التراكمي (44)</span><span>${totalP}</span></div>
-                            <div class="progress-bar"><div class="fill" style="width:${parseFloat(totalP)}%; background:#9c27b0;"></div></div>
-                        </div>
-                        <a href="${sup["رابط"] || '#'}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
-                    </div>`;
-            });
+        // تصفية البيانات بناءً على رقم الأسبوع المختار
+        const weekData = appData.allData.filter(row => String(row["الأسابيع"]) === String(appData.currentWeek));
+
+        if (weekData.length === 0) {
+            container.innerHTML = <div style="grid-column: 1/-1; text-align:center; padding:50px;">لا توجد بيانات للأسبوع ${appData.currentWeek}</div>;
+            return;
         }
-        loadData();
-    </script>
+
+        weekData.forEach(sup => {
+            container.innerHTML += `
+                <div class="card">
+                    <div style="text-align:center; margin-bottom:15px; color:#1e3c72;"><h3>${sup["اسم المشرف"]}</h3></div>
+                    <div class="stats-grid">
+                        <div class="stat-box done"><span class="stat-number">${sup["تم التنفيذ"] || 0}</span> تم</div>
+                        <div class="stat-box pending"><span class="stat-number">${sup["جار التنفيذ"] || 0}</span> جارٍ</div>
+                        <div class="stat-box failed"><span class="stat-number">${sup["لم ينفذ"] || 0}</span> لم ينفذ</div>
+                    </div>
+                    <div class="percent-section">
+                        <p>🔹 نسبة الأسبوع: <strong>${sup["نسبة الأسبوع"] || '0%'}</strong></p>
+                        <p>📊 النسبة الكلية: <strong>${sup["نسبة الكلية"] || '0%'}</strong></p>
+                    </div>
+                    <a href="${sup["رابط"] || '#'}" target="_blank" class="link-btn">🔗 عرض الاستمارة</a>
+                </div>`;
+        });
+    }
+
+    fetchData();
+</script>
+
 </body>
 </html>
