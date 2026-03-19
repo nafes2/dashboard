@@ -2,38 +2,33 @@
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين الذكية</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>لوحة متابعة المشرفين</title>
 <style>
-/* التنسيقات العامة */
-* { box-sizing: border-box; margin:0; padding:0; }
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:20px; }
+/* تنسيقات محسنة للجوال */
+* { box-sizing: border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:15px; }
 .container { max-width:1200px; margin:0 auto; }
-header { text-align:center; padding:20px 0; }
-header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
-.nav { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:25px 0; }
-.btn { background: rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); color:#fff; padding:12px 18px; border-radius:25px; cursor:pointer; font-weight:600; transition: 0.3s; }
-.btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; box-shadow:0 4px 15px rgba(255,215,0,0.4); }
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
-.card { background:#fff; color:#333; border-radius:20px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.3); position:relative; overflow:hidden; }
-.card-header { text-align:center; margin-bottom:15px; border-bottom:2px solid #f0f0f0; padding-bottom:10px; }
-.card-header h3 { color:#1e3c72; }
-.indicators-toggle { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); border:none; padding:10px; border-radius:10px; cursor:pointer; color:#fff; width:100%; margin-bottom:10px; font-weight:bold; }
-.indicators-list { display:none; background:#f8f9fa; border-radius:10px; padding:10px; margin-bottom:10px; max-height:150px; overflow-y:auto; border:1px solid #ddd; }
-.indicators-list.show { display:block; }
-.indicator-item { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #eee; font-size:0.9em; }
-.status-done { color:#4caf50; font-weight:bold; }
-.status-pending { color:#ff9800; font-weight:bold; }
-.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:15px 0; }
-.stat-box { text-align:center; padding:10px; border-radius:10px; }
+header { text-align:center; padding:15px 0; }
+header h1 { font-size:1.6em; margin-bottom:8px; }
+.nav { display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin:20px 0; }
+.btn { background: rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:10px 5px; border-radius:12px; cursor:pointer; font-weight:600; font-size:14px; transition: 0.3s; }
+.btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; box-shadow:0 4px 12px rgba(255,215,0,0.3); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
+.card { background:#fff; color:#333; border-radius:18px; padding:20px; box-shadow:0 8px 25px rgba(0,0,0,0.2); }
+.card-header { text-align:center; margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px; }
+.card-header h3 { color:#1e3c72; font-size:1.2em; }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:15px 0; }
+.stat-box { text-align:center; padding:8px; border-radius:10px; }
 .stat-box.done { background:#e8f5e9; color:#2e7d32; }
 .stat-box.pending { background:#fff3e0; color:#ef6c00; }
 .stat-box.total { background:#e3f2fd; color:#1565c0; }
-.stat-number { font-size:1.4em; font-weight:bold; display:block; }
-.link-btn { display:block; text-align:center; background:#2a5298; color:#fff; padding:12px; border-radius:10px; text-decoration:none; font-weight:bold; }
-.link-btn.disabled { background:#ccc; cursor:not-allowed; }
-.loading { text-align:center; padding:50px; }
-.error-box { background:#ff5252; padding:20px; border-radius:10px; text-align:center; }
+.stat-number { font-size:1.2em; font-weight:bold; display:block; }
+.stat-label { font-size:0.75em; font-weight:600; }
+.link-btn { display:block; text-align:center; background:#2a5298; color:#fff; padding:12px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:0.9em; margin-top:10px; }
+.loading { text-align:center; padding:40px; }
+.error-box { background:#ff5252; padding:20px; border-radius:12px; text-align:center; margin:10px; }
+.retry-btn { background:#fff; color:#ff5252; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -41,61 +36,67 @@ header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,
 <div class="container">
   <header>
     <h1>📊 لوحة متابعة المشرفين</h1>
-    <p>تحديث تلقائي من جوجل شيت</p>
+    <p style="font-size:0.9em; opacity:0.8;">تحديث تلقائي من جوجل شيت</p>
   </header>
 
   <div class="nav" id="weeks"></div>
-  <div class="grid" id="cards">
-    <div class="loading">جاري جلب البيانات...</div>
+  <div id="cards_container">
+    <div class="grid" id="cards">
+      <div class="loading">جاري الاتصال بقاعدة البيانات...</div>
+    </div>
   </div>
 </div>
 
 <script>
-// إعدادات الربط
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const PROXY = "https://api.allorigins.win/raw?url=";
-const TOTAL_INDICATORS = 44;
-const WEEK_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
+// الرابط المباشر لملف الـ CSV
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+
+// قائمة الوسطاء (Proxies) لضمان العمل على الجوال
+const PROXIES = [
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?",
+  "" // محاولة أخيرة بدون وسيط
+];
 
 let appData = { allData: [], currentWeek: 5 };
 
-// دالة تحويل "الأسبوع الخامس" إلى رقم 5
-function weekTextToNumber(text) {
-  if (!text) return null;
-  const t = text.toString().trim();
-  const num = parseInt(t.replace(/[^0-9]/g, ''));
-  if (!isNaN(num)) return num;
-  for (let [key, val] of Object.entries(WEEK_NAMES)) {
-    if (t.includes(val)) return parseInt(key);
+async function loadData(proxyIndex = 0) {
+  if (proxyIndex === 0) {
+    document.getElementById("cards").innerHTML = `<div class="loading">جاري المزامنة...</div>`;
   }
-  return null;
-}
 
-// دالة البحث عن العمود الصحيح
-function findCol(sample, names) {
-  const keys = Object.keys(sample);
-  for (let name of names) {
-    const found = keys.find(k => k.trim().includes(name));
-    if (found) return found;
-  }
-  return keys[0];
-}
-
-async function loadData() {
   try {
-    const res = await fetch(PROXY + encodeURIComponent(SHEET_URL + "&t=" + Date.now()));
+    const timestamp = new Date().getTime();
+    const targetUrl = CSV_URL + "&cb=" + timestamp;
+    const finalUrl = PROXIES[proxyIndex] + encodeURIComponent(targetUrl);
+    
+    const res = await fetch(proxyIndex === 2 ? targetUrl : finalUrl);
+    if (!res.ok) throw new Error();
+    
     const text = await res.text();
+    if (text.length < 50) throw new Error();
+
     appData.allData = parseCSV(text);
     render();
   } catch (err) {
-    document.getElementById("cards").innerHTML = `<div class="error-box">حدث خطأ في الاتصال</div>`;
+    // إذا فشل الوسيط الأول، جرب الوسيط الثاني تلقائياً
+    if (proxyIndex < PROXIES.length - 1) {
+      console.log("التبديل لوسيط بيانات آخر...");
+      loadData(proxyIndex + 1);
+    } else {
+      document.getElementById("cards").innerHTML = `
+        <div class="error-box">
+          <p>⚠️ تعذر الاتصال بالبيانات من الجوال</p>
+          <button class="retry-btn" onclick="location.reload()">🔄 إعادة تحميل الصفحة</button>
+        </div>`;
+    }
   }
 }
 
 function parseCSV(csv) {
-  const lines = csv.split('\n');
+  const lines = csv.split(/\r?\n/);
   const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-  return lines.slice(1).map(line => {
+  return lines.slice(1).filter(l => l.length > 5).map(line => {
     const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
     let row = {};
     headers.forEach((h, i) => row[h] = values[i] || "");
@@ -103,42 +104,39 @@ function parseCSV(csv) {
   });
 }
 
+function weekTextToNumber(text) {
+  if (!text) return null;
+  const t = text.toString().trim();
+  const num = parseInt(t.replace(/[^0-9]/g, ''));
+  if (!isNaN(num)) return num;
+  const names = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر"];
+  for(let i=0; i<names.length; i++) { if(t.includes(names[i])) return i+1; }
+  return null;
+}
+
 function render() {
-  renderWeeks();
-  renderCards();
-}
-
-function renderWeeks() {
-  const container = document.getElementById("weeks");
-  container.innerHTML = "";
-  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(num => {
+  const nav = document.getElementById("weeks");
+  nav.innerHTML = "";
+  for(let i=1; i<=15; i++) {
     const btn = document.createElement("button");
-    btn.className = "btn" + (num === appData.currentWeek ? " active" : "");
-    btn.textContent = num;
-    btn.onclick = () => { appData.currentWeek = num; render(); };
-    container.appendChild(btn);
-  });
-}
+    btn.className = "btn" + (i === appData.currentWeek ? " active" : "");
+    btn.textContent = i;
+    btn.onclick = () => { appData.currentWeek = i; render(); };
+    nav.appendChild(btn);
+  }
 
-function toggleIndicators(idx) {
-  const el = document.getElementById(`list-${idx}`);
-  el.classList.toggle('show');
-}
-
-function renderCards() {
   const container = document.getElementById("cards");
   container.innerHTML = "";
   
   const sample = appData.allData[0];
-  const nameCol = findCol(sample, ["اسم المشرف", "المشرف"]);
-  const weekCol = findCol(sample, ["الأسابيع", "الأسبوع"]);
-  const statusCol = findCol(sample, ["الحالة"]);
-  const indCol = findCol(sample, ["المؤشر", "رقم المؤشر"]);
+  const nameCol = Object.keys(sample).find(k => k.includes("اسم المشرف")) || Object.keys(sample)[1];
+  const weekCol = Object.keys(sample).find(k => k.includes("الأسبوع")) || Object.keys(sample)[0];
+  const statusCol = Object.keys(sample).find(k => k.includes("الحالة")) || "";
 
   const weekData = appData.allData.filter(row => weekTextToNumber(row[weekCol]) === appData.currentWeek);
 
   if (weekData.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px;"><h3>لا توجد بيانات للأسبوع ${appData.currentWeek}</h3></div>`;
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; opacity:0.8;">لا توجد بيانات للأسبوع ${appData.currentWeek}</div>`;
     return;
   }
 
@@ -146,41 +144,22 @@ function renderCards() {
   weekData.forEach(row => {
     const name = row[nameCol];
     if (!name) return;
-    if (!supervisors[name]) supervisors[name] = { name, done:0, pending:0, total:0, indicators:[], link:"#" };
-    
-    const status = row[statusCol];
-    const inds = (row[indCol] || "").split(',').filter(x => x.trim());
-    const count = inds.length || 1;
-
-    supervisors[name].total += count;
-    if (status === "تم التنفيذ") {
-      supervisors[name].done += count;
-      inds.forEach(n => supervisors[name].indicators.push({n, s:'done'}));
-    } else {
-      supervisors[name].pending += count;
-      inds.forEach(n => supervisors[name].indicators.push({n, s:'pending'}));
-    }
-
-    for (let v of Object.values(row)) { if(v.startsWith("http")) supervisors[name].link = v; }
+    if (!supervisors[name]) supervisors[name] = { name, done:0, pending:0, total:0, link:"#" };
+    supervisors[name].total++;
+    if (row[statusCol] === "تم التنفيذ") supervisors[name].done++;
+    else supervisors[name].pending++;
+    for (let v of Object.values(row)) { if(v.toString().startsWith("http")) supervisors[name].link = v; }
   });
 
-  Object.values(supervisors).forEach((sup, i) => {
+  Object.values(supervisors).forEach(sup => {
     const card = document.createElement("div");
     card.className = "card";
-    const indHtml = sup.indicators.map(ind => `
-      <div class="indicator-item">
-        <span>مؤشر ${ind.n}</span>
-        <span class="${ind.s === 'done' ? 'status-done' : 'status-pending'}">${ind.s === 'done' ? '✅' : '⏳'}</span>
-      </div>`).join('');
-
     card.innerHTML = `
       <div class="card-header"><h3>${sup.name}</h3></div>
-      <button class="indicators-toggle" onclick="toggleIndicators(${i})">📋 المؤشرات (${sup.total})</button>
-      <div class="indicators-list" id="list-${i}">${indHtml}</div>
       <div class="stats-grid">
-        <div class="stat-box done"><span class="stat-number">${sup.done}</span>تم</div>
-        <div class="stat-box pending"><span class="stat-number">${sup.pending}</span>جاري</div>
-        <div class="stat-box total"><span class="stat-number">${sup.total}</span>المجموع</div>
+        <div class="stat-box done"><span class="stat-number">${sup.done}</span><span class="stat-label">تم</span></div>
+        <div class="stat-box pending"><span class="stat-number">${sup.pending}</span><span class="stat-label">جاري</span></div>
+        <div class="stat-box total"><span class="stat-number">${sup.total}</span><span class="stat-label">المجموع</span></div>
       </div>
       <a href="${sup.link}" target="_blank" class="link-btn ${sup.link==='#'?'disabled':''}">🔗 فتح الرابط</a>`;
     container.appendChild(card);
