@@ -1,1 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة متابعة المشرفين</title>
+    <style>
+        :root { --primary: #1e3c72; --secondary: #2a5298; --success: #28a745; --warning: #ffc107; --danger: #dc3545; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; margin: 0; padding: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 16px; }
+        .btn.active { background: #ff9800; color: white; transform: scale(1.1); }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); border-top: 6px solid var(--primary); transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; text-align: center; }
+        .stat-box { padding: 10px; border-radius: 8px; }
+        .done { background: #e8f5e9; color: var(--success); }
+        .pending { background: #fffde7; color: #f57f17; }
+        .failed { background: #ffebee; color: var(--danger); }
+        .stat-number { display: block; font-size: 1.5em; font-weight: bold; }
+        .percent-section { background: #f0f4f8; padding: 15px; border-radius: 10px; margin-top: 15px; }
+        .link-btn { display: block; text-align: center; background: var(--primary); color: white; text-decoration: none; padding: 12px; border-radius: 8px; margin-top: 15px; font-weight: bold; }
+        #loading { text-align: center; font-size: 1.3em; color: var(--primary); margin-top: 60px; padding: 20px; background: white; border-radius: 10px; display: block; }
+    </style>
+</head>
+<body>
 
+<div class="header">
+    <h1>لوحة متابعة المؤشرات</h1>
+    <p>تحديث فوري مباشر من البيانات</p>
+</div>
+
+<div id="weeks" class="weeks-nav"></div>
+
+<div id="loading">⏳ جاري جلب البيانات من نظام جوجل.. يرجى الانتظار</div>
+<div id="cardsContainer" class="container"></div>
+
+<script>
+    // الرابط الذي قمنا بتصحيحه معاً
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
+
+    let appData = { allData: [], currentWeek: 5 };
+
+    async function fetchData() {
+        try {
+            // إضافة رمز عشوائي للرابط لضمان عدم التعليق (Cache Buster)
+            const response = await fetch(SCRIPT_URL + "?nocache=" + new Date().getTime());
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                appData.allData = data;
+                document.getElementById('loading').style.display = 'none';
+                render();
+            } else {
+                document.getElementById('loading').innerHTML = "⚠️ لا توجد بيانات حالياً في الجدول.";
+            }
+        } catch (error) {
+            console.error(error);
+            document.getElementById('loading').innerHTML = "❌ فشل جلب البيانات. تأكد من تفعيل 'Anyone' في جوجل سكريبت.";
+        }
+    }
+
+    function render() {
+        const nav = document.getElementById("weeks");
+        nav.innerHTML = "";
+        
+        // إنشاء أزرار الأسابيع
+        for(let i=1; i<=15; i++) {
+            const btn = document.createElement("button");
+            btn.className = btn ${i == appData.currentWeek ? 'active' : ''};
+            btn.textContent = "الأسبوع " + i;
+            btn.onclick = () => {
+                appData.currentWeek = i;
+                render();
+            };
+            nav.appendChild(btn);
+        }
+
+        const container = document.getElementById("cardsContainer");
+        container.innerHTML = "";
+
+        // تصفية البيانات (تأكد أن العمود الأول في جوجل اسمه "الأسابيع")
+        const weekData = appData.allData.filter(row => String(row["الأسابيع"]) === String(appData.currentWeek));
+
+        if (weekData.length === 0) {
+            container.innerHTML = <div style="grid-column: 1/-1; text-align:center; padding:50px; background:white; border-radius:15px;">لا توجد بيانات مسجلة للأسبوع رقم ${appData.currentWeek}</div>;
+            return;
+        }
+
+        weekData.forEach(sup => {
+            container.innerHTML += `
+                <div class="card">
+                    <div style="text-align:center; margin-bottom:15px; color:#1e3c72; border-bottom:1px solid #eee; padding-bottom:10px;">
+                        <h2 style="margin:0;">${sup["اسم المشرف"] || 'غير معروف'}</h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box done"><span class="stat-number">${sup["تم التنفيذ"] || 0}</span> تم</div>
+                        <div class="stat-box pending"><span class="stat-number">${sup["جار التنفيذ"] || 0}</span> جارٍ</div>
+                        <div class="stat-box failed"><span class="stat-number">${sup["لم ينفذ"] || 0}</span> متبقي</div>
+                    </div>
+                    <div class="percent-section">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span>إنجاز الأسبوع:</span>
+                            <span style="font-weight:bold; color:var(--primary);">${sup["نسبة الأسبوع"] || '0%'}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>الإنجاز الكلي:</span>
+                            <span style="font-weight:bold; color:var(--success);">${sup["نسبة الكلية"] || '0%'}</span>
+                        </div>
+                    </div>
+                    <a href="${sup["رابط"] || '#'}" target="_blank" class="link-btn">🔗 فتح نموذج المتابعة</a>
+                </div>`;
+        });
+    }
+
+    // بدء الجلب عند فتح الصفحة
+    fetchData();
+</script>
+
+</body>
+</html>
