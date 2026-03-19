@@ -5,121 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة متابعة المشرفين</title>
     <style>
-        :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; min-height: 100vh; padding: 15px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 20px; }
-        .nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
-        .btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px 5px; border-radius: 12px; cursor: pointer; font-weight: bold; }
-        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
-        .card { background: #fff; color: #333; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .card h3 { color: var(--primary); text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .s-box { text-align: center; padding: 12px; border-radius: 12px; }
-        .s-done { background: #e8f5e9; color: #2e7d32; }
-        .s-pend { background: #fff3e0; color: #ef6c00; }
-        .s-tot { background: #e3f2fd; color: #1565c0; }
-        .s-num { font-size: 1.5rem; font-weight: bold; display: block; }
-        .s-lbl { font-size: 0.8rem; font-weight: bold; }
-        .total-banner { background: #6a11cb; color: #fff; border-radius: 15px; padding: 15px; text-align: center; margin-bottom: 15px; }
-        .prog-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: #555; }
-        .prog-bg { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; }
-        .prog-fill { height: 100%; transition: width 0.8s ease; }
-        .link-btn { display: block; background: var(--primary); color: #fff; text-align: center; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; }
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #1e3c72; color: #fff; margin: 0; padding: 15px; }
+        .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin: 20px 0; }
+        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; padding: 10px; border-radius: 10px; cursor: pointer; min-width: 45px; }
+        .btn.active { background: #ffd700; color: #1e3c72; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .card { background: #fff; color: #333; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .card h3 { margin: 0 0 15px 0; color: #1e3c72; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .stat-row { display: flex; justify-content: space-between; margin: 8px 0; font-weight: bold; }
+        .progress-container { margin: 15px 0; text-align: right; }
+        .progress-bar { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { height: 100%; width: 0%; transition: width 0.5s; }
+        .total-box { background: #f0f4ff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #d1d9ff; text-align: center; }
+        .link-btn { display: block; background: #2a5298; color: #fff; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header><h1>📊 لوحة متابعة المشرفين</h1><p>تحديث تلقائي من جوجل شيت</p></header>
+    <h2 style="text-align:center;">📊 لوحة متابعة المشرفين</h2>
     <div class="nav" id="weeksNav"></div>
-    <div id="cards" class="grid"><div style="text-align:center; padding:50px;">جاري المزامنة...</div></div>
-</div>
+    <div class="grid" id="cardsContainer">جارِ التحميل...</div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const PROXY = "https://api.allorigins.win/raw?url=";
-let db = [];
-let currentW = 1;
+let allData = [];
+let currentWeek = 5; // الأسبوع الحالي
 
-async function load() {
+async function loadData() {
     try {
-        const r = await fetch(PROXY + encodeURIComponent(CSV_URL + "&cb=" + Date.now()));
-        const t = await r.text();
-        const lines = t.split('\n').filter(l => l.trim() !== "");
-        const heads = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        db = lines.slice(1).map(l => {
-            const c = l.split(',').map(v => v.trim().replace(/"/g, ''));
-            let o = {}; heads.forEach((h, i) => o[h] = c[i]); return o;
+        const res = await fetch(PROXY + encodeURIComponent(SHEET_CSV + "&t=" + Date.now()));
+        const text = await res.text();
+        const lines = text.split("\n").filter(l => l.trim() !== "");
+        const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+        
+        allData = lines.slice(1).map(line => {
+            const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = values[i]);
+            return obj;
         });
         render();
-    } catch (e) { document.getElementById("cards").innerHTML = "خطأ في الاتصال"; }
-}
-
-function getWeekNum(str) {
-    if (!str) return 0;
-    const map = {"الأول":1,"الثاني":2,"الثالث":3,"الرابع":4,"الخامس":5,"السادس":6,"السابع":7,"الثامن":8,"التاسع":9,"العاشر":10};
-    for (let key in map) if (str.includes(key)) return map[key];
-    const n = str.replace(/[^0-9]/g, "");
-    return n ? parseInt(n) : 0;
+    } catch (e) {
+        document.getElementById("cardsContainer").innerHTML = "حدث خطأ في الاتصال بالبيانات";
+    }
 }
 
 function render() {
-    const nav = document.getElementById("weeksNav"); nav.innerHTML = "";
+    const nav = document.getElementById("weeksNav");
+    nav.innerHTML = "";
     for(let i=1; i<=15; i++) {
-        const btn = document.createElement("button");
-        btn.className = `btn ${i === currentW ? 'active' : ''}`;
-        btn.textContent = i;
-        btn.onclick = () => { currentW = i; render(); };
-        nav.appendChild(btn);
+        const b = document.createElement("button");
+        b.className = `btn ${i === currentWeek ? 'active' : ''}`;
+        b.textContent = i;
+        b.onclick = () => { currentWeek = i; render(); };
+        nav.appendChild(b);
     }
 
-    const container = document.getElementById("cards"); container.innerHTML = "";
-    const nCol = Object.keys(db[0]).find(k => k.includes("اسم المشرف"));
-    const wCol = Object.keys(db[0]).find(k => k.includes("الأسبوع"));
-    const sCol = Object.keys(db[0]).find(k => k.includes("الحالة"));
+    const container = document.getElementById("cardsContainer");
+    container.innerHTML = "";
 
-    const names = [...new Set(db.map(d => d[nCol]))].filter(n => n);
+    const nameCol = Object.keys(allData[0]).find(k => k.includes("اسم المشرف"));
+    const weekCol = Object.keys(allData[0]).find(k => k.includes("الأسبوع"));
+    const statusCol = Object.keys(allData[0]).find(k => k.includes("الحالة"));
+
+    const names = [...new Set(allData.map(r => r[nameCol]))].filter(n => n);
 
     names.forEach(name => {
-        const allRows = db.filter(r => r[nCol] === name);
-        const totDone = allRows.filter(r => r[sCol] === "تم التنفيذ").length;
-        const wRows = allRows.filter(r => getWeekNum(r[wCol]) === currentW);
+        const myRows = allData.filter(r => r[nameCol] === name);
+        const totalDone = myRows.filter(r => r[statusCol] === "تم التنفيذ").length;
+        
+        // البحث عن الأسبوع سواء كان رقماً أو نصاً
+        const weekRows = myRows.filter(r => {
+            const val = r[weekCol] || "";
+            return val.includes(currentWeek.toString());
+        });
 
-        if (wRows.length > 0) {
-            const wDone = wRows.filter(r => r[sCol] === "تم التنفيذ").length;
-            const wTot = wRows.length;
-            const wP = ((wDone/wTot)*100).toFixed(1);
-            const tP = ((totDone/44)*100).toFixed(1);
-            let link = "#"; for(let v of Object.values(wRows[0])) if(v.includes("http")) link = v;
+        if (weekRows.length > 0) {
+            const wDone = weekRows.filter(r => r[statusCol] === "تم التنفيذ").length;
+            const wTotal = weekRows.length;
+            const wPerc = ((wDone / wTotal) * 100).toFixed(1);
+            const tPerc = ((totalDone / 44) * 100).toFixed(1);
+            let link = "#";
+            for(let key in weekRows[0]) { if(weekRows[0][key].startsWith("http")) link = weekRows[0][key]; }
 
             const card = document.createElement("div");
             card.className = "card";
             card.innerHTML = `
                 <h3>${name}</h3>
-                <div class="stats">
-                    <div class="s-box s-done"><span class="s-num">${wDone}</span><span class="s-lbl">✅ تم</span></div>
-                    <div class="s-box s-pend"><span class="s-num">${wTot - wDone}</span><span class="s-lbl">⏳ جاري</span></div>
-                    <div class="s-box s-tot"><span class="s-num">${wTot}</span><span class="s-lbl">📋 الأسبوع ${currentW}</span></div>
+                <div class="stat-row"><span>✅ تم التنفيذ:</span><span>${wDone}</span></div>
+                <div class="stat-row"><span>⏳ جاري التنفيذ:</span><span>${wTotal - wDone}</span></div>
+                <div class="stat-row"><span>📋 إجمالي الأسبوع:</span><span>${wTotal}</span></div>
+                
+                <div class="progress-container">
+                    <div style="display:flex; justify-content:space-between; font-size:12px;">
+                        <span>إنجاز الأسبوع ${currentWeek}</span><span>${wPerc}%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${wPerc}%; background:#4caf50;"></div></div>
                 </div>
-                <div class="total-banner">
-                    <div style="font-size:0.85rem; opacity:0.9;">إجمالي المؤشرات المنفذة (تراكمي)</div>
-                    <div style="font-size:2rem; font-weight:bold;">${totDone}</div>
-                    <div style="font-size:0.8rem;">من أصل 44 مؤشر (${tP}%)</div>
+
+                <div class="total-box">
+                    <div style="font-size:14px; font-weight:bold; color:#1e3c72; margin-bottom:5px;">إجمالي المؤشرات (تراكمي)</div>
+                    <div style="font-size:24px; font-weight:bold;">${totalDone} <span style="font-size:14px; color:#666;">من 44</span></div>
+                    <div class="progress-bar" style="height:8px;"><div class="progress-fill" style="width:${tPerc}%; background:#9c27b0;"></div></div>
+                    <div style="font-size:11px; margin-top:5px; color:#666;">النسبة الكلية: ${tPerc}%</div>
                 </div>
-                <div class="prog-label"><span>إنجاز الأسبوع ${currentW}</span><span>${wP}%</span></div>
-                <div class="prog-bg"><div class="prog-fill" style="width:${wP}%; background:#4caf50;"></div></div>
-                <div class="prog-label"><span>النسبة التراكمية (44)</span><span>${tP}%</span></div>
-                <div class="prog-bg"><div class="prog-fill" style="width:${tP}%; background:#9c27b0;"></div></div>
-                <a href="${link}" target="_blank" class="link-btn">📋 فتح الاستمارة</a>
+
+                <a href="${link}" target="_blank" class="link-btn">🔗 فتح الرابط</a>
             `;
             container.appendChild(card);
         }
     });
-    if (container.innerHTML === "") container.innerHTML = `<div style="text-align:center; padding:50px; opacity:0.7;">لا توجد بيانات للأسبوع ${currentW}</div>`;
 }
-load();
+
+loadData();
 </script>
 </body>
 </html>
