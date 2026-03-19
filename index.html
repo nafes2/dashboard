@@ -3,80 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة المؤشرات</title>
+    <title>لوحة المؤشرات - تحديث فوري</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
-        .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
-        .card { background: white; border-radius: 10px; padding: 20px; width: 280px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-top: 5px solid #1e3c72; text-align: right; }
-        .btn { padding: 10px; margin: 5px; cursor: pointer; background: #1e3c72; color: white; border: none; border-radius: 5px; }
-        #status { padding: 20px; color: #1e3c72; font-weight: bold; }
+        :root { --primary: #1e3c72; --secondary: #2a5298; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; padding: 20px; text-align: center; }
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn.active { background: #ff9800; color: white; transform: scale(1.05); }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); text-align: right; }
+        .card h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .stat { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1em; }
+        .link-btn { display: block; text-align: center; background: #28a745; color: white; text-decoration: none; padding: 10px; border-radius: 8px; margin-top: 15px; font-weight: bold; }
+        #loading { background: white; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <h2>لوحة متابعة المؤشرات</h2>
-    <div id="weeks-nav"></div>
-    <div id="status">⏳ جاري محاولة جلب البيانات بطريقة بديلة...</div>
-    <div id="container" class="card-container"></div>
+
+<div class="header">
+    <h1>لوحة متابعة المؤشرات</h1>
+    <p>تحديث مباشر من قاعدة البيانات</p>
+</div>
+
+<div id="weeks-nav" class="weeks-nav"></div>
+
+<div id="loading">
+    <h3 id="status-text">⏳ جاري جلب البيانات عبر الاتصال الآمن...</h3>
+</div>
+
+<div id="cardsContainer" class="container"></div>
 
 <script>
-    // الرابط الخاص بك
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkzHhwYWP2sQN9K5HbgnL-zZD5nHt-3T0eaxOvXv32c314VvBH74NHnYHeNKxphNgvSg/exec";
+    // الرابط الذي نجح في المتصفح لديك
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
     
-    // الخدعة: استخدام وسيط لتخطي حماية المتصفح
+    // استخدام وسيط AllOrigins لتخطي حظر المتصفح (CORS)
     const PROXY_URL = "https://api.allorigins.win/get?url=" + encodeURIComponent(SCRIPT_URL);
 
     let allData = [];
+    let currentWeek = 5;
 
     async function loadData() {
         try {
             const response = await fetch(PROXY_URL);
             const result = await response.json();
-            // البيانات تكون داخل result.contents ولكنها نص، نحولها لكائن
+            
+            // تحويل البيانات من نص إلى JSON
             allData = JSON.parse(result.contents);
             
-            document.getElementById('status').style.display = 'none';
-            createWeekButtons();
-            showWeek(5); // عرض الأسبوع 5 تلقائياً
+            document.getElementById('loading').style.display = 'none';
+            renderNav();
+            renderCards();
         } catch (error) {
-            document.getElementById('status').innerHTML = "❌ تعذر جلب البيانات. جرب تحديث الصفحة.";
             console.error(error);
+            document.getElementById('status-text').innerHTML = "❌ حدث خطأ في الاتصال. يرجى تحديث الصفحة.";
         }
     }
 
-    function createWeekButtons() {
+    function renderNav() {
         const nav = document.getElementById('weeks-nav');
+        nav.innerHTML = "";
         for (let i = 1; i <= 15; i++) {
             const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerText = "أسبوع " + i;
-            btn.onclick = () => showWeek(i);
+            btn.className = btn ${i === currentWeek ? 'active' : ''};
+            btn.innerText = "الأسبوع " + i;
+            btn.onclick = () => { currentWeek = i; renderNav(); renderCards(); };
             nav.appendChild(btn);
         }
     }
 
-    function showWeek(weekNum) {
-        const container = document.getElementById('container');
+    function renderCards() {
+        const container = document.getElementById('cardsContainer');
         container.innerHTML = "";
         
-        const filtered = allData.filter(row => String(row["الأسابيع"]).includes(String(weekNum)));
+        // تصفية البيانات للأسبوع المختار
+        const filtered = allData.filter(row => String(row["الأسابيع"]) === String(currentWeek));
 
         if (filtered.length === 0) {
-            container.innerHTML = "<h3>لا توجد بيانات للأسبوع " + weekNum + "</h3>";
+            container.innerHTML = <div style="grid-column: 1/-1"><h3>⚠️ لا توجد بيانات مسجلة للأسبوع ${currentWeek}</h3></div>;
             return;
         }
 
         filtered.forEach(item => {
             container.innerHTML += `
                 <div class="card">
-                    <h3 style="color:#1e3c72">${item["اسم المشرف"] || "مشرف"}</h3>
-                    <p><b>تم التنفيذ:</b> ${item["تم التنفيذ"] || 0}</p>
-                    <p><b>نسبة الأسبوع:</b> ${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</p>
-                    <a href="${item["رابط"] || '#'}" target="_blank" style="display:block; text-align:center; background:#28a745; color:white; padding:8px; text-decoration:none; border-radius:5px;">فتح النموذج</a>
+                    <h3>${item["اسم المشرف"] || "مشرف"}</h3>
+                    <div class="stat"><span>تم التنفيذ:</span> <b>${item["تم التنفيذ"] || 0}</b></div>
+                    <div class="stat"><span>نسبة الأسبوع:</span> <b>${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</b></div>
+                    <div class="stat"><span>الإنجاز الكلي:</span> <b>${Math.round((item["نسبة الكلية"] || 0) * 100)}%</b></div>
+                    <a href="${item["رابط"] || '#'}" target="_blank" class="link-btn">🔗 فتح النموذج</a>
                 </div>`;
         });
     }
 
     loadData();
 </script>
+
 </body>
 </html>
