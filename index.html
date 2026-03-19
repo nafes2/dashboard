@@ -1,178 +1,118 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>لوحة متابعة المشرفين الاحترافية</title>
-<style>
-/* ... التنسيقات العامة ... */
-* { box-sizing: border-box; margin:0; padding:0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:15px; }
-.container { max-width:1200px; margin:0 auto; }
-header { text-align:center; padding:15px 0; }
-header h1 { font-size:1.6em; margin-bottom:8px; }
-.nav { display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin:20px 0; }
-.btn { background: rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:10px; border-radius:12px; cursor:pointer; font-weight:600; font-size:14px; transition: 0.3s; }
-.btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; }
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:15px; }
-.card { background:#fff; color:#333; border-radius:18px; padding:25px; box-shadow:0 8px 25px rgba(0,0,0,0.2); }
-.card-header { text-align:center; margin-bottom:15px; padding-bottom:10px; }
-.card-header h3 { color:#1e3c72; font-size:1.3em; margin-bottom: 5px; }
-.week-badge { background:#e3f2fd; color:#1976d2; padding:4px 10px; border-radius:15px; font-size:0.8em; font-weight:600; }
-
-/* تنسيق أقسام الإحصائيات مطابق للصورة اليمين */
-.stat-section { margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #eee; }
-.section-title { font-size: 0.85em; color: #555; text-align: center; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
-
-.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.stat-box { text-align:center; padding:12px 8px; border-radius:10px; }
-.stat-box.done { background:#e8f5e9; color:#2e7d32; }
-.stat-box.pending { background:#fff3e0; color:#ef6c00; }
-.stat-box.total { background:#e3f2fd; color:#1565c0; }
-.stat-number { font-size:1.5em; font-weight:bold; display:block; }
-.stat-label { font-size:0.75em; font-weight:600; }
-
-/* تنسيق أشرطة النسبة */
-.progress-container { margin: 15px 0; }
-.progress-item { margin-bottom: 10px; }
-.progress-label { display: flex; justify-content: space-between; font-size: 0.8em; font-weight: 600; color: #555; margin-bottom: 4px; }
-.progress-bar { background: #e0e0e0; height: 10px; border-radius: 5px; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
-.fill-week { background: #4caf50; } /* أخضر للأسبوع الحالي */
-.fill-total { background: #9c27b0; } /* بنفسجي للإجمالي التراكمي */
-
-.link-btn { display:block; text-align:center; background:#2a5298; color:#fff; padding:12px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:0.9em; margin-top:15px; }
-.loading { text-align:center; padding:40px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة متابعة المشرفين</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #1e3c72; color: #fff; margin: 0; padding: 15px; text-align: center; }
+        .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin: 20px 0; }
+        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; padding: 10px 15px; border-radius: 10px; cursor: pointer; }
+        .btn.active { background: #ffd700; color: #1e3c72; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .card { background: #fff; color: #333; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .card h3 { margin: 0 0 10px 0; color: #1e3c72; }
+        .stat-line { display: flex; justify-content: space-between; margin: 10px 0; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .progress-bar { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: #4caf50; width: 0%; transition: width 0.5s; }
+        .total-box { background: #f0f4ff; padding: 10px; border-radius: 10px; margin-top: 10px; border: 1px solid #d1d9ff; }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
     <h1>📊 لوحة متابعة المشرفين</h1>
-    <p style="font-size:0.9em; opacity:0.8;">تحديث تلقائي مطابق للنموذج الأصلي</p>
-  </header>
-  <div class="nav" id="weeks"></div>
-  <div class="grid" id="cards"><div class="loading">جاري جلب البيانات...</div></div>
-</div>
+    <p>تحديث تلقائي من جوجل شيت</p>
+
+    <div class="nav" id="weeksNav"></div>
+    <div class="grid" id="cardsContainer">جارِ تحميل البيانات...</div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const PROXY = "https://api.allorigins.win/raw?url=";
-const TOTAL_INDICATORS_GOAL = 44; // الهدف الإجمالي للمؤشرات
+let allRows = [];
+let currentWeek = 1;
 
-let appData = { allData: [], currentWeek: 5 };
-
-async function loadData() {
-  try {
-    const targetUrl = CSV_URL + "&cb=" + new Date().getTime();
-    const res = await fetch(PROXY + encodeURIComponent(targetUrl));
-    const text = await res.text();
-    appData.allData = parseCSV(text);
-    render();
-  } catch (err) {
-    document.getElementById("cards").innerHTML = `<div class="error-box">حدث خطأ</div>`;
-  }
-}
-
-function parseCSV(csv) {
-  const lines = csv.split(/\r?\n/).filter(l => l.length > 5);
-  const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-  return lines.slice(1).map(line => {
-    const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-    let row = {};
-    headers.forEach((h, i) => row[h] = values[i] || "");
-    return row;
-  });
-}
-
-function weekTextToNumber(text) {
-  if (!text) return null;
-  const num = parseInt(text.toString().trim().replace(/[^0-9]/g, ''));
-  return !isNaN(num) ? num : null;
+async function getData() {
+    try {
+        const res = await fetch(PROXY + encodeURIComponent(SHEET_CSV + "&t=" + new Date().getTime()));
+        const text = await res.text();
+        const lines = text.split("\n").filter(l => l.trim() !== "");
+        const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+        
+        allRows = lines.slice(1).map(line => {
+            const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = values[i]);
+            return obj;
+        });
+        render();
+    } catch (e) {
+        document.getElementById("cardsContainer").innerHTML = "حدث خطأ في جلب البيانات. يرجى التحديث.";
+    }
 }
 
 function render() {
-  const nav = document.getElementById("weeks"); nav.innerHTML = "";
-  for(let i=1; i<=10; i++) {
-    const btn = document.createElement("button");
-    btn.className = "btn" + (i === appData.currentWeek ? " active" : "");
-    btn.textContent = i;
-    btn.onclick = () => { appData.currentWeek = i; render(); };
-    nav.appendChild(btn);
-  }
-
-  const container = document.getElementById("cards"); container.innerHTML = "";
-  const sample = appData.allData[0];
-  const nameCol = Object.keys(sample).find(k => k.includes("اسم المشرف"));
-  const weekCol = Object.keys(sample).find(k => k.includes("الأسبوع"));
-  const statusCol = Object.keys(sample).find(k => k.includes("الحالة"));
-
-  // تجميع البيانات التراكمية لكل المشرفين (جميع الأسابيع)
-  const supervisorsStats = {};
-  appData.allData.forEach(row => {
-    const name = row[nameCol];
-    const isDone = row[statusCol] === "تم التنفيذ";
-    const isCurrentWeek = weekTextToNumber(row[weekCol]) === appData.currentWeek;
-    
-    if (!name) return;
-    if (!supervisorsStats[name]) {
-      supervisorsStats[name] = { name, currentDone:0, currentTotal:0, totalDone:0, link:"#" };
+    // رندرة الأزرار
+    const nav = document.getElementById("weeksNav");
+    nav.innerHTML = "";
+    for(let i=1; i<=15; i++) {
+        const b = document.createElement("button");
+        b.className = `btn ${i === currentWeek ? 'active' : ''}`;
+        b.textContent = i;
+        b.onclick = () => { currentWeek = i; render(); };
+        nav.appendChild(b);
     }
-    
-    supervisorsStats[name].totalDone += isDone ? 1 : 0;
-    if (isCurrentWeek) {
-      supervisorsStats[name].currentDone += isDone ? 1 : 0;
-      supervisorsStats[name].currentTotal++;
-      for (let v of Object.values(row)) { if(v.toString().startsWith("http")) supervisorsStats[name].link = v; }
-    }
-  });
 
-  // فلترة وعرض المشرفين للأسبوع الحالي فقط
-  Object.values(supervisorsStats).filter(s => s.currentTotal > 0).forEach(sup => {
-    // حساب النسب
-    const currentPercent = sup.currentTotal > 0 ? ((sup.currentDone / sup.currentTotal) * 100).toFixed(2) : 0;
-    const totalPercent = ((sup.totalDone / TOTAL_INDICATORS_GOAL) * 100).toFixed(2);
-    const currentPending = sup.currentTotal - sup.currentDone;
+    // رندرة البطاقات
+    const container = document.getElementById("cardsContainer");
+    container.innerHTML = "";
 
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header"><h3>${sup.name}</h3><span class="week-badge">الأسبوع ${appData.currentWeek}</span></div>
-      
-      <div class="stat-section">
-        <div class="section-title">📊 مؤشرات هذا الأسبوع (${appData.currentWeek})</div>
-        <div class="stats-grid">
-          <div class="stat-box done"><span class="stat-number">${sup.currentDone}</span><span class="stat-label">✅ تم</span></div>
-          <div class="stat-box pending"><span class="stat-number">${currentPending}</span><span class="stat-label">⏳ جاري</span></div>
-          <div class="stat-box total"><span class="stat-number">${sup.currentTotal}</span><span class="stat-label">📋 المجموع</span></div>
-        </div>
-      </div>
+    // البحث عن أسماء الأعمدة الصحيحة
+    const firstRow = allRows[0];
+    const nameCol = Object.keys(firstRow).find(k => k.includes("اسم المشرف"));
+    const weekCol = Object.keys(firstRow).find(k => k.includes("الأسبوع"));
+    const statusCol = Object.keys(firstRow).find(k => k.includes("الحالة"));
 
-      <div class="stat-section" style="border-color:#9c27b0;">
-        <div class="section-title" style="color:#9c27b0;">📈 إجمالي المؤشرات المنفذة (جميع الأسابيع)</div>
-        <div style="text-align:center;"><span class="stat-number" style="color:#9c27b0; font-size:2em;">${sup.totalDone}</span></div>
-        <p style="text-align:center; font-size:0.8em; color:#555;">من ${TOTAL_INDICATORS_GOAL} مؤشر = ${totalPercent}%</p>
-      </div>
+    // استخراج أسماء المشرفين الفريدين
+    const supervisorNames = [...new Set(allRows.map(r => r[nameCol]))].filter(n => n);
 
-      <div class="progress-container">
-        <div class="progress-item">
-          <div class="progress-label"><span>نسبة الإنجاز في الأسبوع</span><span>${currentPercent}%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-week" style="width:${currentPercent}%"></div></div>
-        </div>
-        <div class="progress-item">
-          <div class="progress-label"><span>النسبة من إجمالي المؤشرات (44)</span><span>${totalPercent}%</span></div>
-          <div class="progress-bar"><div class="progress-fill fill-total" style="width:${totalPercent}%"></div></div>
-        </div>
-      </div>
+    supervisorNames.forEach(name => {
+        const supTotalRows = allRows.filter(r => r[nameCol] === name);
+        const supTotalDone = supTotalRows.filter(r => r[statusCol] === "تم التنفيذ").length;
+        
+        const supWeekRows = supTotalRows.filter(r => {
+            const w = r[weekCol] ? r[weekCol].replace(/[^0-9]/g, "") : "";
+            return parseInt(w) === currentWeek;
+        });
 
-      <a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
-    `;
-    container.appendChild(card);
-  });
+        if (supWeekRows.length > 0) {
+            const weekDone = supWeekRows.filter(r => r[statusCol] === "تم التنفيذ").length;
+            const weekTotal = supWeekRows.length;
+            const weekPerc = ((weekDone / weekTotal) * 100).toFixed(1);
+            const totalPerc = ((supTotalDone / 44) * 100).toFixed(1);
+
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <h3>${name}</h3>
+                <div class="stat-line"><span>تم (الأسبوع ${currentWeek})</span><span>${weekDone}</span></div>
+                <div class="stat-line"><span>جاري (الأسبوع ${currentWeek})</span><span>${weekTotal - weekDone}</span></div>
+                <div class="progress-bar"><div class="progress-fill" style="width: ${weekPerc}%"></div></div>
+                <p style="font-size: 12px; color: #666;">نسبة إنجاز الأسبوع: ${weekPerc}%</p>
+                
+                <div class="total-box">
+                    <div class="stat-line" style="color: #1e3c72;"><span>إجمالي المنفذ (44)</span><span>${supTotalDone}</span></div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${totalPerc}%; background: #9c27b0;"></div></div>
+                    <p style="font-size: 12px; color: #666;">النسبة التراكمية: ${totalPerc}%</p>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+    });
 }
 
-loadData();
+getData();
 </script>
 </body>
 </html>
