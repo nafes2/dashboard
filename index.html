@@ -3,66 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المؤشرات</title>
+    <title>لوحة المؤشرات النهائية</title>
     <style>
-        :root { --primary: #1e3c72; --secondary: #2a5298; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; text-align: center; }
-        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; }
-        .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 8px; background: white; color: var(--primary); cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        :root { --main: #1e3c72; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
+        .header { background: var(--main); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .weeks-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        .btn { padding: 10px 15px; cursor: pointer; border: none; border-radius: 5px; background: white; color: var(--main); font-weight: bold; }
         .btn.active { background: #ff9800; color: white; }
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); text-align: right; }
-        #loader { background: white; padding: 20px; border-radius: 10px; display: inline-block; }
+        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 4px solid var(--main); text-align: right; }
+        #status { background: #fff; padding: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>لوحة متابعة المؤشرات</h1>
-    <p>تحديث مباشر حسب سجلات جوجل</p>
-</div>
-
+<div class="header"><h1>لوحة متابعة المؤشرات</h1></div>
 <div id="weeks-nav" class="weeks-nav"></div>
-
-<div id="loader">
-    <h3 id="status-text">⏳ جاري جلب البيانات...</h3>
-</div>
-
+<div id="status">⏳ جاري فحص البيانات وتنظيفها...</div>
 <div id="cardsContainer" class="container"></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkzHhwYWP2sQN9K5HbgnL-zZD5nHt-3T0eaxOvXv32c314VvBH74NHnYHeNKxphNgvSg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKe9F_Auy-WCMrXomu2SRAjuGLcbUY-UdbyknLLfGoG4ewC02vCzcn7SubUvyr-vzjg/exec";
     const PROXY_URL = "https://api.allorigins.win/get?url=" + encodeURIComponent(SCRIPT_URL);
 
-    // قائمة الأسابيع كما تظهر في صورتك بالضبط
-    const WEEKS_NAMES = ["الأسبوع الأول", "الأسبوع الثاني", "الأسبوع الثالث", "الأسبوع الرابع", "الأسبوع الخامس", "الأسبوع السادس", "الأسبوع السابع", "الأسبوع الثامن"];
-    
     let allData = [];
-    let currentWeekName = "الأسبوع الخامس"; // الأسبوع الافتراضي عند الفتح
+    let currentWeek = "الأسبوع الخامس";
 
     async function loadData() {
         try {
             const response = await fetch(PROXY_URL);
             const result = await response.json();
-            allData = JSON.parse(result.contents);
+            const rawData = JSON.parse(result.contents);
             
-            document.getElementById('loader').style.display = 'none';
+            // تنظيف البيانات: إزالة الصفوف الفارغة تماماً
+            allData = rawData.filter(row => row["الأسابيع"] || row["اسم المشرف"]);
+            
+            console.log("البيانات بعد التنظيف:", allData);
+
+            document.getElementById('status').style.display = 'none';
             renderNav();
             renderCards();
         } catch (error) {
-            document.getElementById('status-text').innerHTML = "❌ فشل جلب البيانات. تأكد من تحديث الصفحة.";
+            document.getElementById('status').innerHTML = "❌ خطأ في التحميل. تأكد من نشر السكريبت كـ Anyone.";
         }
     }
 
     function renderNav() {
         const nav = document.getElementById('weeks-nav');
         nav.innerHTML = "";
-        WEEKS_NAMES.forEach(week => {
+        const weeks = ["الأسبوع الأول", "الأسبوع الثاني", "الأسبوع الثالث", "الأسبوع الرابع", "الأسبوع الخامس", "الأسبوع السادس"];
+        weeks.forEach(w => {
             const btn = document.createElement('button');
-            btn.className = btn ${week === currentWeekName ? 'active' : ''};
-            btn.innerText = week;
-            btn.onclick = () => { currentWeekName = week; renderNav(); renderCards(); };
+            btn.className = btn ${w === currentWeek ? 'active' : ''};
+            btn.innerText = w;
+            btn.onclick = () => { currentWeek = w; renderNav(); renderCards(); };
             nav.appendChild(btn);
         });
     }
@@ -71,29 +66,29 @@
         const container = document.getElementById('cardsContainer');
         container.innerHTML = "";
         
-        // البحث عن النص المطابق تماماً لما في صورتك (الأسبوع الخامس مثلاً)
-        // العمود في صورتك اسمه "الأسابيع"
-        const filtered = allData.filter(row => String(row["الأسابيع"]).trim() === currentWeekName);
+        // فلترة البيانات مع تجاهل المسافات الزائدة
+        const filtered = allData.filter(row => {
+            const weekValue = String(row["الأسابيع"] || "").trim();
+            return weekValue === currentWeek;
+        });
 
         if (filtered.length === 0) {
-            container.innerHTML = <h3>⚠️ لا توجد بيانات مسجلة لـ (${currentWeekName})</h3>;
+            container.innerHTML = <h3>لا توجد بيانات متوفرة لـ ${currentWeek}</h3>;
             return;
         }
 
         filtered.forEach(item => {
             container.innerHTML += `
                 <div class="card">
-                    <h3 style="color:var(--primary)">${item["اسم المشرف"] || "غير مسجل"}</h3>
-                    <p><b>تم التنفيذ:</b> ${item["تم التنفيذ"] || 0}</p>
-                    <p><b>نسبة الأسبوع:</b> ${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</p>
-                    <p><b>الإنجاز التراكمي:</b> ${Math.round((item["نسبة الكلية"] || 0) * 100)}%</p>
-                    <a href="${item["رابط"] || '#'}" target="_blank" style="color:green; font-weight:bold;">🔗 عرض التفاصيل</a>
+                    <h3>${item["اسم المشرف"] || "غير مسجل"}</h3>
+                    <p>تم التنفيذ: ${item["تم التنفيذ"] || 0}</p>
+                    <p>نسبة الأسبوع: ${Math.round((item["نسبة الأسبوع"] || 0) * 100)}%</p>
+                    <a href="${item["رابط"] || '#'}" target="_blank">فتح الرابط</a>
                 </div>`;
         });
     }
 
     loadData();
 </script>
-
 </body>
 </html>
