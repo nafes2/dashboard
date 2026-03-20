@@ -25,18 +25,18 @@
 <div class="container">
     <header>
         <h1>📊 لوحة متابعة المشرفين</h1>
-        <p id="msg" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">جاري جلب البيانات...</p>
+        <p id="msg" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.9;">جاري المزامنة مع صفحة المدير...</p>
     </header>
     <div class="nav" id="weekNav"></div>
     <div class="grid" id="dataGrid"></div>
 </div>
 
 <script>
-// الرابط الخاص بك (تأكد أن صفحة Dashboard هي المنشورة)
+// الرابط المباشر لملفك المنشور كـ CSV
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const TOTAL_INDICATORS = 44;
 
-let state = { data: [], currentWeek: 5 };
+let state = { data: [], currentWeek: 5 }; // نبدأ بالأسبوع 5 كما في صورتك
 
 async function loadData() {
     try {
@@ -46,7 +46,7 @@ async function loadData() {
         document.getElementById('msg').innerText = "✅ البيانات محدثة الآن (تشمل جاري التنفيذ)";
         render();
     } catch (e) {
-        document.getElementById('msg').innerText = "❌ عذراً، تعذر جلب البيانات";
+        document.getElementById('msg').innerText = "❌ تعذر جلب البيانات، تأكد من النشر على الويب";
     }
 }
 
@@ -77,15 +77,16 @@ function render() {
     if (!state.data.length) return;
 
     const keys = Object.keys(state.data[0]);
+    // البحث عن الأعمدة الصحيحة حتى لو تغيرت أسماؤها قليلاً
     const nameCol = keys.find(k => k.includes("مشرف")) || keys[0];
-    const weekCol = keys.find(k => k.includes("أسبوع") || k.includes("أسابيع")) || keys[1];
+    const weekCol = keys.find(k => k.includes("أسبوع") || k.includes("أسابيع") || k.includes("الاسبوع")) || keys[1];
     const statusCol = keys.find(k => k.includes("حالة")) || keys[2];
 
-    // فلترة الأسبوع مع دعم (الأسبوع الخامس) أو (5)
     const filtered = state.data.filter(row => {
         const val = (row[weekCol] || "").toString();
-        const extractedNum = val.replace(/\D/g, "");
-        return extractedNum == state.currentWeek || val.includes(state.currentWeek);
+        // استخراج الرقم من النص (مثلاً "الأسبوع الخامس" سيستخرج الرقم المرتبط بالزر)
+        const numInCell = val.replace(/\D/g, "");
+        return numInCell == state.currentWeek || val.includes("خامس") && state.currentWeek == 5 || val.includes("أول") && state.currentWeek == 1;
     });
 
     if (!filtered.length) {
@@ -99,9 +100,9 @@ function render() {
         if(!name) return;
         if(!summary[name]) summary[name] = { name, done: 0 };
         
-        // التعديل الجوهري هنا: قبول "تم" و "جاري التنفيذ" وأي نص يحتوي عليهما
         const s = (row[statusCol] || "").toString();
-        if(s.includes("تم") || s.includes("جاري") || s.includes("التنفيذ") || s === "1" || parseFloat(s) > 0) {
+        // التعديل: اعتبار أي شيء غير فارغ أو يحتوي على "جاري" كإنجاز
+        if(s.includes("تم") || s.includes("جاري") || s.includes("تنفيذ") || s !== "") {
             summary[name].done++;
         }
     });
