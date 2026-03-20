@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - النسخة المعتمدة</title>
+    <title>لوحة متابعة المشرفين - النسخة الاحترافية</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,7 +11,7 @@
         .container { max-width: 800px; margin: 0 auto; }
         .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
         .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; }
-        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
+        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
         .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-bottom: 20px; }
         .card h2 { color: var(--primary); text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .ind-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.95em; }
@@ -28,24 +28,28 @@
 <body>
 <div class="container">
     <div class="nav" id="weeksNav"></div>
-    <div id="content"><div style="text-align:center; padding:50px;">جاري جلب بيانات الشيت...</div></div>
+    <div id="content"><div style="text-align:center; padding:50px;">جاري تحديث البيانات من الشيت...</div></div>
 </div>
 
 <script>
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const GOAL = 44;
-let app = { data: [], week: 3 };
+let app = { data: [], week: 2 }; // افتراض الأسبوع الثاني بناءً على آخر نجاح لك
 
-// معادلتك: عد المؤشرات عبر الفواصل
+// تطبيق معادلتك: عد المؤشرات بناءً على الفواصل
 function countInds(val) {
     if (!val) return 0;
     return val.split(',').filter(x => x.trim().length > 0).length;
 }
 
+// دالة ذكية لاستخراج رقم الأسبوع من أي نص (أسبوع 2، الاسبوع الثاني، 2)
 function getWeek(val) {
     if (!val) return null;
     const m = val.toString().match(/\d+/);
-    return m ? parseInt(m[0]) : null;
+    if (m) return parseInt(m[0]);
+    const map = {"الأول":1,"الثاني":2,"الثالث":3,"الرابع":4,"الخامس":5};
+    for (let key in map) if (val.includes(key)) return map[key];
+    return null;
 }
 
 async function fetchData() {
@@ -54,11 +58,12 @@ async function fetchData() {
         const text = await r.text();
         app.data = parse(text);
         render();
-    } catch(e) { document.getElementById('content').innerHTML = "⚠️ فشل الاتصال بالشيت"; }
+    } catch(e) { document.getElementById('content').innerHTML = "⚠️ فشل في جلب البيانات، تأكد من اتصالك"; }
 }
 
 function parse(csv) {
     const lines = csv.split('\n').filter(l => l.trim());
+    if (lines.length === 0) return [];
     const heads = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
     return lines.slice(1).map(line => {
         const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,'').trim());
@@ -80,13 +85,14 @@ function render() {
     const cont = document.getElementById('content');
     if (app.data.length === 0) return;
 
+    // تحديد أسماء الأعمدة ديناميكياً لتجنب مشاكل الهمزات
     const keys = Object.keys(app.data[0]);
     const nK = keys.find(k => k.includes("مشرف"));
     const wK = keys.find(k => k.includes("أسبوع") || k.includes("اسبوع"));
     const sK = keys.find(k => k.includes("حالة"));
     const iK = keys.find(k => k.includes("مؤشر"));
 
-    // الإجمالي التراكمي (مطابق لمعادلة الشيت)
+    // الإجمالي التراكمي لجميع الأسابيع (مطابق لمعادلة الشيت)
     let totals = {};
     app.data.forEach(r => {
         const name = r[nK];
@@ -119,7 +125,7 @@ function render() {
         cont.innerHTML += `
             <div class="card">
                 <h2>${s.n}</h2>
-                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px; border:1px solid #eee;">
                     ${s.list.map(i => `<div class="ind-item"><span>${i.d?'✅':'⏳'}</span><span>${i.t}</span></div>`).join('')}
                 </div>
                 <div class="stats-grid">
