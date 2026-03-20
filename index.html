@@ -401,7 +401,6 @@ header p {
 </div>
 
 <script>
-// ✅ رابط Google Sheets مباشرة
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 
 const TOTAL_INDICATORS = 44;
@@ -416,7 +415,6 @@ const WEEK_NAMES = {
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
-
   const num = parseInt(t);
   if (!isNaN(num)) return num;
 
@@ -567,11 +565,39 @@ function renderCards() {
   const statusCol = findCol(sample, ["الحالة", "حالة", "status"]);
   const countCol = findCol(sample, ["عدد", "count", "العدد", "مؤشرات"]) || findColByValue(sample, ["3", "2", "1"]);
 
-  // ✅ البحث عن عمود K بعدة أسماء محتملة
-  const kCol = findCol(sample, ["K", "k", "المجموع", "الإجمالي", "total", "sum", "المؤشرات المنفذة", "all indicators", "cumulative"]);
+  console.log("الأعمدة:", { nameCol, weekCol, statusCol, countCol });
 
-  console.log("الأعمدة:", { nameCol, weekCol, statusCol, countCol, kCol });
-  console.log("جميع الأعمدة:", Object.keys(sample));
+  // ✅ حساب إجمالي المؤشرات المنفذة لكل مشرف من جميع الأسابيع
+  const supervisorTotals = {};
+
+  appData.allData.forEach(row => {
+    const name = row[nameCol];
+    if (!name || name === "undefined") return;
+
+    if (!supervisorTotals[name]) {
+      supervisorTotals[name] = { totalDoneAll: 0 };
+    }
+
+    const status = (row[statusCol] || "").toString().trim();
+    if (status === "تم التنفيذ") {
+      let indicatorCount = 1;
+
+      if (countCol && row[countCol]) {
+        const val = parseInt(row[countCol]);
+        if (!isNaN(val) && val > 0) indicatorCount = val;
+      } else {
+        const indicatorCol = findCol(row, ["رقم المؤشر", "المؤشر", "indicator"]);
+        if (indicatorCol && row[indicatorCol]) {
+          const indicators = row[indicatorCol].toString().split(',').filter(x => x.trim());
+          indicatorCount = indicators.length || 1;
+        }
+      }
+
+      supervisorTotals[name].totalDoneAll += indicatorCount;
+    }
+  });
+
+  console.log("إجمالي المؤشرات المنفذة:", supervisorTotals);
 
   const weekData = appData.allData.filter(row => {
     const rowWeek = row[weekCol];
@@ -602,7 +628,6 @@ function renderCards() {
         pendingCount: 0,
         notDoneCount: 0,
         totalCount: 0,
-        totalDoneAll: 0, // ✅ إجمالي المنفذ في جميع الأسابيع
         link: null,
         indicators: [],
         status: "لم ينفذ"
@@ -634,14 +659,6 @@ function renderCards() {
       supervisors[name].notDoneCount += indicatorCount;
     }
 
-    // ✅ قراءة إجمالي المؤشرات المنفذة من عمود K إذا وجد
-    if (kCol && row[kCol]) {
-      const kValue = parseFloat(row[kCol]);
-      if (!isNaN(kValue)) {
-        supervisors[name].totalDoneAll = kValue;
-      }
-    }
-
     if (indicatorsText) {
       const indicatorsList = indicatorsText.toString().split(',').filter(x => x.trim());
       indicatorsList.forEach(num => {
@@ -663,8 +680,8 @@ function renderCards() {
   });
 
   Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name)).forEach((sup, index) => {
-    // ✅ استخدام القيمة من عمود K إذا وجدت، وإلا احسب يدوياً
-    const totalDoneAll = sup.totalDoneAll || sup.doneCount;
+    // ✅ استخدام الإجمالي المحسوب من جميع الأسابيع
+    const totalDoneAll = supervisorTotals[sup.name]?.totalDoneAll || 0;
     const weekPercent = ((sup.doneCount / TOTAL_INDICATORS) * 100).toFixed(2);
     const percentOf44 = ((totalDoneAll / TOTAL_INDICATORS) * 100).toFixed(2);
     const barClass = weekPercent >= 70 ? "high" : (weekPercent >= 40 ? "medium" : "low");
@@ -803,7 +820,6 @@ function updateTimestamp() {
   });
 }
 
-// التشغيل
 loadData();
 </script>
 </body>
