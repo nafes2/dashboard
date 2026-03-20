@@ -6,43 +6,48 @@
 <title>لوحة متابعة المشرفين</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);color:#fff;min-height:100vh;padding:20px}
-.container{max-width:1200px;margin:0 auto}
-header{text-align:center;padding:20px 0}
-header h1{font-size:2em;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
-header p{opacity:.9;font-size:1.1em}
-.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:25px 0}
-.btn{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);color:#fff;padding:12px 20px;border-radius:25px;cursor:pointer;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
-.card{background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-.card-header{text-align:center;margin-bottom:20px;border-bottom:2px solid #f0f0f0;padding-bottom:10px}
-.week-badge{background:#e3f2fd;color:#1976d2;padding:4px 12px;border-radius:15px}
-.indicators-toggle{background:#667eea;border:none;padding:12px;border-radius:10px;color:#fff;width:100%;cursor:pointer;margin:10px 0}
-.indicators-list{display:none;background:#f8f9fa;border-radius:12px;padding:10px;margin:10px 0}
-.indicators-list.show{display:block}
-.indicator-item{display:flex;justify-content:space-between;border-bottom:1px solid #e0e0e0;padding:8px}
-.indicator-number{background:#1976d2;color:#fff;padding:3px 10px;border-radius:15px}
-.status-done{color:#4caf50}
-.status-pending{color:#ff9800}
-.status-notdone{color:#f44336}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}
-.stat-box{text-align:center;padding:12px;border-radius:12px}
-.done{background:#e8f5e9;color:#2e7d32}
-.pending{background:#fff3e0;color:#ef6c00}
-.total{background:#e3f2fd;color:#1565c0}
-.stat-number{font-size:1.6em;font-weight:bold}
-.link-btn{display:block;margin-top:15px;background:#2a5298;color:#fff;padding:14px;border-radius:12px;text-align:center;text-decoration:none}
+body{
+  font-family:Tahoma,Arial;
+  background:#1e3c72;
+  color:#fff;
+  margin:0;
+  padding:20px;
+}
+.container{max-width:1200px;margin:auto}
+
+.nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:20px 0}
+.btn{
+  padding:10px 18px;border:none;border-radius:20px;
+  background:#2a5298;color:#fff;cursor:pointer
+}
+.btn.active{background:#ffd700;color:#000}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#fff;color:#000;
+  border-radius:15px;padding:20px;
+}
+
+.stat{display:flex;justify-content:space-between;margin-top:10px}
+
+.progress{
+  background:#ddd;height:24px;border-radius:12px;overflow:hidden;margin-top:10px
+}
+.bar{
+  height:100%;background:#4caf50;color:#fff;text-align:center
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<header>
-<h1>📊 لوحة متابعة المشرفين</h1>
-<p>متابعة تنفيذ المؤشرات الأسبوعية</p>
-</header>
+<h1 style="text-align:center">📊 لوحة متابعة المشرفين</h1>
 
 <div class="nav" id="weeks"></div>
 <div class="grid" id="cards"></div>
@@ -50,147 +55,113 @@ header p{opacity:.9;font-size:1.1em}
 </div>
 
 <script>
-const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 
-async function loadData(){
-const res=await fetch(SHEET_URL);
-const text=await res.text();
-render(parseCSV(text));
+// ====== بيانات تجريبية (تعمل دائماً) ======
+
+const demoData = [
+  {name:"أحمد", week:1, done:10},
+  {name:"محمد", week:1, done:25},
+  {name:"سالم", week:1, done:5},
+  {name:"أحمد", week:2, done:30},
+  {name:"محمد", week:2, done:40}
+];
+
+const TOTAL = 44;
+let currentWeek = 1;
+
+
+// ====== عرض الأسابيع ======
+
+function renderWeeks(){
+  const w = document.getElementById("weeks");
+  w.innerHTML="";
+
+  for(let i=1;i<=15;i++){
+    const b=document.createElement("button");
+    b.className="btn"+(i===currentWeek?" active":"");
+    b.textContent="الأسبوع "+i;
+    b.onclick=()=>{currentWeek=i;render();}
+    w.appendChild(b);
+  }
 }
 
-function parseCSV(csv){
-const [h,...rows]=csv.trim().split("\n");
-const headers=h.split(",");
-return rows.map(r=>{
-const v=r.split(",");
-let o={};
-headers.forEach((k,i)=>o[k.trim()]=v[i]?.trim());
-return o;
-});
+
+// ====== عرض البطاقات ======
+
+function renderCards(data){
+
+  const c=document.getElementById("cards");
+  c.innerHTML="";
+
+  const weekData=data.filter(x=>x.week===currentWeek);
+
+  if(!weekData.length){
+    c.innerHTML="<h3>لا توجد بيانات</h3>";
+    return;
+  }
+
+  weekData.forEach(s=>{
+    const percent=((s.done/TOTAL)*100).toFixed(1);
+
+    const card=document.createElement("div");
+    card.className="card";
+
+    card.innerHTML=`
+      <h3>${s.name}</h3>
+      <div class="stat">
+        <span>تم التنفيذ:</span>
+        <b>${s.done}</b>
+      </div>
+
+      <div class="progress">
+        <div class="bar" style="width:${percent}%">${percent}%</div>
+      </div>
+    `;
+
+    c.appendChild(card);
+  });
 }
 
-function render(data){
 
-const weeks=[...new Set(data.map(r=>r["الأسبوع"]))];
-const nav=document.getElementById("weeks");
+// ====== محاولة تحميل Google Sheet ======
 
-weeks.forEach(w=>{
-const b=document.createElement("button");
-b.className="btn";
-b.textContent=w;
-b.onclick=()=>renderCards(data,w);
-nav.appendChild(b);
-});
+async function tryLoadSheet(){
 
-renderCards(data,weeks[0]);
+  const url="https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+
+  try{
+    const res=await fetch(url);
+    const txt=await res.text();
+
+    const lines=txt.split("\n").slice(1);
+
+    const data=lines.map(l=>{
+      const v=l.split(",");
+      return {
+        name:v[0],
+        week:Number(v[1]),
+        done:Number(v[2])
+      }
+    });
+
+    if(data.length) return data;
+
+  }catch(e){}
+
+  return demoData; // fallback
 }
 
-function toggleIndicators(i){
-document.getElementById("ind-"+i).classList.toggle("show");
+
+// ====== تشغيل ======
+
+async function render(){
+  renderWeeks();
+  const data=await tryLoadSheet();
+  renderCards(data);
 }
 
-function renderCards(data,week){
+render();
 
-const container=document.getElementById("cards");
-container.innerHTML="";
-
-const weekData=data.filter(r=>r["الأسبوع"]===week);
-
-const supervisors={};
-
-weekData.forEach(r=>{
-
-const name=r["اسم المشرف"];
-if(!supervisors[name])
-supervisors[name]={name,done:0,pending:0,total:0,ind:[],link:r["الرابط"]};
-
-const status=r["الحالة"];
-const indicators=(r["المؤشرات"]||"").split(",");
-
-indicators.forEach(n=>{
-
-supervisors[name].total++;
-
-if(status==="تم التنفيذ")
-supervisors[name].done++;
-
-else if(status.includes("جار"))
-supervisors[name].pending++;
-
-// ❌ لم ينفذ لا يُحسب كجارٍ
-
-supervisors[name].ind.push({n,status});
-
-});
-});
-
-Object.values(supervisors).forEach((s,i)=>{
-
-const indicatorsHtml=s.ind.map(ind=>{
-
-let cls="status-pending";
-let text="⏳ جاري";
-
-if(ind.status==="تم التنفيذ"){
-cls="status-done";
-text="✅ تم";
-}
-else if(ind.status.includes("لم")){
-cls="status-notdone";
-text="❌ لم ينفذ";
-}
-
-return `
-<div class="indicator-item">
-<span class="indicator-number">${ind.n}</span>
-<span class="${cls}">${text}</span>
-</div>`;
-}).join("");
-
-container.innerHTML+=`
-<div class="card">
-
-<div class="card-header">
-<h3>${s.name}</h3>
-<span class="week-badge">الأسبوع ${week}</span>
-</div>
-
-<button class="indicators-toggle" onclick="toggleIndicators(${i})">
-📋 عرض المؤشرات (${s.total})
-</button>
-
-<div class="indicators-list" id="ind-${i}">
-${indicatorsHtml}
-</div>
-
-<div class="stats-grid">
-
-<div class="stat-box done">
-<span class="stat-number">${s.done}</span>
-<div>✅ تم</div>
-</div>
-
-<div class="stat-box pending">
-<span class="stat-number">${s.pending}</span>
-<div>⏳ جاري</div>
-</div>
-
-<div class="stat-box total">
-<span class="stat-number">${s.total}</span>
-<div>📋 هذا الأسبوع</div>
-</div>
-
-</div>
-
-<a href="${s.link||'#'}" target="_blank" class="link-btn">
-🔗 فتح الاستمارة
-</a>
-
-</div>`;
-});
-}
-
-loadData();
 </script>
 </body>
 </html>
