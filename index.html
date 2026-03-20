@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين - النسخة النهائية الشاملة</title>
+<title>لوحة متابعة المشرفين - إصلاح عداد المؤشرات</title>
 <style>
     :root { --primary: #1e3c72; --accent: #ffd700; --success: #4caf50; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +33,7 @@
 <div class="container">
     <header>
         <h1>📊 لوحة متابعة المشرفين</h1>
-        <p id="status-msg">جاري تحميل البيانات لكافة الأسابيع...</p>
+        <p id="status-msg">جاري تحميل البيانات وتصحيح الحساب...</p>
     </header>
     <div class="nav" id="weekNav"></div>
     <div class="grid" id="dataGrid"></div>
@@ -51,20 +51,45 @@ async function init() {
         const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
         const text = await response.text();
         state.allRows = parseCSV(text);
-        document.getElementById('status-msg').innerText = "✅ تم التحديث: جاري عرض أسبوعك المختار";
+        document.getElementById('status-msg').innerText = "✅ تم تحديث البيانات: العداد يعمل بدقة الآن";
         render();
     } catch (e) {
         document.getElementById('status-msg').innerText = "❌ فشل في جلب البيانات";
     }
 }
 
+// تحسين تحليل الـ CSV للتعامل مع الأسطر المتعددة داخل الخلية الواحدة
 function parseCSV(csv) {
-    const lines = csv.split('\n').filter(l => l.trim());
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-    return lines.slice(1).map(line => {
-        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-        return headers.reduce((obj, h, i) => ({ ...obj, [h]: values[i] || "" }), {});
-    });
+    const rows = [];
+    let currentRow = [];
+    let currentField = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < csv.length; i++) {
+        const char = csv[i];
+        const nextChar = csv[i + 1];
+
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') { currentField += '"'; i++; }
+            else { inQuotes = !inQuotes; }
+        } else if (char === ',' && !inQuotes) {
+            currentRow.push(currentField.trim());
+            currentField = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            if (currentField || currentRow.length > 0) {
+                currentRow.push(currentField.trim());
+                rows.push(currentRow);
+                currentRow = [];
+                currentField = '';
+            }
+        } else {
+            currentField += char;
+        }
+    }
+    if (currentRow.length > 0) { currentRow.push(currentField.trim()); rows.push(currentRow); }
+
+    const headers = rows[0];
+    return rows.slice(1).map(r => headers.reduce((obj, h, i) => ({ ...obj, [h]: r[i] || "" }), {}));
 }
 
 function render() {
@@ -83,21 +108,14 @@ function render() {
 
     const sample = state.allRows[0] || {};
     const nameCol = Object.keys(sample).find(k => k.includes("مشرف")) || "اسم المشرف";
-    const weekCol = Object.keys(sample).find(k => k.includes("سبوع")) || "الأسابيع";
+    const weekCol = Object.keys(sample).find(k => k.includes("بوع")) || "الأسابيع";
     const statusCol = Object.keys(sample).find(k => k.includes("حالة")) || "الحالة";
     const indCol = Object.keys(sample).find(k => k.includes("مؤشر")) || "المؤشر";
 
-    // فلترة مرنة جداً للأسابيع
     const filtered = state.allRows.filter(row => {
         const val = row[weekCol] || "";
-        const targetWord = WEEK_MAP[state.currentWeek];
-        return val.includes(targetWord) || val.includes(state.currentWeek.toString());
+        return val.includes(WEEK_MAP[state.currentWeek]) || val.includes(state.currentWeek.toString());
     });
-
-    if (!filtered.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1; padding:40px; border:2px dashed #ccc; border-radius:15px;">لا توجد بيانات للأسبوع ${state.currentWeek}</div>`;
-        return;
-    }
 
     const supervisors = {};
     filtered.forEach(row => {
@@ -105,29 +123,28 @@ function render() {
         if (!name) return;
         if (!supervisors[name]) supervisors[name] = { name, doneCount: 0, list: [] };
 
-        // تقسيم البيانات إذا كانت في أسطر متعددة داخل نفس الخلية
-        const indicators = (row[indCol] || "").split('\n');
-        const statuses = (row[statusCol] || "").split('\n');
+        // حل المشكلة هنا: تقسيم النص بناءً على الفواصل السطرية الحقيقية
+        const indicators = (row[indCol] || "").split(/\r?\n/).filter(x => x.trim());
+        const statuses = (row[statusCol] || "").split(/\r?\n/).filter(x => x.trim());
 
         indicators.forEach((indText, idx) => {
-            const cleanInd = indText.trim();
-            if (!cleanInd) return;
-
-            // أخذ الحالة المقابلة للسطر، أو الحالة الأولى إذا لم توجد تعددية
+            // استخدام الحالة المقابلة للسطر، أو الحالة الوحيدة الموجودة
             const rawStat = (statuses[idx] || statuses[0] || "").trim();
             const isDone = rawStat.includes("تم") || rawStat.includes("جاري") || rawStat.includes("تنفيذ");
 
-            if (isDone) supervisors[name].doneCount++;
+            if (isDone) {
+                supervisors[name].doneCount++; // زيادة العداد لكل مؤشر فرعي
+            }
             
-            supervisors[name].list.push({ text: cleanInd, stat: rawStat, isDone });
+            supervisors[name].list.push({ text: indText.trim(), stat: rawStat, isDone });
         });
     });
 
-    Object.values(supervisors).forEach((sup, idx) => {
+    Object.values(supervisors).forEach((sup) => {
         const percent = ((sup.doneCount / TOTAL_EXPECTED) * 100).toFixed(1);
         const indHtml = sup.list.map(item => `
             <div class="indicator-item">
-                <span>${item.text} <small style="color:#888;">(${item.stat})</small></span>
+                <span>${item.text}</span>
                 <span class="${item.isDone ? 'status-done' : 'status-pending'}">${item.isDone ? '✅' : '⏳'}</span>
             </div>`).join('');
 
@@ -140,7 +157,7 @@ function render() {
                 <div class="indicators-list">${indHtml}</div>
                 <div class="stats-grid">
                     <div class="stat-box done"><span class="stat-number">${sup.doneCount}</span>منجز</div>
-                    <div class="stat-box pending"><span class="stat-number">${TOTAL_EXPECTED - sup.doneCount}</span>متبقي</div>
+                    <div class="stat-box pending"><span class="stat-number">${Math.max(0, TOTAL_EXPECTED - sup.doneCount)}</span>متبقي</div>
                     <div class="stat-box" style="background:#e3f2fd;"><span class="stat-number">${percent}%</span>نسبة</div>
                 </div>
             </div>`;
