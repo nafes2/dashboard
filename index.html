@@ -64,6 +64,12 @@ header p {
   border-color: #ffd700;
   box-shadow: 0 4px 15px rgba(255,215,0,0.4);
 }
+.btn.empty {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.5);
+  cursor: default;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -304,7 +310,7 @@ header p {
   background: #ccc;
   color: #888;
   cursor: not-allowed;
-  pointer-events: none; /* ✅ منع جميع الأحداث */
+  pointer-events: none;
 }
 .loading {
   text-align: center;
@@ -413,26 +419,32 @@ const WEEK_NAMES = {
   11: "الحادي عشر", 12: "الثاني عشر", 13: "الثالث عشر", 14: "الرابع عشر", 15: "الخامس عشر"
 };
 
+// ✅ ترتيب التحقق من الأرقام الكبيرة أولاً
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
+
   const num = parseInt(t);
   if (!isNaN(num)) return num;
 
-  for (let [key, value] of Object.entries(WEEK_NAMES)) {
-    if (t === value || t.includes(value)) return parseInt(key);
-  }
+  // ✅ التحقق من الأرقام الكبيرة أولاً (من 15 إلى 11)
+  if (t.includes("خامس عشر")) return 15;
+  if (t.includes("رابع عشر")) return 14;
+  if (t.includes("ثالث عشر")) return 13;
+  if (t.includes("ثاني عشر")) return 12;
+  if (t.includes("حادي عشر")) return 11;
 
-  if (t.includes("أول")) return 1;
-  if (t.includes("ثاني")) return 2;
-  if (t.includes("ثالث")) return 3;
-  if (t.includes("رابع")) return 4;
-  if (t.includes("خامس")) return 5;
-  if (t.includes("سادس")) return 6;
-  if (t.includes("سابع")) return 7;
-  if (t.includes("ثامن")) return 8;
-  if (t.includes("تاسع")) return 9;
+  // ✅ ثم التحقق من باقي الأرقام (من 10 إلى 1)
   if (t.includes("عاشر")) return 10;
+  if (t.includes("تاسع")) return 9;
+  if (t.includes("ثامن")) return 8;
+  if (t.includes("سابع")) return 7;
+  if (t.includes("سادس")) return 6;
+  if (t.includes("خامس")) return 5;
+  if (t.includes("رابع")) return 4;
+  if (t.includes("ثالث")) return 3;
+  if (t.includes("ثاني")) return 2;
+  if (t.includes("أول")) return 1;
 
   return null;
 }
@@ -516,11 +528,18 @@ function renderWeeks() {
   const container = document.getElementById("weeks");
   container.innerHTML = "";
 
+  // ✅ معرفة الأسابيع المتوفرة في البيانات
+  const sample = appData.allData[0];
+  const weekCol = findCol(sample, ["الأسابيع", "الأسبوع", "الاسبوع", "أسابيع", "week"]);
+  const availableWeeks = [...new Set(appData.allData.map(row => weekTextToNumber(row[weekCol])))].filter(w => w);
+
   ALL_WEEKS.forEach(weekNum => {
     const btn = document.createElement("button");
-    btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "");
+    const hasData = availableWeeks.includes(weekNum);
+
+    btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "") + (!hasData ? " empty" : "");
     btn.textContent = weekNum;
-    btn.title = "الأسبوع " + WEEK_NAMES[weekNum];
+    btn.title = "الأسبوع " + WEEK_NAMES[weekNum] + (hasData ? "" : " (لا توجد بيانات)");
 
     btn.onclick = () => {
       appData.currentWeek = weekNum;
@@ -566,8 +585,6 @@ function renderCards() {
   const statusCol = findCol(sample, ["الحالة", "حالة", "status"]);
   const countCol = findCol(sample, ["عدد", "count", "العدد", "مؤشرات"]) || findColByValue(sample, ["3", "2", "1"]);
 
-  console.log("الأعمدة:", { nameCol, weekCol, statusCol, countCol });
-
   // ✅ حساب إجمالي المؤشرات المنفذة لكل مشرف من جميع الأسابيع
   const supervisorTotals = {};
 
@@ -597,8 +614,6 @@ function renderCards() {
       supervisorTotals[name].totalDoneAll += indicatorCount;
     }
   });
-
-  console.log("إجمالي المؤشرات المنفذة:", supervisorTotals);
 
   const weekData = appData.allData.filter(row => {
     const rowWeek = row[weekCol];
@@ -681,7 +696,6 @@ function renderCards() {
   });
 
   Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name)).forEach((sup, index) => {
-    // ✅ استخدام الإجمالي المحسوب من جميع الأسابيع
     const totalDoneAll = supervisorTotals[sup.name]?.totalDoneAll || 0;
     const weekPercent = ((sup.doneCount / TOTAL_INDICATORS) * 100).toFixed(2);
     const percentOf44 = ((totalDoneAll / TOTAL_INDICATORS) * 100).toFixed(2);
