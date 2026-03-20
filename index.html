@@ -3,140 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام المتابعة الدقيق</title>
+    <title>لوحة متابعة المشرفين - اتصال مباشر</title>
     <style>
-        :root { --main-bg: #2a5298; --card-bg: #ffffff; --text-dark: #333; --accent: #ffd700; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: #fff; margin: 0; padding: 15px; text-align: center; }
-        .container { max-width: 500px; margin: 0 auto; }
-        .weeks-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
-        .week-btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
-        .week-btn.active { background: var(--accent); color: #1e3c72; border-color: var(--accent); transform: scale(1.1); }
-        .supervisor-card { background: var(--card-bg); color: var(--text-dark); border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        .name-header { color: #1e3c72; font-size: 1.5em; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .action-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-bottom: 15px; }
-        .details-box { display: none; background: #f1f3f5; border-radius: 12px; padding: 15px; text-align: right; margin-bottom: 15px; border: 1px solid #dee2e6; }
-        .details-box.active { display: block; }
-        .indicator-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef; font-size: 0.9em; }
-        .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-item { padding: 12px 5px; border-radius: 15px; font-weight: bold; }
-        .stat-item span { display: block; font-size: 1.7em; }
-        .bg-green { background: #e8f5e9; color: #2e7d32; }
-        .bg-orange { background: #fff3e0; color: #ef6c00; }
-        .bg-blue { background: #e3f2fd; color: #1565c0; }
-        .progress-section { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 15px; border-radius: 15px; margin-top: 10px; }
-        .progress-section b { font-size: 2em; display: block; }
+        :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; --white: #ffffff; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: var(--white); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; padding: 20px 0; }
+        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; }
+        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); shadow: 0 4px 15px rgba(255,215,0,0.4); }
+        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-top: 20px; }
+        .card-header { text-align: center; margin-bottom: 20px; }
+        .card-header h2 { color: var(--primary); font-size: 1.8em; }
+        .week-badge { background: #e3f2fd; color: #1565c0; padding: 5px 20px; border-radius: 15px; display: inline-block; margin-top: 10px; font-weight: bold; }
+        .toggle-btn { background: #667eea; border: none; padding: 15px; border-radius: 12px; color: #fff; width: 100%; margin: 20px 0; font-weight: bold; cursor: pointer; font-size: 1.1em; }
+        .stats-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-box { text-align: center; padding: 15px; border-radius: 15px; }
+        .stat-box.done { background: #e8f5e9; color: #2e7d32; }
+        .stat-box.pending { background: #fff3e0; color: #ef6c00; }
+        .stat-box.current { background: #e3f2fd; color: #1565c0; }
+        .stat-number { font-size: 1.8em; font-weight: bold; display: block; }
+        .total-box { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; padding: 25px; border-radius: 20px; text-align: center; margin: 20px 0; }
+        .total-number { font-size: 3em; font-weight: bold; display: block; }
+        .progress-section { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 10px; }
+        .progress-bar-bg { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; transition: width 0.8s ease-in-out; }
+        .link-btn { display: block; text-align: center; background: #1e3c72; color: #fff; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 20px; }
+        .loading { text-align: center; padding: 50px; font-size: 1.2em; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="weeks-nav" id="navBar"></div>
-    <div id="displayArea">جاري مزامنة البيانات...</div>
+    <header>
+        <h1>لوحة متابعة المشرفين</h1>
+        <p>اتصال مباشر ومستقر بدون بروكسي</p>
+    </header>
+
+    <div class="nav" id="weeksNav"></div>
+    <div id="content">
+        <div class="loading">جاري جلب البيانات مباشرة من جوجل...</div>
+    </div>
 </div>
 
 <script>
-// إضافة عشوائية للرابط لمنع الكاش (Cache)
-const DATA_SOURCE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv&cache=" + Math.random();
-const W_TEXT = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const TOTAL_INDICATORS = 44;
 
-let masterData = [];
-let selectedW = 2; // الأسبوع المطلوب مراجعته
+let state = { allData: [], currentWeek: 2 };
 
-async function fetchData() {
+async function init() {
     try {
-        const response = await fetch(DATA_SOURCE);
-        const rawText = await response.text();
-        masterData = processCSV(rawText);
-        updateUI();
-    } catch (err) { document.getElementById('displayArea').innerHTML = "فشل في تحديث البيانات"; }
+        // الاتصال المباشر وحذف أي بروكسي وسيط
+        const res = await fetch(`${SHEET_URL}&t=${Date.now()}`);
+        const csv = await res.text();
+        state.allData = parseCSV(csv);
+        render();
+    } catch (e) {
+        document.getElementById('content').innerHTML = '<div style="text-align:center; color:white;">خطأ في الاتصال المباشر. تأكد من نشر الشيت بصيغة CSV.</div>';
+    }
 }
 
-function processCSV(text) {
-    const lines = text.split(/\r?\n/);
+function parseCSV(text) {
+    const lines = text.split('\n').filter(l => l.trim());
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
     return lines.slice(1).map(line => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-        return headers.reduce((obj, h, i) => ({ ...obj, [h]: values[i] || "" }), {});
+        let obj = {};
+        headers.forEach((h, i) => obj[h] = values[i] || "");
+        return obj;
     });
 }
 
-function updateUI() {
-    const nav = document.getElementById('navBar');
+function render() {
+    renderNav();
+    renderCards();
+}
+
+function renderNav() {
+    const nav = document.getElementById('weeksNav');
     nav.innerHTML = '';
     for(let i=1; i<=15; i++) {
         const btn = document.createElement('button');
-        btn.className = `week-btn ${i === selectedW ? 'active' : ''}`;
-        btn.innerText = i;
-        btn.onclick = () => { selectedW = i; updateUI(); };
+        btn.className = `btn ${state.currentWeek === i ? 'active' : ''}`;
+        btn.textContent = i;
+        btn.onclick = () => { state.currentWeek = i; render(); };
         nav.appendChild(btn);
     }
+}
 
-    const grid = document.getElementById('displayArea');
-    grid.innerHTML = '';
+function renderCards() {
+    const container = document.getElementById('content');
+    container.innerHTML = '';
 
-    const weekData = masterData.filter(row => 
-        (row["الأسابيع"] || "").includes(W_TEXT[selectedW]) || (row["الأسابيع"] || "") == selectedW
-    );
+    const sample = state.allData[0];
+    const nameKey = Object.keys(sample).find(k => k.includes("اسم") || k.includes("المشرف"));
+    const weekKey = Object.keys(sample).find(k => k.includes("الأسبوع") || k.includes("الأسابيع"));
+    const statusKey = Object.keys(sample).find(k => k.includes("الحالة"));
+
+    // حساب الإجمالي التراكمي (جميع الأسابيع)
+    const totals = {};
+    state.allData.forEach(row => {
+        const name = row[nameKey];
+        if (name && (row[statusKey]?.includes("تنفيذ"))) {
+            totals[name] = (totals[name] || 0) + 1;
+        }
+    });
+
+    // بيانات الأسبوع المختار فقط
+    const weekData = state.allData.filter(row => {
+        const val = row[weekKey] || "";
+        const num = parseInt(val.replace(/[^0-9]/g, ''));
+        return num === state.currentWeek;
+    });
 
     if (weekData.length === 0) {
-        grid.innerHTML = `<div class="supervisor-card">لا توجد بيانات مسجلة للأسبوع ${selectedW}</div>`;
+        container.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${state.currentWeek}</h3></div>`;
         return;
     }
 
-    const summary = {};
+    const supervisors = {};
     weekData.forEach(row => {
-        const sup = row["اسم المشرف"]; if(!sup) return;
-        if(!summary[sup]) summary[sup] = { name: sup, done: 0, pending: 0, total: 0, items: [] };
-
-        // الحل الجذري: تقسيم النصوص بناءً على أي فاصل أسطر وحذف الفراغات
-        const indList = (row["المؤشر"] || "").split(/\n/).map(t => t.trim()).filter(t => t.length > 5);
-        const statList = (row["الحالة"] || "").split(/\n/).map(t => t.trim()).filter(t => t.length > 0);
-
-        indList.forEach((txt, idx) => {
-            const status = (statList[idx] || statList[0] || "").trim();
-            const isDone = status.includes("تم") && !status.includes("جاري");
-            const isPending = status.includes("جاري");
-
-            if(isDone) summary[sup].done++;
-            if(isPending) summary[sup].pending++;
-            summary[sup].total++;
-            summary[sup].items.push({ txt, isDone, isPending });
-        });
+        const name = row[nameKey];
+        if(!name) return;
+        if(!supervisors[name]) {
+            supervisors[name] = { 
+                name, 
+                weekDone: 0, 
+                totalDone: totals[name] || 0,
+                link: Object.values(row).find(v => v.toString().startsWith('http')) || "#"
+            };
+        }
+        if(row[statusKey]?.includes("تنفيذ")) supervisors[name].weekDone++;
     });
 
-    Object.values(summary).forEach(s => {
-        grid.innerHTML += `
-            <div class="supervisor-card">
-                <div class="name-header">${s.name}</div>
-                <div style="font-size:0.8em; color:#777; margin-top:-10px; margin-bottom:15px;">الأسبوع ${W_TEXT[selectedW]}</div>
-                
-                <button class="action-btn" onclick="this.nextElementSibling.classList.toggle('active')">
-                    ▼ قائمة المؤشرات (${s.total})
-                </button>
-                <div class="details-box">
-                    ${s.items.map(it => `
-                        <div class="indicator-item">
-                            <span>${it.txt}</span>
-                            <span>${it.isDone ? '✅' : (it.isPending ? '⏳' : '⚪')}</span>
-                        </div>
-                    `).join('')}
-                </div>
+    Object.values(supervisors).forEach(sup => {
+        const percent = ((sup.totalDone / TOTAL_INDICATORS) * 100).toFixed(2);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-header">
+                <h2>${sup.name}</h2>
+                <span class="week-badge">الأسبوع ${state.currentWeek}</span>
+            </div>
 
-                <div class="stats-row">
-                    <div class="stat-item bg-green"><span>${s.done}</span>تم ✅</div>
-                    <div class="stat-item bg-orange"><span>${s.pending}</span>جاري ⏳</div>
-                    <div class="stat-item bg-blue"><span>${s.total}</span>الأسبوع</div>
-                </div>
+            <button class="toggle-btn">📋 عرض المؤشرات (${sup.weekDone})</button>
 
-                <div class="progress-section">
-                    <small>إجمالي المنجز (تراكمي)</small>
-                    <b>${s.done}</b>
-                    <small>نسبة الإنجاز: ${((s.done/44)*100).toFixed(1)}%</small>
-                </div>
-            </div>`;
+            <div class="stats-main">
+                <div class="stat-box done"><span class="stat-number">${sup.weekDone}</span>تم ✅</div>
+                <div class="stat-box pending"><span class="stat-number">0</span>جاري ⏳</div>
+                <div class="stat-box current"><span class="stat-number">${sup.weekDone}</span>هذا الأسبوع</div>
+            </div>
+
+            <div class="total-box">
+                <p>📊 إجمالي المؤشرات المنفذة (جميع الأسابيع)</p>
+                <span class="total-number">${sup.totalDone}</span>
+                <p>من ${TOTAL_INDICATORS} مؤشر = ${percent}%</p>
+            </div>
+
+            <div class="progress-section">
+                <p>نسبة الإنجاز في الأسبوع الحالي: ${percent}%</p>
+                <div class="progress-bar-bg"><div class="progress-fill" style="width:${percent}%; background:#ff4444;"></div></div>
+            </div>
+
+            <div class="progress-section">
+                <p>النسبة من إجمالي المؤشرات (${TOTAL_INDICATORS}): ${percent}%</p>
+                <div class="progress-bar-bg"><div class="progress-fill" style="width:${percent}%; background:#9c27b0;"></div></div>
+            </div>
+
+            <a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
+        `;
+        container.appendChild(card);
     });
 }
-fetchData();
+
+init();
 </script>
 </body>
 </html>
