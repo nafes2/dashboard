@@ -2,18 +2,18 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة متابعة المشرفين</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* ستايلاتك الأصلية كما هي */
-        :root { --primary-color: #1a3a63; --success-color: #28a745; }
+        :root { --p: #1a3a63; --s: #28a745; }
         body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
-        .header { background-color: var(--primary-color); color: white; padding: 20px; text-align: center; }
+        .header { background: var(--p); color: white; padding: 20px; text-align: center; }
         .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
         .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .progress-bar { background: #eee; border-radius: 10px; height: 15px; overflow: hidden; margin: 10px 0; }
-        .progress-fill { background: var(--success-color); height: 100%; transition: width 0.5s; }
-        .indicator-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .prog-bg { background: #eee; border-radius: 10px; height: 15px; overflow: hidden; margin: 10px 0; }
+        .prog-fill { background: var(--s); height: 100%; transition: width 0.5s; }
+        .ind-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 0.9em; }
         .controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
     </style>
 </head>
@@ -23,66 +23,62 @@
 
 <div class="container">
     <div class="controls">
-        <input type="checkbox" id="showAll" onchange="init()">
-        <label for="showAll">إظهار المؤشرات المنفذة (المكتملة)</label>
+        <input type="checkbox" id="checkShow" onchange="init()">
+        <label for="checkShow" style="cursor:pointer">إظهار المؤشرات المنفذة (المكتملة)</label>
     </div>
     <div id="dashboard">جاري التحميل...</div>
 </div>
 
 <script>
-    const sheetId = '1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s';
-    const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+    const sId = '1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s';
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sId}/gviz/tq?tqx=out:csv`;
 
     async function init() {
         try {
-            const response = await fetch(base);
-            const data = await response.text();
+            const r = await fetch(csvUrl);
+            const txt = await r.text();
             
-            // نفس طريقة تقسيمك الأصلية بدون أي تغيير
-            const rows = data.split('\n').slice(1).map(row => {
+            // العودة لطريقة تقسيمك الأصلية حرفياً
+            const rows = txt.split('\n').slice(1).map(row => {
                 const parts = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return parts.map(p => p.replace(/^"|"$/g, '').trim());
             });
 
-            render(rows);
-        } catch (err) { document.getElementById('dashboard').innerText = "خطأ في الاتصال"; }
-    }
+            const showAll = document.getElementById('checkShow').checked;
+            const container = document.getElementById('dashboard');
+            container.innerHTML = '';
+            const groups = {};
 
-    function render(rows) {
-        const showAll = document.getElementById('showAll').checked;
-        const container = document.getElementById('dashboard');
-        container.innerHTML = '';
-        const groups = {};
+            rows.forEach(row => {
+                const [name, status, task] = row;
+                if (!name) return;
+                if (!groups[name]) groups[name] = { done: 0, tasks: [] };
 
-        rows.forEach(row => {
-            const name = row[0]; const status = row[1]; const task = row[2];
-            if (!name) return;
-            if (!groups[name]) groups[name] = { done: 0, tasks: [] };
+                const isDone = (status === "تم التنفيذ" || status === "جاري التنفيذ");
+                if (isDone) groups[name].done++;
+                
+                if (!isDone || showAll) {
+                    groups[name].tasks.push({ task, status, isDone });
+                }
+            });
 
-            const isDone = (status === "تم التنفيذ" || status === "جاري التنفيذ");
-            if (isDone) groups[name].done++;
-            
-            // الإضافة الوحيدة: الفلترة
-            if (!isDone || showAll) {
-                groups[name].tasks.push({ task, status, isDone });
+            for (const name in groups) {
+                const g = groups[name];
+                const pct = ((g.done / 44) * 100).toFixed(1); // النسبة من 44
+                
+                container.innerHTML += `
+                    <div class="card">
+                        <h3>المشرف: ${name}</h3>
+                        <div class="prog-bg"><div class="prog-fill" style="width:${pct}%"></div></div>
+                        <p style="text-align:center">الإنجاز: ${g.done} من 44 (${pct}%)</p>
+                        <div>${g.tasks.map(t => `<div class="ind-item"><span>${t.task}</span><span>${t.status}</span></div>`).join('')}</div>
+                    </div>`;
             }
-        });
-
-        for (const name in groups) {
-            const g = groups[name];
-            const pct = ((g.done / 44) * 100).toFixed(1); // الحساب من 44
-            
-            container.innerHTML += `
-                <div class="card">
-                    <h3>المشرف: ${name}</h3>
-                    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-                    <p style="text-align:center">الإنجاز: ${g.done} من 44 (${pct}%)</p>
-                    <div>${g.tasks.map(t => `<div class="indicator-item"><span>${t.task}</span><span>${t.status}</span></div>`).join('')}</div>
-                </div>`;
-        }
+        } catch (e) { document.getElementById('dashboard').innerText = "خطأ في الاتصال"; }
     }
 
     init();
+    setInterval(init, 60000);
 </script>
 </body>
 </html>
