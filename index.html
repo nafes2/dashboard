@@ -304,6 +304,7 @@ header p {
   background: #ccc;
   color: #888;
   cursor: not-allowed;
+  pointer-events: none; /* ✅ منع جميع الأحداث */
 }
 .loading {
   text-align: center;
@@ -782,9 +783,10 @@ function renderCards() {
         </div>
       </div>
 
-      <a href="${isLinkActive ? sup.link : '#'}" target="_blank" class="link-btn ${!isLinkActive ? 'disabled' : ''}">
-        ${isLinkActive ? '🔗 فتح الاستمارة' : '🔗 غير متاح'}
-      </a>
+      ${isLinkActive 
+        ? `<a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>`
+        : `<button class="link-btn disabled" disabled>🔗 غير متاح</button>`
+      }
     `;
     container.appendChild(card);
   });
