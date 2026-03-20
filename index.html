@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة متابعة المشرفين</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,7 +37,7 @@
             const r = await fetch(csvUrl);
             const txt = await r.text();
             
-            // العودة لطريقة تقسيمك الأصلية حرفياً
+            // تقسيم البيانات بنفس طريقتك الأصلية التي كانت تعمل
             const rows = txt.split('\n').slice(1).map(row => {
                 const parts = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return parts.map(p => p.replace(/^"|"$/g, '').trim());
@@ -64,7 +63,7 @@
 
             for (const name in groups) {
                 const g = groups[name];
-                const pct = ((g.done / 44) * 100).toFixed(1); // النسبة من 44
+                const pct = ((g.done / 44) * 100).toFixed(1); 
                 
                 container.innerHTML += `
                     <div class="card">
@@ -78,7 +77,6 @@
     }
 
     init();
-    setInterval(init, 60000);
 </script>
 </body>
 </html>
