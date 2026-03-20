@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - الإصدار المعتمد</title>
+    <title>لوحة متابعة المشرفين - الإصدار النهائي</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +28,7 @@
 <body>
 <div class="container">
     <div class="nav" id="weeksNav"></div>
-    <div id="content"></div>
+    <div id="content"><div style="text-align:center; padding:50px;">جاري جلب البيانات...</div></div>
 </div>
 
 <script>
@@ -41,7 +41,7 @@ function countInds(val) {
     return val.split(',').filter(x => x.trim().length > 0).length;
 }
 
-function getWeek(val) {
+function getWeekNum(val) {
     if (!val) return null;
     const m = val.toString().match(/\d+/);
     return m ? parseInt(m[0]) : null;
@@ -53,11 +53,12 @@ async function fetchData() {
         const text = await r.text();
         app.data = parse(text);
         render();
-    } catch(e) { document.getElementById('content').innerHTML = "⚠️ فشل في جلب البيانات"; }
+    } catch(e) { document.getElementById('content').innerHTML = "⚠️ خطأ في الاتصال"; }
 }
 
 function parse(csv) {
     const lines = csv.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
     const heads = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
     return lines.slice(1).map(line => {
         const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,'').trim());
@@ -85,15 +86,16 @@ function render() {
     const sK = keys.find(k => k.includes("حالة"));
     const iK = keys.find(k => k.includes("مؤشر"));
 
+    // الإجمالي لجميع الأسابيع
     let totals = {};
     app.data.forEach(r => {
         const name = r[nK];
-        if (name && r[sK]?.includes("تم")) {
+        if (name && (r[sK]||"").includes("تم")) {
             totals[name] = (totals[name] || 0) + countInds(r[iK]);
         }
     });
 
-    const rows = app.data.filter(r => getWeek(r[wK]) === app.week);
+    const rows = app.data.filter(r => getWeekNum(r[wK]) === app.week);
     if (rows.length === 0) {
         cont.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${app.week}</h3></div>`;
         return;
@@ -104,31 +106,31 @@ function render() {
         const n = r[nK]; if(!n) return;
         if(!sups[n]) sups[n] = { n, wDone: 0, wProg: 0, tDone: totals[n] || 0, list: [], link: "#" };
         
-        const c = countInds(r[iK]);
-        const statusStr = r[sK] || "";
+        const count = countInds(r[iK]);
+        const status = (r[sK] || "").trim();
         
-        // تعديل جوهري: فحص الحالة لكل سطر
-        if(statusStr.includes("تم")) {
-            sups[n].wDone += c;
-        } else if(statusStr.includes("جاري")) {
-            sups[n].wProg += c; // هنا سيظهر رقم 2 بدلاً من 0
+        // تعديل منطق الحساب لخانة "جاري"
+        if(status.includes("تم")) {
+            sups[n].wDone += count;
+        } else if(status.includes("جاري")) {
+            sups[n].wProg += count; // هذا ما سيجعل الرقم 2 يظهر
         }
 
         r[iK].split(',').forEach(txt => { 
-            if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: statusStr.includes("تم"), p: statusStr.includes("جاري") }); 
+            if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: status.includes("تم"), p: status.includes("جاري") }); 
         });
         
-        const l = Object.values(r).find(v => v.toString().startsWith('http'));
+        const l = Object.values(r).find(v => v && v.toString().startsWith('http'));
         if(l) sups[n].link = l;
     });
 
     cont.innerHTML = '';
     Object.values(sups).forEach(s => {
-        const p = ((s.tDone / GOAL) * 100).toFixed(2);
+        const p = ((s.tDone / GOAL) * 100).toFixed(1);
         cont.innerHTML += `
             <div class="card">
                 <h2>${s.n}</h2>
-                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px; border:1px solid #eee;">
                     ${s.list.map(i => `<div class="ind-item"><span>${i.d?'✅':(i.p?'⏳':'⚪')}</span><span>${i.t}</span></div>`).join('')}
                 </div>
                 <div class="stats-grid">
