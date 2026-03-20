@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - الإصلاح الشامل</title>
+    <title>لوحة متابعة المشرفين - النسخة النهائية</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,7 +34,7 @@
 <script>
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const GOAL = 44;
-let app = { data: [], week: 3 }; // تم التعديل لعرض الأسبوع 3 مباشرة
+let app = { data: [], week: 3 };
 
 function countInds(val) {
     if (!val) return 0;
@@ -44,21 +44,21 @@ function countInds(val) {
 function getWeek(val) {
     if (!val) return null;
     const m = val.toString().match(/\d+/);
-    if (m) return parseInt(m[0]);
-    return null;
+    return m ? parseInt(m[0]) : null;
 }
 
 async function fetchData() {
     try {
-        const r = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
+        const r = await fetch(`${SHEET_CSV}&t=${Date.now()}`); // منع التخزين المؤقت
         const text = await r.text();
         app.data = parse(text);
         render();
-    } catch(e) { document.getElementById('content').innerHTML = "⚠️ خطأ في الاتصال"; }
+    } catch(e) { document.getElementById('content').innerHTML = "⚠️ فشل في تحديث البيانات"; }
 }
 
 function parse(csv) {
     const lines = csv.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
     const heads = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
     return lines.slice(1).map(line => {
         const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,'').trim());
@@ -81,22 +81,23 @@ function render() {
     if (app.data.length === 0) return;
 
     const keys = Object.keys(app.data[0]);
-    const nK = keys.find(k => k.includes("مشرف"));
+    // البحث المرن عن الأعمدة لضمان عدم حدوث خطأ "لا توجد بيانات"
+    const nK = keys.find(k => k.toLowerCase().includes("مشرف") || k.toLowerCase().includes("الاسم"));
     const wK = keys.find(k => k.includes("أسبوع") || k.includes("اسبوع"));
-    const sK = keys.find(k => k.includes("حالة"));
-    const iK = keys.find(k => k.includes("مؤشر"));
+    const sK = keys.find(k => k.includes("حالة") || k.includes("الوضع"));
+    const iK = keys.find(k => k.includes("مؤشر") || k.includes("البيان"));
 
     let totals = {};
     app.data.forEach(r => {
         const name = r[nK];
-        if (name && r[sK]?.includes("تم التنفيذ")) {
+        if (name && r[sK] && r[sK].includes("تم التنفيذ")) {
             totals[name] = (totals[name] || 0) + countInds(r[iK]);
         }
     });
 
     const rows = app.data.filter(r => getWeek(r[wK]) === app.week);
     if (rows.length === 0) {
-        cont.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${app.week}</h3></div>`;
+        cont.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${app.week}</h3><p style="font-size:0.8em; color:#999;">تأكد من كتابة الرقم ${app.week} في خانة الأسبوع بالشيت</p></div>`;
         return;
     }
 
@@ -106,17 +107,18 @@ function render() {
         if(!sups[n]) sups[n] = { n, wDone: 0, wProg: 0, tDone: totals[n] || 0, list: [], link: "#" };
         
         const c = countInds(r[iK]);
-        const isDone = r[sK]?.includes("تم التنفيذ");
-        const isProg = r[sK]?.includes("جاري");
+        const status = r[sK] || "";
+        const isDone = status.includes("تم");
+        const isProg = status.includes("جاري");
 
         if(isDone) sups[n].wDone += c;
-        if(isProg) sups[n].wProg += c; // إضافة عداد "جاري التنفيذ"
+        if(isProg) sups[n].wProg += c;
 
         r[iK].split(',').forEach(txt => { 
             if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: isDone, p: isProg }); 
         });
         
-        const l = Object.values(r).find(v => v.toString().startsWith('http'));
+        const l = Object.values(r).find(v => v && v.toString().startsWith('http'));
         if(l) sups[n].link = l;
     });
 
@@ -126,7 +128,7 @@ function render() {
         cont.innerHTML += `
             <div class="card">
                 <h2>${s.n}</h2>
-                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px; border:1px solid #eee;">
                     ${s.list.map(i => `<div class="ind-item"><span>${i.d?'✅':(i.p?'⏳':'⚪')}</span><span>${i.t}</span></div>`).join('')}
                 </div>
                 <div class="stats-grid">
