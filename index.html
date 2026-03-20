@@ -3,52 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إصدار الحساب الدقيق</title>
+    <title>لوحة متابعة المشرفين - النسخة المصححة</title>
     <style>
         :root { --primary: #1e3c72; --accent: #ffd700; }
-        body { font-family: 'Segoe UI', sans-serif; background: #2a5298; color: #fff; padding: 15px; margin: 0; }
-        .container { max-width: 500px; margin: 0 auto; }
-        .nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
-        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; padding: 10px 0; border-radius: 50%; cursor: pointer; font-weight: bold; width: 45px; height: 45px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #2a5298; color: #fff; padding: 10px; margin: 0; }
+        .container { max-width: 480px; margin: 0 auto; }
+        .nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; padding: 10px; }
+        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-weight: bold; }
         .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
-        .card { background: #fff; color: #333; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); text-align: center; }
-        .sup-name { color: var(--primary); font-size: 1.4em; font-weight: bold; margin-bottom: 5px; }
-        .week-tag { background: #e3f2fd; color: #1565c0; padding: 3px 12px; border-radius: 12px; font-size: 0.8em; display: inline-block; margin-bottom: 15px; }
-        .toggle-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
-        .list-area { display: none; background: #f9f9f9; padding: 10px; border-radius: 10px; text-align: right; border: 1px solid #eee; margin-bottom: 15px; font-size: 0.85em; }
+        .card { background: #fff; color: #333; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); text-align: center; }
+        .sup-name { color: var(--primary); font-size: 1.4em; font-weight: bold; }
+        .toggle-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 10px; cursor: pointer; margin: 15px 0; font-weight: bold; }
+        .list-area { display: none; background: #f9f9f9; padding: 10px; border-radius: 10px; text-align: right; border: 1px solid #eee; font-size: 0.85em; }
         .list-area.show { display: block; }
-        .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .stat-box { padding: 10px 5px; border-radius: 12px; font-weight: bold; font-size: 0.75em; }
+        .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { padding: 10px 5px; border-radius: 12px; font-weight: bold; font-size: 0.8em; }
         .stat-box b { display: block; font-size: 1.5em; }
         .box-done { background: #e8f5e9; color: #2e7d32; }
         .box-proc { background: #fff3e0; color: #ef6c00; }
         .box-total { background: #e3f2fd; color: #1565c0; }
         .total-box { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 15px; border-radius: 15px; }
-        .total-box b { font-size: 1.8em; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="nav" id="weeks"></div>
-    <div id="content">جاري التحميل...</div>
+    <div class="nav" id="weeksNav"></div>
+    <div id="contentGrid">جاري التحميل...</div>
 </div>
 
 <script>
 const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const W_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
 
-let db = [];
-let currentW = 2; 
+let dbData = [];
+let currentW = 2;
 
-async function load() {
+async function loadData() {
     try {
-        const r = await fetch(URL + "&t=" + Date.now());
-        const txt = await r.text();
-        db = parseCSV(txt);
+        const response = await fetch(URL + "&t=" + Date.now());
+        const text = await response.text();
+        dbData = parseCSV(text);
         render();
-    } catch (e) { document.getElementById('content').innerHTML = "تعذر جلب البيانات"; }
+    } catch (e) { document.getElementById('contentGrid').innerHTML = "خطأ في التحميل"; }
 }
 
 function parseCSV(csv) {
@@ -67,7 +65,7 @@ function parseCSV(csv) {
 }
 
 function render() {
-    const nav = document.getElementById('weeks');
+    const nav = document.getElementById('weeksNav');
     nav.innerHTML = '';
     for(let i=1; i<=15; i++){
         const b = document.createElement('button');
@@ -77,63 +75,63 @@ function render() {
         nav.appendChild(b);
     }
 
-    const main = document.getElementById('content');
-    main.innerHTML = '';
-    
-    // فلترة البيانات بناءً على الأسبوع المختار
-    const filtered = db.filter(r => (r["الأسابيع"]||"").includes(W_NAMES[currentW]) || (r["الأسابيع"]||"").includes(currentW.toString()));
+    const grid = document.getElementById('contentGrid');
+    grid.innerHTML = '';
 
-    if (filtered.length === 0) {
-        main.innerHTML = `<div class="card">لا توجد بيانات للأسبوع ${currentW}</div>`;
+    // تصفية البيانات
+    const filtered = dbData.filter(r => (r["الأسابيع"]||"").includes(W_NAMES[currentW]) || (r["الأسابيع"]||"").includes(currentW.toString()));
+
+    if(filtered.length === 0) {
+        grid.innerHTML = '<div class="card">لا توجد بيانات لهذا الأسبوع</div>';
         return;
     }
 
     const sups = {};
     filtered.forEach(r => {
         const name = r["اسم المشرف"]; if(!name) return;
-        if(!sups[name]) sups[name] = { name, done: 0, process: 0, total: 0, list: [] };
+        if(!sups[name]) sups[name] = { name, done: 0, proc: 0, total: 0, list: [] };
         
-        // --- الحل النهائي لمشكلة العداد: تقسيم محتوى الخلية لأسطر حقيقية ---
-        const rawInds = (r["المؤشر"]||"").split(/\n/).map(x => x.trim()).filter(x => x.length > 2);
-        const rawStats = (r["الحالة"]||"").split(/\n/).map(x => x.trim()).filter(x => x.length > 0);
+        // تفكيك الأسطر لحساب العداد بشكل صحيح (1 أو 2)
+        const inds = (r["المؤشر"]||"").split('\n').map(x => x.trim()).filter(x => x.length > 3);
+        const stats = (r["الحالة"]||"").split('\n').map(x => x.trim()).filter(x => x);
 
-        rawInds.forEach((txt, idx) => {
-            const s = (rawStats[idx] || rawStats[0] || "").trim();
-            const isDone = s.includes("تم") && !s.includes("جاري");
-            const isProc = s.includes("جاري");
+        inds.forEach((txt, idx) => {
+            const s = (stats[idx] || stats[0] || "").trim();
+            const done = s.includes("تم") && !s.includes("جاري");
+            const proc = s.includes("جاري");
             
-            if(isDone) sups[name].done++;
-            if(isProc) sups[name].process++;
+            if(done) sups[name].done++;
+            if(proc) sups[name].proc++;
             sups[name].total++;
-            sups[name].list.push({ txt, isDone, isProc });
+            sups[name].list.push({ txt, done, proc });
         });
     });
 
     Object.values(sups).forEach(s => {
-        main.innerHTML += `
+        grid.innerHTML += `
             <div class="card">
                 <div class="sup-name">${s.name}</div>
-                <div class="week-tag">الأسبوع ${W_NAMES[currentW]}</div>
+                <div style="color:#666; font-size:0.8em; margin-bottom:10px;">الأسبوع ${W_NAMES[currentW]}</div>
                 <button class="toggle-btn" onclick="this.nextElementSibling.classList.toggle('show')">
                     ▼ عرض المؤشرات (${s.total})
                 </button>
                 <div class="list-area">
-                    ${s.list.map(item => `<div class="item"><span>${item.txt}</span> <span>${item.isDone?'✅':(item.isProc?'⏳':'⚪')}</span></div>`).join('')}
+                    ${s.list.map(it => `<div class="item"><span>${it.txt}</span> <span>${it.done?'✅':(it.proc?'⏳':'⚪')}</span></div>`).join('')}
                 </div>
                 <div class="stats-grid">
                     <div class="stat-box box-done"><b>${s.done}</b>تم ✅</div>
-                    <div class="stat-box box-proc"><b>${s.process}</b>جاري ⏳</div>
-                    <div class="stat-box box-total"><b>${s.total}</b>هذا الأسبوع</div>
+                    <div class="stat-box box-proc"><b>${s.proc}</b>جاري ⏳</div>
+                    <div class="stat-box box-total"><b>${s.total}</b>الأسبوع</div>
                 </div>
                 <div class="total-box">
-                    <small>إجمالي المنجز (جميع الأسابيع)</small>
-                    <b>${s.done}</b>
-                    <small>من 44 مؤشر = ${((s.done/44)*100).toFixed(2)}%</small>
+                    <small>المنجز (جميع الأسابيع)</small>
+                    <div style="font-size:1.8em; font-weight:bold; margin:5px 0;">${s.done}</div>
+                    <small>من 44 مؤشر = ${((s.done/44)*100).toFixed(1)}%</small>
                 </div>
             </div>`;
     });
 }
-load();
+loadData();
 </script>
 </body>
 </html>
