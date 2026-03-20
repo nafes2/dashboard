@@ -3,145 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - مطابقة معادلات الشيت</title>
+    <title>لوحة متابعة المشرفين - النسخة المعتمدة</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #fff; min-height: 100vh; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
-        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; }
-        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
+        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; }
         .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
         .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-bottom: 20px; }
-        .card h2 { color: var(--primary); text-align: center; margin-bottom: 15px; }
-        .indicators-list { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; }
-        .indicator-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.95em; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        .stat-box { text-align: center; padding: 12px; border-radius: 15px; font-weight: bold; }
+        .card h2 { color: var(--primary); text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .ind-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+        .stat-box { text-align: center; padding: 15px; border-radius: 15px; font-weight: bold; }
         .stat-box.done { background: #e8f5e9; color: #2e7d32; }
         .stat-box.pending { background: #fff3e0; color: #ef6c00; }
         .stat-box.info { background: #e3f2fd; color: #1565c0; }
-        .stat-number { font-size: 1.8em; display: block; }
-        .total-panel { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .stat-num { font-size: 1.8em; display: block; }
+        .total-box { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
         .link-btn { display: block; text-align: center; background: #1e3c72; color: #fff; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="nav" id="weeksNav"></div>
-    <div id="content"></div>
+    <div id="content"><div style="text-align:center; padding:50px;">جاري جلب بيانات الشيت...</div></div>
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const TOTAL_INDICATORS = 44;
-let state = { allData: [], currentWeek: 3 };
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const GOAL = 44;
+let app = { data: [], week: 3 };
 
-function getWeekNum(t) {
-    if (!t) return null;
-    const m = t.toString().match(/\d+/);
+// معادلتك: عد المؤشرات عبر الفواصل
+function countInds(val) {
+    if (!val) return 0;
+    return val.split(',').filter(x => x.trim().length > 0).length;
+}
+
+function getWeek(val) {
+    if (!val) return null;
+    const m = val.toString().match(/\d+/);
     return m ? parseInt(m[0]) : null;
 }
 
-// دالة تحاكي معادلتك في الشيت تماماً (حساب عدد المؤشرات بالفاصلة)
-function countIndicators(text) {
-    if (!text || text.trim() === "") return 0;
-    return text.split(',').filter(i => i.trim() !== "").length;
+async function fetchData() {
+    try {
+        const r = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
+        const text = await r.text();
+        app.data = parse(text);
+        render();
+    } catch(e) { document.getElementById('content').innerHTML = "⚠️ فشل الاتصال بالشيت"; }
 }
 
-async function load() {
-    const res = await fetch(`${SHEET_URL}&t=${Date.now()}`);
-    const csv = await res.text();
-    state.allData = parseCSV(csv);
-    render();
-}
-
-function parseCSV(text) {
-    const rows = text.split('\n').filter(r => r.trim());
-    const headers = rows[0].split(',').map(h => h.replace(/"/g,'').trim());
-    return rows.slice(1).map(row => {
-        const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,'').trim());
-        let obj = {}; headers.forEach((h, i) => obj[h] = cols[i] || "");
-        return obj;
+function parse(csv) {
+    const lines = csv.split('\n').filter(l => l.trim());
+    const heads = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+    return lines.slice(1).map(line => {
+        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,'').trim());
+        let d = {}; heads.forEach((h, i) => d[h] = cols[i] || "");
+        return d;
     });
 }
 
 function render() {
-    const nav = document.getElementById('weeksNav');
-    nav.innerHTML = '';
+    const nav = document.getElementById('weeksNav'); nav.innerHTML = '';
     for(let i=1; i<=15; i++) {
         const b = document.createElement('button');
-        b.className = `btn ${state.currentWeek === i ? 'active' : ''}`;
+        b.className = `btn ${app.week === i ? 'active' : ''}`;
         b.textContent = i;
-        b.onclick = () => { state.currentWeek = i; render(); };
+        b.onclick = () => { app.week = i; render(); };
         nav.appendChild(b);
     }
 
-    const container = document.getElementById('content');
-    const sample = state.allData[0] || {};
-    const nKey = Object.keys(sample).find(k => k.includes("مشرف"));
-    const wKey = Object.keys(sample).find(k => k.includes("أسبوع"));
-    const sKey = Object.keys(sample).find(k => k.includes("حالة"));
-    const iKey = Object.keys(sample).find(k => k.includes("مؤشر"));
+    const cont = document.getElementById('content');
+    if (app.data.length === 0) return;
 
-    // الحساب التراكمي بناءً على معادلة الفاصلة
-    const totals = {};
-    state.allData.forEach(r => {
-        const n = r[nKey];
-        if (n && r[sKey]?.includes("تم التنفيذ")) {
-            const count = countIndicators(r[iKey]);
-            totals[n] = (totals[n] || 0) + count;
+    const keys = Object.keys(app.data[0]);
+    const nK = keys.find(k => k.includes("مشرف"));
+    const wK = keys.find(k => k.includes("أسبوع") || k.includes("اسبوع"));
+    const sK = keys.find(k => k.includes("حالة"));
+    const iK = keys.find(k => k.includes("مؤشر"));
+
+    // الإجمالي التراكمي (مطابق لمعادلة الشيت)
+    let totals = {};
+    app.data.forEach(r => {
+        const name = r[nK];
+        if (name && r[sK]?.includes("تم التنفيذ")) {
+            totals[name] = (totals[name] || 0) + countInds(r[iK]);
         }
     });
 
-    const weekRows = state.allData.filter(r => getWeekNum(r[wKey]) === state.currentWeek);
-    const sups = {};
-    weekRows.forEach(r => {
-        const n = r[nKey]; if(!n) return;
-        if(!sups[n]) sups[n] = { n, weekDone: 0, totalDone: totals[n] || 0, list: [], link: "#" };
-        
-        const count = countIndicators(r[iKey]);
-        const isDone = r[sKey]?.includes("تم التنفيذ");
-        if(isDone) sups[n].weekDone += count;
-        
-        // تفصيل المؤشرات في القائمة
-        r[iKey].split(',').forEach(ind => {
-            if(ind.trim()) sups[n].list.push({ text: ind.trim(), done: isDone });
-        });
+    const rows = app.data.filter(r => getWeek(r[wK]) === app.week);
+    if (rows.length === 0) {
+        cont.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${app.week}</h3></div>`;
+        return;
+    }
 
-        const link = Object.values(r).find(v => v.toString().startsWith('http'));
-        if(link) sups[n].link = link;
+    let sups = {};
+    rows.forEach(r => {
+        const n = r[nK]; if(!n) return;
+        if(!sups[n]) sups[n] = { n, wDone: 0, tDone: totals[n] || 0, list: [], link: "#" };
+        const c = countInds(r[iK]);
+        const done = r[sK]?.includes("تم التنفيذ");
+        if(done) sups[n].wDone += c;
+        r[iK].split(',').forEach(txt => { if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: done }); });
+        const l = Object.values(r).find(v => v.toString().startsWith('http'));
+        if(l) sups[n].link = l;
     });
 
-    container.innerHTML = '';
+    cont.innerHTML = '';
     Object.values(sups).forEach(s => {
-        const perc = ((s.totalDone / TOTAL_INDICATORS) * 100).toFixed(2);
-        container.innerHTML += `
+        const p = ((s.tDone / GOAL) * 100).toFixed(2);
+        cont.innerHTML += `
             <div class="card">
                 <h2>${s.n}</h2>
-                <div class="indicators-list">
-                    ${s.list.map(ind => `
-                        <div class="indicator-item">
-                            <span>${ind.done ? '✅' : '⏳'}</span>
-                            <span>${ind.text}</span>
-                        </div>
-                    `).join('')}
+                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px;">
+                    ${s.list.map(i => `<div class="ind-item"><span>${i.d?'✅':'⏳'}</span><span>${i.t}</span></div>`).join('')}
                 </div>
                 <div class="stats-grid">
-                    <div class="stat-box done"><span class="stat-number">${s.weekDone}</span>تم</div>
-                    <div class="stat-box pending"><span class="stat-number">0</span>جاري</div>
-                    <div class="stat-box info"><span class="stat-number">${s.weekDone}</span>هذا الأسبوع</div>
+                    <div class="stat-box done"><span class="stat-num">${s.wDone}</span>تم</div>
+                    <div class="stat-box pending"><span class="stat-num">0</span>جاري</div>
+                    <div class="stat-box info"><span class="stat-num">${s.wDone}</span>هذا الأسبوع</div>
                 </div>
-                <div class="total-panel">
+                <div class="total-box">
                     <p>📊 الإجمالي التراكمي</p>
-                    <h1 style="font-size:3em;">${s.totalDone}</h1>
-                    <p>من ${TOTAL_INDICATORS} مؤشر (${perc}%)</p>
+                    <h1 style="font-size:2.8em;">${s.tDone}</h1>
+                    <p>من ${GOAL} مؤشر (${p}%)</p>
                 </div>
                 <a href="${s.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
             </div>`;
     });
 }
-load();
+fetchData();
 </script>
 </body>
 </html>
