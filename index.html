@@ -3,167 +3,141 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين - إصلاح عداد المؤشرات</title>
+<title>لوحة متابعة المشرفين - الإصدار المعتمد</title>
 <style>
-    :root { --primary: #1e3c72; --accent: #ffd700; --success: #4caf50; }
+    :root { --bg: #f4f7f6; --primary: #1e3c72; --accent: #ffd700; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, var(--primary) 0%, #2a5298 100%); color: #fff; min-height: 100vh; padding: 20px; text-align: center; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; }
-    .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.3s; }
-    .btn.active { background: var(--accent); color: var(--primary); transform: scale(1.1); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-    .card { background: #fff; color: #333; border-radius: 15px; padding: 20px; text-align: right; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .card h3 { color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
-    .indicators-toggle { background: #667eea; border: none; padding: 10px; border-radius: 8px; cursor: pointer; color: #fff; width: 100%; font-weight: bold; margin-bottom: 12px; }
-    .indicators-list { display: none; background: #f9f9f9; border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; margin-bottom: 10px; }
-    .indicators-list.show { display: block; }
-    .indicator-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.85em; align-items: center; }
-    .status-done { color: var(--success); font-weight: bold; }
-    .status-pending { color: #ff9800; font-weight: bold; }
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
-    .stat-box { text-align: center; padding: 8px; border-radius: 8px; }
-    .stat-box.done { background: #e8f5e9; color: #2e7d32; }
-    .stat-box.pending { background: #fff3e0; color: #ef6c00; }
-    .stat-number { font-size: 1.2em; font-weight: bold; display: block; }
+    body { font-family: 'Segoe UI', sans-serif; background: #2a5298; color: #fff; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+    .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+    .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
+    
+    /* تصميم البطاقة الجديد ليطابق الصورة */
+    .card { background: #fff; color: #333; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); text-align: center; }
+    .sup-name { color: #1e3c72; font-size: 1.5em; margin-bottom: 5px; }
+    .week-tag { background: #e3f2fd; color: #1565c0; padding: 5px 15px; border-radius: 15px; display: inline-block; margin-bottom: 15px; font-size: 0.9em; }
+    
+    .toggle-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; cursor: pointer; }
+    
+    /* شبكة العدادات الثلاثية */
+    .mini-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .stat-box { padding: 15px 5px; border-radius: 12px; }
+    .stat-box b { font-size: 1.8em; display: block; }
+    .box-done { background: #e8f5e9; color: #2e7d32; }
+    .box-process { background: #fff3e0; color: #ef6c00; }
+    .box-total { background: #e3f2fd; color: #1565c0; }
+    
+    /* صندوق الإجمالي الكبير */
+    .total-box { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+    .total-box b { font-size: 2.5em; }
+    
+    .list-area { display: none; background: #f9f9f9; padding: 10px; border-radius: 10px; text-align: right; margin-bottom: 15px; border: 1px solid #eee; }
+    .list-area.show { display: block; }
+    .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; font-size: 0.9em; }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>📊 لوحة متابعة المشرفين</h1>
-        <p id="status-msg">جاري تحميل البيانات وتصحيح الحساب...</p>
-    </header>
-    <div class="nav" id="weekNav"></div>
-    <div class="grid" id="dataGrid"></div>
+    <div class="nav" id="weeks"></div>
+    <div id="content"></div>
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const TOTAL_EXPECTED = 44;
-const WEEK_MAP = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
+const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const W_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
 
-let state = { allRows: [], currentWeek: 5 };
+let db = [];
+let currentW = 5;
 
-async function init() {
-    try {
-        const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
-        const text = await response.text();
-        state.allRows = parseCSV(text);
-        document.getElementById('status-msg').innerText = "✅ تم تحديث البيانات: العداد يعمل بدقة الآن";
-        render();
-    } catch (e) {
-        document.getElementById('status-msg').innerText = "❌ فشل في جلب البيانات";
-    }
+async function load() {
+    const r = await fetch(URL + "&t=" + Date.now());
+    const txt = await r.text();
+    db = parse(txt);
+    render();
 }
 
-// تحسين تحليل الـ CSV للتعامل مع الأسطر المتعددة داخل الخلية الواحدة
-function parseCSV(csv) {
-    const rows = [];
-    let currentRow = [];
-    let currentField = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < csv.length; i++) {
-        const char = csv[i];
-        const nextChar = csv[i + 1];
-
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') { currentField += '"'; i++; }
-            else { inQuotes = !inQuotes; }
-        } else if (char === ',' && !inQuotes) {
-            currentRow.push(currentField.trim());
-            currentField = '';
-        } else if ((char === '\r' || char === '\n') && !inQuotes) {
-            if (currentField || currentRow.length > 0) {
-                currentRow.push(currentField.trim());
-                rows.push(currentRow);
-                currentRow = [];
-                currentField = '';
-            }
-        } else {
-            currentField += char;
-        }
-    }
-    if (currentRow.length > 0) { currentRow.push(currentField.trim()); rows.push(currentRow); }
-
-    const headers = rows[0];
-    return rows.slice(1).map(r => headers.reduce((obj, h, i) => ({ ...obj, [h]: r[i] || "" }), {}));
+function parse(csv) {
+    const lines = csv.split('\n').filter(l => l.trim());
+    const head = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+    return lines.slice(1).map(l => {
+        const v = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/"/g, '').trim());
+        return head.reduce((o, h, i) => ({ ...o, [h]: v[i] || "" }), {});
+    });
 }
 
 function render() {
-    const nav = document.getElementById('weekNav');
+    const nav = document.getElementById('weeks');
     nav.innerHTML = '';
-    for(let i=1; i<=15; i++) {
-        const btn = document.createElement('button');
-        btn.className = `btn ${i === state.currentWeek ? 'active' : ''}`;
-        btn.innerText = i;
-        btn.onclick = () => { state.currentWeek = i; render(); };
-        nav.appendChild(btn);
+    for(let i=1; i<=15; i++){
+        const b = document.createElement('button');
+        b.className = `btn ${i===currentW?'active':''}`;
+        b.innerText = i;
+        b.onclick = () => { currentW = i; render(); };
+        nav.appendChild(b);
     }
 
-    const grid = document.getElementById('dataGrid');
-    grid.innerHTML = '';
+    const main = document.getElementById('content');
+    main.innerHTML = '';
+    
+    // تحديد الأعمدة
+    const sample = db[0] || {};
+    const colName = Object.keys(sample).find(k => k.includes("مشرف"));
+    const colWeek = Object.keys(sample).find(k => k.includes("بوع"));
+    const colStat = Object.keys(sample).find(k => k.includes("حالة"));
+    const colInd = Object.keys(sample).find(k => k.includes("مؤشر"));
 
-    const sample = state.allRows[0] || {};
-    const nameCol = Object.keys(sample).find(k => k.includes("مشرف")) || "اسم المشرف";
-    const weekCol = Object.keys(sample).find(k => k.includes("بوع")) || "الأسابيع";
-    const statusCol = Object.keys(sample).find(k => k.includes("حالة")) || "الحالة";
-    const indCol = Object.keys(sample).find(k => k.includes("مؤشر")) || "المؤشر";
+    const filtered = db.filter(r => (r[colWeek]||"").includes(W_NAMES[currentW]) || (r[colWeek]||"").includes(currentW.toString()));
 
-    const filtered = state.allRows.filter(row => {
-        const val = row[weekCol] || "";
-        return val.includes(WEEK_MAP[state.currentWeek]) || val.includes(state.currentWeek.toString());
-    });
+    const sups = {};
+    filtered.forEach(r => {
+        const n = r[colName]; if(!n) return;
+        if(!sups[n]) sups[n] = { name: n, done: 0, process: 0, total: 0, list: [] };
+        
+        const inds = (r[colInd]||"").split('\n').filter(x => x.trim());
+        const stats = (r[colStat]||"").split('\n').filter(x => x.trim());
 
-    const supervisors = {};
-    filtered.forEach(row => {
-        const name = row[nameCol];
-        if (!name) return;
-        if (!supervisors[name]) supervisors[name] = { name, doneCount: 0, list: [] };
-
-        // حل المشكلة هنا: تقسيم النص بناءً على الفواصل السطرية الحقيقية
-        const indicators = (row[indCol] || "").split(/\r?\n/).filter(x => x.trim());
-        const statuses = (row[statusCol] || "").split(/\r?\n/).filter(x => x.trim());
-
-        indicators.forEach((indText, idx) => {
-            // استخدام الحالة المقابلة للسطر، أو الحالة الوحيدة الموجودة
-            const rawStat = (statuses[idx] || statuses[0] || "").trim();
-            const isDone = rawStat.includes("تم") || rawStat.includes("جاري") || rawStat.includes("تنفيذ");
-
-            if (isDone) {
-                supervisors[name].doneCount++; // زيادة العداد لكل مؤشر فرعي
-            }
+        inds.forEach((txt, idx) => {
+            const s = (stats[idx] || stats[0] || "").trim();
+            const isDone = s.includes("تم");
+            const isProc = s.includes("جاري");
             
-            supervisors[name].list.push({ text: indText.trim(), stat: rawStat, isDone });
+            if(isDone) sups[n].done++;
+            if(isProc) sups[n].process++;
+            sups[n].total++;
+            sups[n].list.push({ txt, s, isDone, isProc });
         });
     });
 
-    Object.values(supervisors).forEach((sup) => {
-        const percent = ((sup.doneCount / TOTAL_EXPECTED) * 100).toFixed(1);
-        const indHtml = sup.list.map(item => `
-            <div class="indicator-item">
-                <span>${item.text}</span>
-                <span class="${item.isDone ? 'status-done' : 'status-pending'}">${item.isDone ? '✅' : '⏳'}</span>
-            </div>`).join('');
-
-        grid.innerHTML += `
+    Object.values(sups).forEach((s, idx) => {
+        main.innerHTML += `
             <div class="card">
-                <h3>${sup.name}</h3>
-                <button class="indicators-toggle" onclick="this.nextElementSibling.classList.toggle('show')">
-                    📋 عرض المؤشرات (${sup.doneCount}/${TOTAL_EXPECTED})
+                <div class="sup-name">${s.name}</div>
+                <div class="week-tag">الأسبوع ${W_NAMES[currentW]}</div>
+                
+                <button class="toggle-btn" onclick="this.nextElementSibling.classList.toggle('show')">
+                    ▼ عرض المؤشرات (${s.total})
                 </button>
-                <div class="indicators-list">${indHtml}</div>
-                <div class="stats-grid">
-                    <div class="stat-box done"><span class="stat-number">${sup.doneCount}</span>منجز</div>
-                    <div class="stat-box pending"><span class="stat-number">${Math.max(0, TOTAL_EXPECTED - sup.doneCount)}</span>متبقي</div>
-                    <div class="stat-box" style="background:#e3f2fd;"><span class="stat-number">${percent}%</span>نسبة</div>
+                <div class="list-area">
+                    ${s.list.map(item => `<div class="item"><span>${item.txt}</span> <span>${item.isDone?'✅':(item.isProc?'⏳':'⚪')}</span></div>`).join('')}
+                </div>
+
+                <div class="mini-stats">
+                    <div class="stat-box box-done"><b>${s.done}</b>تم ✅</div>
+                    <div class="stat-box box-process"><b>${s.process}</b>جاري ⏳</div>
+                    <div class="stat-box box-total"><b>${s.total}</b>هذا الأسبوع 📋</div>
+                </div>
+
+                <div class="total-box">
+                    <p>📊 إجمالي المؤشرات المنفذة (جميع الأسابيع)</p>
+                    <b>${s.done}</b>
+                    <p>من 44 مؤشر = ${((s.done/44)*100).toFixed(2)}%</p>
                 </div>
             </div>`;
     });
 }
-init();
+load();
 </script>
 </body>
 </html>
