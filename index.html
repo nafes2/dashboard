@@ -1,1 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة متابعة المشرفين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a3a63; --bg: #f0f2f5; --success: #28a745; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg); margin: 0; padding: 0; }
+        .header { background: var(--primary); color: white; padding: 25px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid var(--primary); }
+        .prog-bg { background: #eee; border-radius: 10px; height: 14px; margin: 10px 0; overflow: hidden; }
+        .prog-fill { background: var(--success); height: 100%; transition: width 0.5s ease; }
+        .stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
+        .ind-item { padding: 10px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
+        .tag { padding: 3px 8px; border-radius: 5px; font-size: 0.8em; font-weight: bold; }
+        .tag-done { background: #d4edda; color: #155724; }
+        .tag-wait { background: #fff3cd; color: #856404; }
+        #loading { text-align: center; padding: 50px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>📊 لوحة متابعة المشرفين</h2>
+    <p>تحديث تلقائي من النظام المركزي</p>
+</div>
+
+<div class="container">
+    <div class="controls">
+        <input type="checkbox" id="showDone" onchange="renderUI()">
+        <label for="showDone" style="cursor:pointer">إظهار المؤشرات المنفذة (المكتملة)</label>
+    </div>
+
+    <div id="loading">جاري تحميل البيانات...</div>
+    <div id="content"></div>
+</div>
+
+<script>
+    const sheetID = '1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s';
+    // استخدام صيغة csv المباشرة والأكثر استقراراً
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gid=0`;
+    
+    let rawRows = [];
+
+    async function loadData() {
+        try {
+            const response = await fetch(url);
+            const data = await response.text();
+            // تقسيم الأسطر مع تنظيف علامات التنصيص
+            const lines = data.split('\n');
+            rawRows = lines.slice(1).map(line => line.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
+            
+            document.getElementById('loading').style.display = 'none';
+            renderUI();
+        } catch (err) {
+            document.getElementById('loading').innerText = "خطأ في الاتصال. يرجى التأكد من صلاحيات الشيت.";
+        }
+    }
+
+    function renderUI() {
+        const showDone = document.getElementById('showDone').checked;
+        const container = document.getElementById('content');
+        container.innerHTML = '';
+
+        const groups = {};
+        rawRows.forEach(row => {
+            const name = row[0];
+            const status = row[1];
+            const task = row[2];
+
+            if (!name) return;
+
+            if (!groups[name]) groups[name] = { done: 0, list: [] };
+
+            const isFinished = (status === "تم التنفيذ" || status === "جاري التنفيذ");
+            if (isFinished) groups[name].done++;
+            
+            groups[name].list.push({ task, status, isFinished });
+        });
+
+        for (const name in groups) {
+            const supervisor = groups[name];
+            const percent = ((supervisor.done / 44) * 100).toFixed(1);
+            
+            let listContent = '';
+            supervisor.list.forEach(item => {
+                // الفلترة: إذا كان منفذ ولا نريد إظهاره، نتخطاه
+                if (!item.isFinished || showDone) {
+                    listContent += `
+                        <div class="ind-item">
+                            <span>${item.task}</span>
+                            <span class="tag ${item.isFinished ? 'tag-done' : 'tag-wait'}">${item.status}</span>
+                        </div>`;
+                }
+            });
+
+            container.innerHTML += `
+                <div class="card">
+                    <div class="stats">
+                        <span>المشرف: ${name}</span>
+                        <span>${percent}%</span>
+                    </div>
+                    <div class="prog-bg"><div class="prog-fill" style="width: ${percent}%"></div></div>
+                    <div style="text-align:center; font-size:0.8em; margin-bottom:10px; color:#666;">
+                        الإنجاز: ${supervisor.done} من 44 مؤشر
+                    </div>
+                    <div class="list">${listContent || '<p style="text-align:center;color:gray;">لا توجد مؤشرات متبقية</p>'}</div>
+                </div>`;
+        }
+    }
+
+    loadData();
+    setInterval(loadData, 60000); // تحديث كل دقيقة
+</script>
+
+</body>
+</html>
 
