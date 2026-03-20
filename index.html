@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -12,7 +11,7 @@
         .header { background-color: var(--primary-color); color: white; padding: 25px 20px; text-align: center; }
         .container { max-width: 900px; margin: -30px auto 20px; padding: 0 15px; }
         
-        /* إضافة ستايل التحكم */
+        /* ميزة الإظهار والإخفاء */
         .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
         .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 5px solid var(--primary-color); }
@@ -36,8 +35,8 @@
 
 <div class="container">
     <div class="controls">
-        <input type="checkbox" id="toggleDone" onchange="displayData()">
-        <label for="toggleDone" style="cursor:pointer">إظهار المؤشرات المنفذة (المكتملة)</label>
+        <input type="checkbox" id="showCompleted" onchange="processData(window.lastRawData)">
+        <label for="showCompleted">إظهار المؤشرات المنفذة (المكتملة)</label>
     </div>
 
     <div id="loading">جاري جلب البيانات...</div>
@@ -46,82 +45,75 @@
 
 <script>
     const sheetId = '1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s';
-    const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-    
-    let rawData = [];
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
 
-    async function init() {
+    async function fetchData() {
         try {
-            const res = await fetch(base);
-            const data = await res.text();
-            // تقسيم البيانات بنفس طريقتك الأصلية المستقرة
-            rawData = data.split('\n').slice(1).map(row => {
-                const parts = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return parts.map(p => p.replace(/^"|"$/g, '').trim());
-            });
-            displayData();
+            const response = await fetch(url);
+            const csvData = await response.text();
+            window.lastRawData = csvData; // حفظ البيانات للتحديث عند الضغط على المربع
+            processData(csvData);
             document.getElementById('loading').style.display = 'none';
-        } catch (err) {
+        } catch (error) {
             document.getElementById('loading').innerText = "خطأ في الاتصال بالسيرفر";
         }
     }
 
-    function displayData() {
-        const showDone = document.getElementById('toggleDone').checked;
-        const container = document.getElementById('dashboard');
-        container.innerHTML = '';
+    function processData(csvData) {
+        const showAll = document.getElementById('showCompleted').checked;
+        const rows = csvData.split('\n').slice(1);
+        const dashboard = document.getElementById('dashboard');
+        dashboard.innerHTML = '';
 
-        const groups = {};
-        rawData.forEach(row => {
-            const name = row[0];
-            const status = row[1];
-            const task = row[2];
-            if (!name) return;
+        const supervisors = {};
 
-            if (!groups[name]) groups[name] = { doneCount: 0, tasks: [] };
-            
-            const isFinished = (status === "تم التنفيذ" || status === "جاري التنفيذ");
-            if (isFinished) groups[name].doneCount++;
-            
-            groups[name].tasks.push({ task, status, isFinished });
+        rows.forEach(row => {
+            const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, '').trim());
+            const name = columns[0];
+            const status = columns[1];
+            const task = columns[2];
+
+            if (name) {
+                if (!supervisors[name]) supervisors[name] = { done: 0, total: 44, tasks: [] };
+                
+                const isFinished = (status === "تم التنفيذ" || status === "جاري التنفيذ");
+                if (isFinished) supervisors[name].done++;
+                
+                // الإضافة: فلترة العرض بناءً على المربع
+                if (!isFinished || showAll) {
+                    supervisors[name].tasks.push({ task, status, isFinished });
+                }
+            }
         });
 
-        for (const name in groups) {
-            const info = groups[name];
-            // التصحيح: النسبة من 44
-            const percent = ((info.doneCount / 44) * 100).toFixed(1);
+        for (const name in supervisors) {
+            const data = supervisors[name];
+            const percentage = ((data.done / 44) * 100).toFixed(1);
             
             let tasksHtml = '';
-            info.tasks.forEach(t => {
-                // الفلترة: إذا كان منفذ ولا نريد إظهار المنفذ، نتخطاه
-                if (!t.isFinished || showDone) {
-                    tasksHtml += `
-                        <div class="indicator-item">
-                            <span>${t.task}</span>
-                            <span class="status-tag ${t.isFinished ? 'status-done' : 'status-pending'}">${t.status}</span>
-                        </div>`;
-                }
+            data.tasks.forEach(t => {
+                tasksHtml += `
+                    <div class="indicator-item">
+                        <span>${t.task}</span>
+                        <span class="status-tag ${t.isFinished ? 'status-done' : 'status-pending'}">${t.status}</span>
+                    </div>`;
             });
 
-            container.innerHTML += `
+            dashboard.innerHTML += `
                 <div class="card">
-                    <h3 style="margin:0 0 10px 0; color:var(--primary-color)">المشرف: ${name}</h3>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${percent}%"></div>
-                    </div>
+                    <h3>المشرف: ${name}</h3>
+                    <div class="progress-container"><div class="progress-bar" style="width: ${percentage}%"></div></div>
                     <div class="stats-grid">
-                        <div class="stat-box">الإنجاز: ${info.doneCount} / 44</div>
-                        <div class="stat-box">النسبة: ${percent}%</div>
+                        <div class="stat-box">الإنجاز: ${data.done} / 44</div>
+                        <div class="stat-box">النسبة: ${percentage}%</div>
                     </div>
-                    <div style="margin-top:15px;">
-                        ${tasksHtml || '<p style="text-align:center; color:gray">تم إنجاز جميع المهام الحالية</p>'}
-                    </div>
+                    <div style="margin-top:15px;">${tasksHtml}</div>
                 </div>`;
         }
     }
 
-    init();
-    setInterval(init, 60000);
+    fetchData();
+    setInterval(fetchData, 60000);
 </script>
 </body>
 </html>
