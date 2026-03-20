@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين الذكية</title>
+<title>لوحة متابعة المشرفين الذكية - اتصال مباشر</title>
 <style>
 /* التنسيقات العامة */
 * { box-sizing: border-box; margin:0; padding:0; }
@@ -30,6 +30,8 @@ header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,
 .stat-box.pending { background:#fff3e0; color:#ef6c00; }
 .stat-box.total { background:#e3f2fd; color:#1565c0; }
 .stat-number { font-size:1.4em; font-weight:bold; display:block; }
+.progress-container { background: #eee; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; }
+.progress-bar { background: #4caf50; height: 100%; transition: width 0.5s; }
 .link-btn { display:block; text-align:center; background:#2a5298; color:#fff; padding:12px; border-radius:10px; text-decoration:none; font-weight:bold; }
 .link-btn.disabled { background:#ccc; cursor:not-allowed; }
 .loading { text-align:center; padding:50px; }
@@ -38,33 +40,27 @@ header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,
 </head>
 <body>
 
-
 <div class="container">
   <header>
     <h1>📊 لوحة متابعة المشرفين</h1>
-    <p>تحديث تلقائي من جوجل شيت</p>
+    <p>اتصال مباشر ومستقر بدون بروكسي</p>
   </header>
-
 
   <div class="nav" id="weeks"></div>
   <div class="grid" id="cards">
-    <div class="loading">جاري جلب البيانات...</div>
+    <div class="loading">جاري جلب البيانات من جوجل مباشرة...</div>
   </div>
 </div>
 
-
 <script>
-// إعدادات الربط
+// إعدادات الربط المباشر
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const PROXY = "https://api.allorigins.win/raw?url=";
-const TOTAL_INDICATORS = 44;
+const TOTAL_INDICATORS = 44; // تثبيت الإجمالي كما طلبت
 const WEEK_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
-
 
 let appData = { allData: [], currentWeek: 5 };
 
-
-// دالة تحويل "الأسبوع الخامس" إلى رقم 5
+// تحويل نصوص الأسابيع لأرقام
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
@@ -76,32 +72,23 @@ function weekTextToNumber(text) {
   return null;
 }
 
-
-// دالة البحث عن العمود الصحيح
-function findCol(sample, names) {
-  const keys = Object.keys(sample);
-  for (let name of names) {
-    const found = keys.find(k => k.trim().includes(name));
-    if (found) return found;
-  }
-  return keys[0];
-}
-
-
+// جلب البيانات بدون بروكسي
 async function loadData() {
   try {
-    const res = await fetch(PROXY + encodeURIComponent(SHEET_URL + "&t=" + Date.now()));
+    // الاتصال المباشر برابط جوجل مع إضافة تيمستامب لمنع الكاش
+    const res = await fetch(SHEET_URL + "&t=" + Date.now());
+    if (!res.ok) throw new Error();
     const text = await res.text();
     appData.allData = parseCSV(text);
     render();
   } catch (err) {
-    document.getElementById("cards").innerHTML = `<div class="error-box">حدث خطأ في الاتصال</div>`;
+    document.getElementById("cards").innerHTML = `<div class="error-box">حدث خطأ في الاتصال المباشر بجوجل شيت</div>`;
   }
 }
 
-
+// تحليل بيانات الـ CSV
 function parseCSV(csv) {
-  const lines = csv.split('\n');
+  const lines = csv.split('\n').filter(l => l.trim() !== "");
   const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
   return lines.slice(1).map(line => {
     const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
@@ -111,12 +98,10 @@ function parseCSV(csv) {
   });
 }
 
-
 function render() {
   renderWeeks();
   renderCards();
 }
-
 
 function renderWeeks() {
   const container = document.getElementById("weeks");
@@ -130,82 +115,73 @@ function renderWeeks() {
   });
 }
 
-
 function toggleIndicators(idx) {
   const el = document.getElementById(`list-${idx}`);
   el.classList.toggle('show');
 }
-
 
 function renderCards() {
   const container = document.getElementById("cards");
   container.innerHTML = "";
   
   const sample = appData.allData[0];
-  const nameCol = findCol(sample, ["اسم المشرف", "المشرف"]);
-  const weekCol = findCol(sample, ["الأسابيع", "الأسبوع"]);
-  const statusCol = findCol(sample, ["الحالة"]);
-  const indCol = findCol(sample, ["المؤشر", "رقم المؤشر"]);
+  if (!sample) return;
 
+  // البحث عن الأعمدة ديناميكياً
+  const nameCol = Object.keys(sample).find(k => k.includes("اسم المشرف") || k.includes("المشرف")) || Object.keys(sample)[0];
+  const weekCol = Object.keys(sample).find(k => k.includes("الأسابيع") || k.includes("الأسبوع")) || Object.keys(sample)[1];
+  const statusCol = Object.keys(sample).find(k => k.includes("الحالة")) || Object.keys(sample)[2];
+  const indCol = Object.keys(sample).find(k => k.includes("المؤشر")) || Object.keys(sample)[3];
 
   const weekData = appData.allData.filter(row => weekTextToNumber(row[weekCol]) === appData.currentWeek);
 
-
   if (weekData.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px;"><h3>لا توجد بيانات للأسبوع ${appData.currentWeek}</h3></div>`;
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px;"><h3>لا توجد بيانات للأسبوع ${appData.currentWeek}</h3></div>`;
     return;
   }
-
 
   const supervisors = {};
   weekData.forEach(row => {
     const name = row[nameCol];
     if (!name) return;
-    if (!supervisors[name]) supervisors[name] = { name, done:0, pending:0, total:0, indicators:[], link:"#" };
+    if (!supervisors[name]) supervisors[name] = { name, done:0, indicators:[], link:"#" };
     
     const status = row[statusCol];
-    const inds = (row[indCol] || "").split(',').filter(x => x.trim());
-    const count = inds.length || 1;
+    const indVal = row[indCol] || "1";
+    
+    const isDone = (status === "تم التنفيذ" || status === "جاري التنفيذ");
+    if (isDone) supervisors[name].done++;
+    
+    supervisors[name].indicators.push({n: indVal, s: isDone ? 'done' : 'pending'});
 
-
-    supervisors[name].total += count;
-    if (status === "تم التنفيذ") {
-      supervisors[name].done += count;
-      inds.forEach(n => supervisors[name].indicators.push({n, s:'done'}));
-    } else {
-      supervisors[name].pending += count;
-      inds.forEach(n => supervisors[name].indicators.push({n, s:'pending'}));
-    }
-
-
-    for (let v of Object.values(row)) { if(v.startsWith("http")) supervisors[name].link = v; }
+    for (let v of Object.values(row)) { if(v.toString().startsWith("http")) supervisors[name].link = v; }
   });
 
-
   Object.values(supervisors).forEach((sup, i) => {
+    const percent = ((sup.done / TOTAL_INDICATORS) * 100).toFixed(1);
     const card = document.createElement("div");
     card.className = "card";
+    
     const indHtml = sup.indicators.map(ind => `
       <div class="indicator-item">
         <span>مؤشر ${ind.n}</span>
         <span class="${ind.s === 'done' ? 'status-done' : 'status-pending'}">${ind.s === 'done' ? '✅' : '⏳'}</span>
       </div>`).join('');
 
-
     card.innerHTML = `
       <div class="card-header"><h3>${sup.name}</h3></div>
-      <button class="indicators-toggle" onclick="toggleIndicators(${i})">📋 المؤشرات (${sup.total})</button>
+      <div class="progress-container"><div class="progress-bar" style="width:${percent}%"></div></div>
+      <button class="indicators-toggle" onclick="toggleIndicators(${i})">📋 المؤشرات (${sup.done}/${TOTAL_INDICATORS})</button>
       <div class="indicators-list" id="list-${i}">${indHtml}</div>
       <div class="stats-grid">
         <div class="stat-box done"><span class="stat-number">${sup.done}</span>تم</div>
-        <div class="stat-box pending"><span class="stat-number">${sup.pending}</span>جاري</div>
-        <div class="stat-box total"><span class="stat-number">${sup.total}</span>المجموع</div>
+        <div class="stat-box pending"><span class="stat-number">${TOTAL_INDICATORS - sup.done}</span>متبقي</div>
+        <div class="stat-box total"><span class="stat-number">${percent}%</span>نسبة</div>
       </div>
       <a href="${sup.link}" target="_blank" class="link-btn ${sup.link==='#'?'disabled':''}">🔗 فتح الرابط</a>`;
     container.appendChild(card);
   });
 }
-
 
 loadData();
 </script>
