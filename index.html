@@ -10,48 +10,56 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #fff; min-height: 100vh; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
         .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; }
-        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
-        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; }
-        .loading-box { background: #fff; color: #333; padding: 30px; border-radius: 20px; text-align: center; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        .stat-box { padding: 15px; border-radius: 15px; font-weight: bold; }
+        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-bottom: 20px; }
+        .card h2 { color: var(--primary); text-align: center; margin-bottom: 15px; }
+        
+        /* قائمة المؤشرات */
+        .indicators-toggle { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 12px; border-radius: 12px; color: #fff; width: 100%; margin-bottom: 10px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
+        .indicators-list { display: none; background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; max-height: 250px; overflow-y: auto; }
+        .indicators-list.show { display: block; }
+        .indicator-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .status-done { color: #4caf50; font-weight: bold; }
+        .status-pending { color: #ff9800; font-weight: bold; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .stat-box { text-align: center; padding: 12px; border-radius: 15px; font-weight: bold; }
         .stat-box.done { background: #e8f5e9; color: #2e7d32; }
         .stat-box.pending { background: #fff3e0; color: #ef6c00; }
         .stat-box.info { background: #e3f2fd; color: #1565c0; }
-        .stat-number { font-size: 1.8em; display: block; }
-        .total-panel { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; padding: 20px; border-radius: 20px; margin-top: 15px; }
+        .stat-number { font-size: 1.6em; display: block; }
+
+        .total-panel { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .link-btn { display: block; text-align: center; background: #1e3c72; color: #fff; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.1em; }
+        .link-btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header style="text-align:center;">
-        <h1 id="title">لوحة متابعة المشرفين</h1>
-        <p>تحديث مباشر ومستقر</p>
+    <header style="text-align:center; padding: 20px;">
+        <h1>لوحة متابعة المشرفين</h1>
+        <p>اتصال مباشر ومستقر</p>
     </header>
 
     <div class="nav" id="weeksNav"></div>
     <div id="content">
-        <div class="loading-box">جاري مزامنة البيانات من جوجل...</div>
+        <div style="text-align:center; padding:50px;">جاري جلب البيانات...</div>
     </div>
 </div>
 
 <script>
-// الرابط المباشر
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const TOTAL_REQ = 44;
 
 let appState = { allData: [], currentWeek: 2 };
 
-// دالة ذكية لتحويل النص إلى رقم أسبوع (تحل مشكلة الهمزة والمسافات)
+// دالة استخراج رقم الأسبوع
 function extractWeekNum(text) {
     if (!text) return null;
     const match = text.toString().match(/\d+/);
-    if (match) return parseInt(match[0]);
-    const names = {"الأول":1,"الثاني":2,"الثالث":3,"الرابع":4,"الخامس":5,"السادس":6,"السابع":7,"الثامن":8,"التاسع":9,"العاشر":10};
-    for (let name in names) if (text.includes(name)) return names[name];
-    return null;
+    return match ? parseInt(match[0]) : null;
 }
 
 async function loadData() {
@@ -61,7 +69,7 @@ async function loadData() {
         appState.allData = parseCSV(text);
         render();
     } catch (e) {
-        document.getElementById('content').innerHTML = `<div class="card">⚠️ فشل جلب البيانات. تأكد من نشر الشيت CSV.</div>`;
+        document.getElementById('content').innerHTML = `<div class="card">⚠️ خطأ في الاتصال.</div>`;
     }
 }
 
@@ -76,8 +84,12 @@ function parseCSV(csv) {
     });
 }
 
+function toggleList(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('show');
+}
+
 function render() {
-    // 1. رسم أزرار الأسابيع
     const nav = document.getElementById('weeksNav');
     nav.innerHTML = '';
     for(let i=1; i<=15; i++){
@@ -88,14 +100,14 @@ function render() {
         nav.appendChild(b);
     }
 
-    // 2. معالجة البيانات
     const container = document.getElementById('content');
     const sample = appState.allData[0] || {};
     const nCol = Object.keys(sample).find(k => k.includes("مشرف"));
     const wCol = Object.keys(sample).find(k => k.includes("أسبوع") || k.includes("أسابيع"));
     const sCol = Object.keys(sample).find(k => k.includes("حالة"));
+    const iCol = Object.keys(sample).find(k => k.includes("مؤشر"));
 
-    // الإجمالي التراكمي
+    // الإجمالي التراكمي لجميع الأسابيع
     const totals = {};
     appState.allData.forEach(r => {
         if (r[nCol] && r[sCol]?.includes("تنفيذ")) totals[r[nCol]] = (totals[r[nCol]] || 0) + 1;
@@ -105,33 +117,64 @@ function render() {
     const weekRows = appState.allData.filter(r => extractWeekNum(r[wCol]) === appState.currentWeek);
 
     if (weekRows.length === 0) {
-        container.innerHTML = `<div class="card"><h3>لا توجد بيانات للأسبوع ${appState.currentWeek}</h3></div>`;
+        container.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${appState.currentWeek}</h3></div>`;
         return;
     }
 
     container.innerHTML = '';
     const sups = {};
-    weekRows.forEach(r => {
+    weekRows.forEach((r, idx) => {
         const n = r[nCol]; if(!n) return;
-        if(!sups[n]) sups[n] = { n, week: 0, total: totals[n] || 0 };
-        if(r[sCol]?.includes("تنفيذ")) sups[n].week++;
+        if(!sups[n]) sups[n] = { n, week: 0, total: totals[n] || 0, indicators: [], link: "#" };
+        
+        const isDone = r[sCol]?.includes("تنفيذ");
+        if(isDone) sups[n].week++;
+        
+        sups[n].indicators.push({
+            name: r[iCol] || "مؤشر غير معروف",
+            status: isDone ? "✅" : "⏳",
+            class: isDone ? "status-done" : "status-pending"
+        });
+
+        // البحث عن الرابط في الصف
+        const rowLink = Object.values(r).find(v => v.toString().startsWith('http'));
+        if(rowLink) sups[n].link = rowLink;
     });
 
-    Object.values(sups).forEach(s => {
+    Object.values(sups).forEach((s, i) => {
         const perc = ((s.total / TOTAL_REQ) * 100).toFixed(2);
+        const listId = `list-${i}`;
+        
         container.innerHTML += `
             <div class="card">
                 <h2>${s.n}</h2>
+                
+                <button class="indicators-toggle" onclick="toggleList('${listId}')">
+                    📋 عرض المؤشرات (${s.indicators.length})
+                </button>
+                
+                <div class="indicators-list" id="${listId}">
+                    ${s.indicators.map(ind => `
+                        <div class="indicator-item">
+                            <span>${ind.name}</span>
+                            <span class="${ind.class}">${ind.status}</span>
+                        </div>
+                    `).join('')}
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-box done"><span class="stat-number">${s.week}</span>تم ✅</div>
                     <div class="stat-box pending"><span class="stat-number">0</span>جاري ⏳</div>
                     <div class="stat-box info"><span class="stat-number">${s.week}</span>هذا الأسبوع</div>
                 </div>
+
                 <div class="total-panel">
                     <p>📊 إجمالي المنفذ (جميع الأسابيع)</p>
-                    <h1 style="font-size:3em;">${s.total}</h1>
+                    <h1 style="font-size:2.5em;">${s.total}</h1>
                     <p>من ${TOTAL_REQ} مؤشر = ${perc}%</p>
                 </div>
+
+                <a href="${s.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
             </div>`;
     });
 }
