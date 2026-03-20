@@ -3,64 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - النسخة النهائية</title>
+    <title>لوحة متابعة المشرفين - إصلاح عداد المؤشرات المتعددة</title>
     <style>
-        :root { --primary: #1e3c72; --accent: #ffd700; --success: #4caf50; --pending: #ff9800; }
+        :root { --primary: #1e3c72; --accent: #ffd700; --success: #4caf50; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #2a5298; color: #fff; padding: 15px; text-align: center; }
         .container { max-width: 600px; margin: 0 auto; }
-        
-        /* تصميم أزرار الأسابيع */
-        .nav { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 25px; padding: 10px; }
-        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; margin: 0 auto; transition: 0.3s; }
-        .btn.active { background: var(--accent); color: var(--primary); transform: scale(1.1); box-shadow: 0 0 10px rgba(255,215,0,0.5); border-color: var(--accent); }
-
-        /* البطاقة والتصميم الداخلي */
-        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--success); }
-        .sup-name { color: var(--primary); font-size: 1.6em; font-weight: bold; margin-bottom: 5px; }
-        .week-tag { background: #e3f2fd; color: #1565c0; padding: 4px 15px; border-radius: 20px; font-size: 0.9em; display: inline-block; margin-bottom: 20px; }
-
-        .toggle-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 15px; font-size: 1em; }
-        .list-area { display: none; background: #f8f9fa; border-radius: 12px; padding: 15px; text-align: right; border: 1px solid #eee; margin-bottom: 20px; }
+        .nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 25px; }
+        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
+        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .sup-name { color: var(--primary); font-size: 1.5em; font-weight: bold; margin-bottom: 5px; }
+        .week-tag { background: #e3f2fd; color: #1565c0; padding: 4px 12px; border-radius: 15px; font-size: 0.85em; display: inline-block; margin-bottom: 15px; }
+        .toggle-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+        .list-area { display: none; background: #f9f9f9; padding: 10px; border-radius: 10px; text-align: right; border: 1px solid #eee; margin-bottom: 15px; font-size: 0.9em; }
         .list-area.show { display: block; }
-        .item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; line-height: 1.4; }
-        .item:last-child { border: none; }
-
-        /* شبكة الإحصائيات */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-box { padding: 15px 5px; border-radius: 15px; font-weight: bold; font-size: 0.85em; }
-        .stat-box b { display: block; font-size: 1.8em; margin-bottom: 2px; }
+        .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { padding: 12px 5px; border-radius: 12px; font-weight: bold; }
+        .stat-box b { display: block; font-size: 1.6em; }
         .box-done { background: #e8f5e9; color: #2e7d32; }
         .box-proc { background: #fff3e0; color: #ef6c00; }
         .box-total { background: #e3f2fd; color: #1565c0; }
-
-        /* صندوق الإجمالي */
-        .total-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 20px; border-radius: 18px; text-align: center; }
-        .total-box small { opacity: 0.9; font-size: 0.85em; display: block; margin-bottom: 5px; }
-        .total-box b { font-size: 2.2em; display: block; margin: 5px 0; }
+        .total-banner { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 15px; border-radius: 15px; }
+        .total-banner b { font-size: 2em; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="nav" id="weeksNav"></div>
-    <div id="contentGrid"></div>
+    <div class="nav" id="weeks"></div>
+    <div id="content"></div>
 </div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const W_MAP = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
+const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const W_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
 
-let allData = [];
-let currentWeek = 2; // افتراضي حسب صورتك
+let db = [];
+let currentW = 2; // ثابت على الأسبوع الثاني للمراجعة كما طلبت
 
-async function init() {
-    const res = await fetch(CSV_URL + "&t=" + Date.now());
-    const text = await res.text();
-    allData = parseCSV(text);
+async function load() {
+    const r = await fetch(URL + "&t=" + Date.now());
+    const txt = await r.text();
+    db = parseCSV(txt);
     render();
 }
 
+// دالة متطورة لتحليل CSV تتعامل مع الأسطر المتعددة داخل الخلية الواحدة
 function parseCSV(csv) {
     const rows = [];
     let field = '', inQuotes = false, row = [];
@@ -72,79 +61,75 @@ function parseCSV(csv) {
             if (row.length || field) { row.push(field.trim()); rows.push(row); row = []; field = ''; }
         } else field += c;
     }
-    const headers = rows[0];
-    return rows.slice(1).map(r => headers.reduce((o, h, i) => ({ ...o, [h]: r[i] || "" }), {}));
+    const head = rows[0];
+    return rows.slice(1).map(r => head.reduce((o, h, i) => ({ ...o, [h]: r[i] || "" }), {}));
 }
 
 function render() {
-    const nav = document.getElementById('weeksNav');
+    const nav = document.getElementById('weeks');
     nav.innerHTML = '';
-    [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(i => {
-        const btn = document.createElement('button');
-        btn.className = `btn ${i === currentWeek ? 'active' : ''}`;
-        btn.innerText = i;
-        btn.onclick = () => { currentWeek = i; render(); };
-        nav.appendChild(btn);
-    });
+    for(let i=1; i<=15; i++){
+        const b = document.createElement('button');
+        b.className = `btn ${i===currentW?'active':''}`;
+        b.innerText = i;
+        b.onclick = () => { currentW = i; render(); };
+        nav.appendChild(b);
+    }
 
-    const grid = document.getElementById('contentGrid');
-    grid.innerHTML = '';
-
-    const filtered = allData.filter(r => (r["الأسابيع"]||"").includes(W_MAP[currentWeek]) || (r["الأسابيع"]||"").includes(currentWeek.toString()));
+    const main = document.getElementById('content');
+    main.innerHTML = '';
+    
+    // فلترة الأسبوع
+    const filtered = db.filter(r => (r["الأسابيع"]||"").includes(W_NAMES[currentW]) || (r["الأسابيع"]||"").includes(currentW.toString()));
 
     const sups = {};
     filtered.forEach(r => {
         const name = r["اسم المشرف"]; if(!name) return;
-        if(!sups[name]) sups[name] = { name, done: 0, proc: 0, weekTotal: 0, list: [] };
+        if(!sups[name]) sups[name] = { name, done: 0, process: 0, total: 0, list: [] };
         
-        // تفكيك المؤشرات والحالات بدقة (سطر بسطر)
-        const inds = (r["المؤشر"]||"").split('\n').filter(x => x.trim());
-        const stats = (r["الحالة"]||"").split('\n').filter(x => x.trim());
+        // --- الحل هنا: تقسيم محتوى الخلية بناءً على السطر الجديد ---
+        const rawInds = (r["المؤشر"]||"").split('\n').map(x => x.trim()).filter(x => x);
+        const rawStats = (r["الحالة"]||"").split('\n').map(x => x.trim()).filter(x => x);
 
-        inds.forEach((txt, idx) => {
-            const s = (stats[idx] || stats[0] || "").trim();
-            const isDone = s.includes("تم") && !s.includes("جاري");
+        rawInds.forEach((txt, idx) => {
+            // أخذ الحالة المقابلة للسطر، أو الحالة الأولى إذا كانت حالة واحدة للكل
+            const s = (rawStats[idx] || rawStats[0] || "").trim();
+            const isDone = s === "تم" || s.includes("تم الإنجاز") || (s.includes("تم") && !s.includes("جاري"));
             const isProc = s.includes("جاري");
             
-            if(isDone) sups[name].done++;
-            if(isProc) sups[name].proc++;
-            sups[name].weekTotal++;
+            if(isDone) sups[name].done++; // الآن سيزيد العداد لكل سطر "تم"
+            if(isProc) sups[name].process++;
+            sups[name].total++; // سيزيد إجمالي الأسبوع لكل سطر مؤشر
+            
             sups[name].list.push({ txt, isDone, isProc });
         });
     });
 
     Object.values(sups).forEach(s => {
-        grid.innerHTML += `
+        main.innerHTML += `
             <div class="card">
                 <div class="sup-name">${s.name}</div>
-                <div class="week-tag">الأسبوع ${W_MAP[currentWeek]}</div>
-                
+                <div class="week-tag">الأسبوع ${W_NAMES[currentW]}</div>
                 <button class="toggle-btn" onclick="this.nextElementSibling.classList.toggle('show')">
-                    ▼ عرض المؤشرات (${s.weekTotal})
+                    ▼ عرض المؤشرات (${s.total})
                 </button>
                 <div class="list-area">
-                    ${s.list.map(item => `
-                        <div class="item">
-                            <span>${item.txt}</span>
-                            <span>${item.isDone ? '✅' : (item.isProc ? '⏳' : '⚪')}</span>
-                        </div>`).join('')}
+                    ${s.list.map(item => `<div class="item"><span>${item.txt}</span> <span>${item.isDone?'✅':(item.isProc?'⏳':'⚪')}</span></div>`).join('')}
                 </div>
-
                 <div class="stats-grid">
                     <div class="stat-box box-done"><b>${s.done}</b>تم ✅</div>
-                    <div class="stat-box box-proc"><b>${s.proc}</b>جاري ⏳</div>
-                    <div class="stat-box box-total"><b>${s.weekTotal}</b>هذا الأسبوع 📋</div>
+                    <div class="stat-box box-proc"><b>${s.process}</b>جاري ⏳</div>
+                    <div class="stat-box box-total"><b>${s.total}</b>هذا الأسبوع</div>
                 </div>
-
-                <div class="total-box">
-                    <small>📊 إجمالي المؤشرات المنفذة (جميع الأسابيع)</small>
+                <div class="total-banner">
+                    <small>إجمالي المنجز (جميع الأسابيع)</small>
                     <b>${s.done}</b>
                     <small>من 44 مؤشر = ${((s.done/44)*100).toFixed(2)}%</small>
                 </div>
             </div>`;
     });
 }
-init();
+load();
 </script>
 </body>
 </html>
