@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - إصلاح عداد المؤشرات المتعددة</title>
+    <title>لوحة متابعة المشرفين - الإصدار المعتمد</title>
     <style>
-        :root { --primary: #1e3c72; --accent: #ffd700; --success: #4caf50; }
+        :root { --primary: #1e3c72; --accent: #ffd700; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #2a5298; color: #fff; padding: 15px; text-align: center; }
         .container { max-width: 600px; margin: 0 auto; }
         .nav { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 25px; }
-        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .btn { background: rgba(255,255,255,0.2); border: 1px solid #fff; color: #fff; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-weight: bold; }
         .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
-        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: block !important; }
         .sup-name { color: var(--primary); font-size: 1.5em; font-weight: bold; margin-bottom: 5px; }
         .week-tag { background: #e3f2fd; color: #1565c0; padding: 4px 12px; border-radius: 15px; font-size: 0.85em; display: inline-block; margin-bottom: 15px; }
         .toggle-btn { background: #667eea; color: #fff; width: 100%; border: none; padding: 12px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
@@ -19,7 +19,7 @@
         .list-area.show { display: block; }
         .item { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { padding: 12px 5px; border-radius: 12px; font-weight: bold; }
+        .stat-box { padding: 12px 5px; border-radius: 12px; font-weight: bold; font-size: 0.8em; }
         .stat-box b { display: block; font-size: 1.6em; }
         .box-done { background: #e8f5e9; color: #2e7d32; }
         .box-proc { background: #fff3e0; color: #ef6c00; }
@@ -32,7 +32,7 @@
 
 <div class="container">
     <div class="nav" id="weeks"></div>
-    <div id="content"></div>
+    <div id="content">جاري جلب البيانات...</div>
 </div>
 
 <script>
@@ -40,16 +40,17 @@ const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7J
 const W_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
 
 let db = [];
-let currentW = 2; // ثابت على الأسبوع الثاني للمراجعة كما طلبت
+let currentW = 2; 
 
 async function load() {
-    const r = await fetch(URL + "&t=" + Date.now());
-    const txt = await r.text();
-    db = parseCSV(txt);
-    render();
+    try {
+        const r = await fetch(URL + "&t=" + Date.now());
+        const txt = await r.text();
+        db = parseCSV(txt);
+        render();
+    } catch (e) { document.getElementById('content').innerText = "خطأ في الاتصال"; }
 }
 
-// دالة متطورة لتحليل CSV تتعامل مع الأسطر المتعددة داخل الخلية الواحدة
 function parseCSV(csv) {
     const rows = [];
     let field = '', inQuotes = false, row = [];
@@ -79,35 +80,39 @@ function render() {
     const main = document.getElementById('content');
     main.innerHTML = '';
     
-    // فلترة الأسبوع
+    // فلترة الأسبوع المختار
     const filtered = db.filter(r => (r["الأسابيع"]||"").includes(W_NAMES[currentW]) || (r["الأسابيع"]||"").includes(currentW.toString()));
+
+    if (filtered.length === 0) {
+        main.innerHTML = `<div class="card">لا توجد بيانات للأسبوع ${currentW}</div>`;
+        return;
+    }
 
     const sups = {};
     filtered.forEach(r => {
         const name = r["اسم المشرف"]; if(!name) return;
         if(!sups[name]) sups[name] = { name, done: 0, process: 0, total: 0, list: [] };
         
-        // --- الحل هنا: تقسيم محتوى الخلية بناءً على السطر الجديد ---
-        const rawInds = (r["المؤشر"]||"").split('\n').map(x => x.trim()).filter(x => x);
-        const rawStats = (r["الحالة"]||"").split('\n').map(x => x.trim()).filter(x => x);
+        // تقسيم المؤشرات والحالات بناءً على الأسطر الجديدة
+        const rawInds = (r["المؤشر"]||"").split(/\n/).map(x => x.trim()).filter(x => x);
+        const rawStats = (r["الحالة"]||"").split(/\n/).map(x => x.trim()).filter(x => x);
 
         rawInds.forEach((txt, idx) => {
-            // أخذ الحالة المقابلة للسطر، أو الحالة الأولى إذا كانت حالة واحدة للكل
             const s = (rawStats[idx] || rawStats[0] || "").trim();
             const isDone = s === "تم" || s.includes("تم الإنجاز") || (s.includes("تم") && !s.includes("جاري"));
             const isProc = s.includes("جاري");
             
-            if(isDone) sups[name].done++; // الآن سيزيد العداد لكل سطر "تم"
+            if(isDone) sups[name].done++;
             if(isProc) sups[name].process++;
-            sups[name].total++; // سيزيد إجمالي الأسبوع لكل سطر مؤشر
-            
+            sups[name].total++;
             sups[name].list.push({ txt, isDone, isProc });
         });
     });
 
     Object.values(sups).forEach(s => {
-        main.innerHTML += `
-            <div class="card">
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
                 <div class="sup-name">${s.name}</div>
                 <div class="week-tag">الأسبوع ${W_NAMES[currentW]}</div>
                 <button class="toggle-btn" onclick="this.nextElementSibling.classList.toggle('show')">
@@ -125,8 +130,8 @@ function render() {
                     <small>إجمالي المنجز (جميع الأسابيع)</small>
                     <b>${s.done}</b>
                     <small>من 44 مؤشر = ${((s.done/44)*100).toFixed(2)}%</small>
-                </div>
-            </div>`;
+                </div>`;
+        main.appendChild(card);
     });
 }
 load();
