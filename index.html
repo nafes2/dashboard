@@ -3,67 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - الإصدار النهائي</title>
+    <title>لوحة متابعة المشرفين</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #fff; min-height: 100vh; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
-        .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
-        .btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold; }
-        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
-        .card { background: #fff; color: #333; border-radius: 25px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-bottom: 20px; }
-        .card h2 { color: var(--primary); text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .ind-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.95em; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        .stat-box { text-align: center; padding: 15px; border-radius: 15px; font-weight: bold; }
-        .stat-box.done { background: #e8f5e9; color: #2e7d32; }
-        .stat-box.pending { background: #fff3e0; color: #ef6c00; }
-        .stat-box.info { background: #e3f2fd; color: #1565c0; }
-        .stat-num { font-size: 1.8em; display: block; }
-        .total-box { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
-        .link-btn { display: block; text-align: center; background: #1e3c72; color: #fff; padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold; }
+        .nav { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+        .btn { background: #fff; border: 1px solid #ddd; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card h2 { text-align: center; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .ind-list { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .ind-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { text-align: center; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .done { background: #e8f5e9; color: #2e7d32; }
+        .prog { background: #fff3e0; color: #ef6c00; }
+        .total { background: #e3f2fd; color: #1565c0; }
+        .stat-num { font-size: 1.5em; display: block; }
+        .big-total { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 20px; border-radius: 15px; text-align: center; }
+        .link-btn { display: block; text-align: center; background: var(--primary); color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="nav" id="weeksNav"></div>
-    <div id="content"><div style="text-align:center; padding:50px;">جاري جلب البيانات...</div></div>
+    <div id="content"></div>
 </div>
 
 <script>
-const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const GOAL = 44;
-let app = { data: [], week: 3 };
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+let appState = { data: [], currentWeek: 3 };
 
-function countInds(val) {
-    if (!val) return 0;
-    return val.split(',').filter(x => x.trim().length > 0).length;
+async function init() {
+    const r = await fetch(`${CSV_URL}&t=${Date.now()}`);
+    const text = await r.text();
+    appState.data = parseCSV(text);
+    render();
 }
 
-function getWeekNum(val) {
-    if (!val) return null;
-    const m = val.toString().match(/\d+/);
-    return m ? parseInt(m[0]) : null;
-}
-
-async function fetchData() {
-    try {
-        const r = await fetch(`${SHEET_CSV}&t=${Date.now()}`);
-        const text = await r.text();
-        app.data = parse(text);
-        render();
-    } catch(e) { document.getElementById('content').innerHTML = "⚠️ خطأ في الاتصال"; }
-}
-
-function parse(csv) {
-    const lines = csv.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
+function parseCSV(text) {
+    const lines = text.split('\n').filter(l => l.trim());
     const heads = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
     return lines.slice(1).map(line => {
         const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g,'').trim());
-        let d = {}; heads.forEach((h, i) => d[h] = cols[i] || "");
-        return d;
+        let obj = {}; heads.forEach((h, i) => obj[h] = cols[i]);
+        return obj;
     });
 }
 
@@ -71,83 +57,62 @@ function render() {
     const nav = document.getElementById('weeksNav'); nav.innerHTML = '';
     for(let i=1; i<=15; i++) {
         const b = document.createElement('button');
-        b.className = `btn ${app.week === i ? 'active' : ''}`;
+        b.className = `btn ${appState.currentWeek === i ? 'active' : ''}`;
         b.textContent = i;
-        b.onclick = () => { app.week = i; render(); };
+        b.onclick = () => { appState.currentWeek = i; render(); };
         nav.appendChild(b);
     }
 
-    const cont = document.getElementById('content');
-    if (app.data.length === 0) return;
+    const container = document.getElementById('content');
+    if (appState.data.length === 0) return;
 
-    const keys = Object.keys(app.data[0]);
-    const nK = keys.find(k => k.includes("مشرف"));
-    const wK = keys.find(k => k.includes("أسبوع") || k.includes("اسبوع"));
-    const sK = keys.find(k => k.includes("حالة"));
-    const iK = keys.find(k => k.includes("مؤشر"));
-
-    // الإجمالي لجميع الأسابيع
-    let totals = {};
-    app.data.forEach(r => {
-        const name = r[nK];
-        if (name && (r[sK]||"").includes("تم")) {
-            totals[name] = (totals[name] || 0) + countInds(r[iK]);
-        }
-    });
-
-    const rows = app.data.filter(r => getWeekNum(r[wK]) === app.week);
-    if (rows.length === 0) {
-        cont.innerHTML = `<div class="card" style="text-align:center;"><h3>لا توجد بيانات للأسبوع ${app.week}</h3></div>`;
-        return;
-    }
+    // البحث عن أسماء الأعمدة (تأكد أن الشيت يحتوي على هذه الكلمات)
+    const keys = Object.keys(appState.data[0]);
+    const nameK = keys.find(k => k.includes("مشرف"));
+    const weekK = keys.find(k => k.includes("أسبوع") || k.includes("اسبوع"));
+    const statusK = keys.find(k => k.includes("حالة"));
+    const indK = keys.find(k => k.includes("مؤشر"));
 
     let sups = {};
-    rows.forEach(r => {
-        const n = r[nK]; if(!n) return;
-        if(!sups[n]) sups[n] = { n, wDone: 0, wProg: 0, tDone: totals[n] || 0, list: [], link: "#" };
-        
-        const count = countInds(r[iK]);
-        const status = (r[sK] || "").trim();
-        
-        // تعديل منطق الحساب لخانة "جاري"
-        if(status.includes("تم")) {
-            sups[n].wDone += count;
-        } else if(status.includes("جاري")) {
-            sups[n].wProg += count; // هذا ما سيجعل الرقم 2 يظهر
-        }
+    appState.data.forEach(row => {
+        const weekNum = row[weekK]?.match(/\d+/)?.[0];
+        if (parseInt(weekNum) === appState.currentWeek) {
+            const name = row[nameK]; if(!name) return;
+            if(!sups[name]) sups[name] = { name, done: 0, prog: 0, list: [], link: "" };
+            
+            const count = row[indK].split(',').filter(x => x.trim()).length;
+            const status = row[statusK] || "";
+            
+            if(status.includes("تم")) sups[name].done += count;
+            if(status.includes("جاري")) sups[name].prog += count;
 
-        r[iK].split(',').forEach(txt => { 
-            if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: status.includes("تم"), p: status.includes("جاري") }); 
-        });
-        
-        const l = Object.values(r).find(v => v && v.toString().startsWith('http'));
-        if(l) sups[n].link = l;
+            row[indK].split(',').forEach(t => {
+                if(t.trim()) sups[name].list.push({ t: t.trim(), isDone: status.includes("تم"), isProg: status.includes("جاري") });
+            });
+            const link = Object.values(row).find(v => v.startsWith('http'));
+            if(link) sups[name].link = link;
+        }
     });
 
-    cont.innerHTML = '';
+    container.innerHTML = '';
     Object.values(sups).forEach(s => {
-        const p = ((s.tDone / GOAL) * 100).toFixed(1);
-        cont.innerHTML += `
+        container.innerHTML += `
             <div class="card">
-                <h2>${s.n}</h2>
-                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px; border:1px solid #eee;">
-                    ${s.list.map(i => `<div class="ind-item"><span>${i.d?'✅':(i.p?'⏳':'⚪')}</span><span>${i.t}</span></div>`).join('')}
+                <h2>${s.name}</h2>
+                <div class="ind-list">
+                    ${s.list.map(i => `<div class="ind-item">${i.isDone?'✅':(i.isProg?'⏳':'⚪')} ${i.t}</div>`).join('')}
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-box done"><span class="stat-num">${s.wDone}</span>تم</div>
-                    <div class="stat-box pending"><span class="stat-num">${s.wProg}</span>جاري</div>
-                    <div class="stat-box info"><span class="stat-num">${s.wDone + s.wProg}</span>هذا الأسبوع</div>
+                <div class="stats">
+                    <div class="stat-box done"><span class="stat-num">${s.done}</span>تم</div>
+                    <div class="stat-box prog"><span class="stat-num">${s.prog}</span>جاري</div>
+                    <div class="stat-box total"><span class="stat-num">${s.done + s.prog}</span>المؤشرات</div>
                 </div>
-                <div class="total-box">
-                    <p>📊 الإجمالي التراكمي</p>
-                    <h1 style="font-size:2.8em;">${s.tDone}</h1>
-                    <p>من ${GOAL} مؤشر (${p}%)</p>
-                </div>
+                <div class="big-total"><h3>الإجمالي التراكمي: ${s.done}</h3></div>
                 <a href="${s.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
             </div>`;
     });
 }
-fetchData();
+init();
 </script>
 </body>
 </html>
