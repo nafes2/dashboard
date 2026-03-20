@@ -3,23 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين</title>
+<title>لوحة متابعة المشرفين - تحديث عمود الأسابيع</title>
 <style>
     * { box-sizing: border-box; margin:0; padding:0; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:20px; text-align: center; }
     .container { max-width:1200px; margin:0 auto; }
     header { padding:20px 0; }
     .nav { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:25px 0; }
-    .btn { background: rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); color:#fff; width: 50px; height: 50px; border-radius:50%; cursor:pointer; font-weight:600; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+    .btn { background: rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); color:#fff; width: 45px; height: 45px; border-radius:50%; cursor:pointer; font-weight:600; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
     .btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; box-shadow:0 4px 15px rgba(255,215,0,0.4); }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; margin-top: 30px; }
-    .card { background:#fff; color:#333; border-radius:20px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,0.3); text-align: right; }
-    .card h3 { color: #1e3c72; margin-bottom: 10px; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px; }
-    .progress-container { background: #eee; border-radius: 10px; height: 12px; margin: 15px 0; overflow: hidden; }
-    .progress-bar { background: #4caf50; height: 100%; transition: width 0.5s; }
-    .stat-row { display: flex; justify-content: space-around; margin-top: 15px; font-size: 0.9em; }
-    .stat-item { background: #f8f9fa; padding: 10px; border-radius: 10px; flex: 1; margin: 0 5px; text-align: center; }
-    .no-data { grid-column: 1 / -1; padding: 50px; background: rgba(255,255,255,0.1); border-radius: 20px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; margin-top: 20px; }
+    .card { background:#fff; color:#333; border-radius:15px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.2); text-align: right; border-top: 5px solid #ffd700; }
+    .card h3 { color: #1e3c72; margin-bottom: 10px; font-size: 1.2em; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .progress-container { background: #eee; border-radius: 10px; height: 10px; margin: 15px 0; overflow: hidden; }
+    .progress-bar { background: #4caf50; height: 100%; transition: width 0.6s ease-in-out; }
+    .stats { display: flex; justify-content: space-between; font-size: 0.85em; font-weight: bold; color: #555; }
+    .no-data { grid-column: 1 / -1; padding: 40px; background: rgba(255,255,255,0.1); border-radius: 15px; border: 1px dashed #fff; }
 </style>
 </head>
 <body>
@@ -27,7 +26,7 @@
 <div class="container">
     <header>
         <h1>📊 لوحة متابعة المشرفين</h1>
-        <p id="status-msg">جاري تحميل البيانات...</p>
+        <p id="msg" style="font-size: 0.9em; opacity: 0.8;">جاري تحديث البيانات...</p>
     </header>
 
     <div class="nav" id="weeks"></div>
@@ -38,22 +37,23 @@
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const TOTAL_INDICATORS = 44;
 
-let appData = { allData: [], currentWeek: 1 }; // نبدأ بالأسبوع الأول افتراضياً
+let appData = { allData: [], currentWeek: 1 };
 
 async function loadData() {
     try {
         const res = await fetch(SHEET_URL + "&t=" + Date.now());
         const text = await res.text();
         appData.allData = parseCSV(text);
-        document.getElementById('status-msg').innerText = "تم تحديث البيانات بنجاح";
+        document.getElementById('msg').innerText = "✅ البيانات محدثة الآن";
         render();
     } catch (err) {
-        document.getElementById('status-msg').innerText = "خطأ في الاتصال بجوجل شيت";
+        document.getElementById('msg').innerText = "❌ فشل جلب البيانات";
     }
 }
 
 function parseCSV(csv) {
     const lines = csv.split('\n').filter(l => l.trim() !== "");
+    if (lines.length === 0) return [];
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
     return lines.slice(1).map(line => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
@@ -77,20 +77,22 @@ function render() {
     const container = document.getElementById("cards");
     container.innerHTML = "";
     
-    // البحث عن الأعمدة
-    const sample = appData.allData[0] || {};
+    if (appData.allData.length === 0) return;
+
+    const sample = appData.allData[0];
+    // التعرف الذكي على الأعمدة حتى لو تغيرت الأسماء قليلاً
     const nameCol = Object.keys(sample).find(k => k.includes("مشرف")) || Object.keys(sample)[0];
-    const weekCol = Object.keys(sample).find(k => k.includes("أسبوع") || k.includes("أسابيع")) || Object.keys(sample)[1];
+    const weekCol = Object.keys(sample).find(k => k.includes("أسابيع") || k.includes("أسبوع") || k.includes("الاسبوع")) || Object.keys(sample)[1];
     const statusCol = Object.keys(sample).find(k => k.includes("حالة")) || Object.keys(sample)[2];
 
-    // تصفية البيانات حسب الأسبوع المختار
+    // تصفية البيانات (البحث عن رقم الأسبوع داخل النص)
     const weekData = appData.allData.filter(row => {
-        const wVal = row[weekCol] ? row[weekCol].toString() : "";
-        return wVal.includes(appData.currentWeek.toString());
+        const val = row[weekCol] ? row[weekCol].toString().replace(/\D/g, "") : "";
+        return val == appData.currentWeek;
     });
 
     if (weekData.length === 0) {
-        container.innerHTML = `<div class="no-data"><h3>لا توجد استمارات مسجلة للأسبوع ${appData.currentWeek}</h3><p>تأكد من اختيار الأسبوع الصحيح من الأعلى</p></div>`;
+        container.innerHTML = `<div class="no-data"><h3>لا توجد بيانات للأسبوع ${appData.currentWeek}</h3></div>`;
         return;
     }
 
@@ -100,27 +102,25 @@ function render() {
         if (!name) return;
         if (!supervisors[name]) supervisors[name] = { name, done: 0 };
         
-        const statusText = row[statusCol] ? row[statusCol].trim() : "";
-        if (statusText.includes("تم") || statusText.includes("جاري")) {
+        const st = (row[statusCol] || "").trim();
+        if (st.includes("تم") || st.includes("جاري") || st.includes("تنفيذ")) {
             supervisors[name].done++;
         }
     });
 
-    Object.values(supervisors).forEach(sup => {
+    for (const id in supervisors) {
+        const sup = supervisors[id];
         const percent = ((sup.done / TOTAL_INDICATORS) * 100).toFixed(1);
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-            <h3>${sup.name}</h3>
-            <div class="progress-container"><div class="progress-bar" style="width:${percent}%"></div></div>
-            <div class="stat-row">
-                <div class="stat-item"><strong>${sup.done}</strong><br>منجز</div>
-                <div class="stat-item"><strong>${TOTAL_INDICATORS - sup.done}</strong><br>متبقي</div>
-                <div class="stat-item" style="color:#1e3c72"><strong>${percent}%</strong><br>النسبة</div>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+        container.innerHTML += `
+            <div class="card">
+                <h3>${sup.name}</h3>
+                <div class="progress-container"><div class="progress-bar" style="width:${percent}%"></div></div>
+                <div class="stats">
+                    <span>المنجز: ${sup.done}</span>
+                    <span>النسبة: ${percent}%</span>
+                </div>
+            </div>`;
+    }
 }
 
 loadData();
