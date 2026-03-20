@@ -1,147 +1,128 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة متابعة المشرفين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1e3c72; --accent: #ffd700; --purple-grad: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        
-        body { background: var(--primary); color: #fff; margin: 0; padding: 0; min-height: 100vh; }
-        
-        /* الهيدر مع مساحة كافية */
-        .header-section { padding: 30px 15px; text-align: center; background: rgba(0,0,0,0.1); }
-        
-        /* حاوية الأزرار - إصلاح التداخل */
-        .nav-container { padding: 10px 15px; max-width: 600px; margin: 0 auto; }
-        .nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
-        
-        .btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px 5px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn.active { background: var(--accent); color: var(--primary); border-color: var(--accent); }
-
-        /* منطقة المحتوى */
-        .content-area { background: #f0f2f5; color: #333; border-radius: 30px 30px 0 0; padding: 25px 15px; min-height: 60vh; }
-        .container { max-width: 600px; margin: 0 auto; }
-
-        /* البطاقات وتنسيقها */
-        .card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        .card-name { color: var(--primary); font-size: 1.4rem; font-weight: bold; text-align: center; margin-bottom: 15px; }
-
-        .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .stat-box { text-align: center; padding: 12px 5px; border-radius: 15px; }
-        .s-green { background: #e8f5e9; color: #2e7d32; }
-        .s-orange { background: #fff3e0; color: #ef6c00; }
-        .s-blue { background: #e3f2fd; color: #1565c0; }
-        .s-num { font-size: 1.5rem; font-weight: bold; display: block; }
-        .s-label { font-size: 0.75rem; font-weight: bold; }
-
-        .banner-total { background: var(--purple-grad); color: #fff; border-radius: 18px; padding: 20px; text-align: center; margin: 15px 0; }
-        .banner-num { font-size: 2.5rem; font-weight: bold; display: block; }
-
-        .progress-wrap { margin-bottom: 15px; }
-        .p-text { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: #555; }
-        .p-bar { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; }
-        .p-fill { height: 100%; transition: width 0.8s ease; }
-
-        .btn-link { display: block; background: var(--primary); color: #fff; text-align: center; padding: 15px; border-radius: 15px; text-decoration: none; font-weight: bold; margin-top: 10px; }
+        :root { --primary: #1a3a63; --accent: #f8f9fa; --success: #28a745; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; color: #333; }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 20px auto; padding: 15px; }
+        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .progress-section { margin: 15px 0; }
+        .progress-bar-bg { background: #e9ecef; border-radius: 10px; height: 12px; overflow: hidden; }
+        .progress-bar-fill { background: var(--success); height: 100%; transition: width 0.5s; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .stat-box { background: var(--accent); padding: 10px; border-radius: 8px; text-align: center; }
+        .indicator-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .hidden { display: none; }
+        .toggle-btn { cursor: pointer; color: #007bff; text-decoration: underline; font-size: 0.9em; }
+        #loading { text-align: center; padding: 50px; }
     </style>
 </head>
 <body>
 
-    <div class="header-section">
-        <h2 style="margin:0;">📊 لوحة متابعة المشرفين</h2>
-        <p style="opacity:0.8; font-size:0.9rem; margin-top:10px;">تحديث تلقائي من النظام المركزي</p>
+<div class="header">
+    <h2>📊 لوحة متابعة المشرفين</h2>
+    <p>تحديث تلقائي من النظام المركزي</p>
+</div>
+
+<div class="container">
+    <div class="controls">
+        <input type="checkbox" id="toggleCompleted" onchange="renderData()">
+        <label for="toggleCompleted">إظهار المؤشرات المنفذة (المكتملة)</label>
     </div>
 
-    <div class="nav-container">
-        <div class="nav-grid" id="weeksNav"></div>
-    </div>
-
-    <div class="content-area">
-        <div class="container" id="cardsDisplay">جارِ التحميل...</div>
-    </div>
+    <div id="loading">جاري تحميل البيانات...</div>
+    <div id="content"></div>
+</div>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const PROXY = "https://api.allorigins.win/raw?url=";
-let allData = [];
-let activeWeek = 1;
+    // الرابط الخاص بك (تأكد من أنه الرابط الصحيح الذي كان يعمل)
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s/gviz/tq?tqx=out:json';
+    
+    let allData = [];
 
-async function init() {
-    try {
-        const r = await fetch(PROXY + encodeURIComponent(CSV_URL + "&t=" + Date.now()));
-        const t = await r.text();
-        const rows = t.split('\n').filter(l => l.trim() !== "");
-        const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        allData = rows.slice(1).map(row => {
-            const c = row.split(',').map(v => v.trim().replace(/"/g, ''));
-            let o = {}; headers.forEach((h, i) => o[h] = c[i]);
-            return o;
-        });
-        render();
-    } catch (e) {
-        document.getElementById("cardsDisplay").innerHTML = "خطأ في تحميل البيانات";
-    }
-}
+    async function fetchData() {
+        try {
+            const response = await fetch(SHEET_URL);
+            const text = await response.text();
+            const json = JSON.parse(text.substring(47, text.length - 2));
+            const rows = json.table.rows;
+            
+            // تحويل البيانات لشكل يسهل التعامل معه
+            allData = rows.map(row => ({
+                name: row.c[0]?.v || "غير معروف",
+                status: row.c[1]?.v || "", // الحالة
+                indicator: row.c[2]?.v || "", // اسم المؤشر
+                count: parseInt(row.c[3]?.v) || 0 // عدد المنفذ (للحساب)
+            }));
 
-function render() {
-    const nav = document.getElementById("weeksNav"); nav.innerHTML = "";
-    for(let i=1; i<=15; i++) {
-        const b = document.createElement("button");
-        b.className = `btn ${i === activeWeek ? 'active' : ''}`;
-        b.textContent = i;
-        b.onclick = () => { activeWeek = i; render(); };
-        nav.appendChild(b);
-    }
-
-    const display = document.getElementById("cardsDisplay"); display.innerHTML = "";
-    const nK = Object.keys(allData[0]).find(k => k.includes("اسم المشرف"));
-    const wK = Object.keys(allData[0]).find(k => k.includes("الأسبوع"));
-    const sK = Object.keys(allData[0]).find(k => k.includes("الحالة"));
-
-    const names = [...new Set(allData.map(d => d[nK]))].filter(n => n);
-
-    names.forEach(name => {
-        const pRows = allData.filter(r => r[nK] === name);
-        const tDone = pRows.filter(r => (r[sK] || "").includes("تم")).length;
-        const wRows = pRows.filter(r => (r[wK] || "").includes(activeWeek.toString()));
-
-        if (wRows.length > 0) {
-            const wDone = wRows.filter(r => (r[sK] || "").includes("تم")).length;
-            const wP = ((wDone / wRows.length) * 100).toFixed(1);
-            const tP = ((tDone / 44) * 100).toFixed(1);
-            let link = "#"; for(let v of Object.values(wRows[0])) if(String(v).startsWith("http")) link = v;
-
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `
-                <div class="card-name">${name}</div>
-                <div class="stats-row">
-                    <div class="stat-box s-green"><span class="s-num">${wDone}</span><span class="s-label">✅ تم</span></div>
-                    <div class="stat-box s-orange"><span class="s-num">${wRows.length - wDone}</span><span class="s-label">⏳ جاري</span></div>
-                    <div class="stat-box s-blue"><span class="s-num">${wRows.length}</span><span class="s-label">📋 الأسبوع ${activeWeek}</span></div>
-                </div>
-                <div class="banner-total">
-                    <div style="font-size:0.85rem; opacity:0.9;">إجمالي المؤشرات المنفذة (تراكمي)</div>
-                    <span class="banner-num">${tDone}</span>
-                    <div style="font-size:0.85rem;">من أصل 44 مؤشر (${tP}%)</div>
-                </div>
-                <div class="progress-wrap">
-                    <div class="p-text"><span>إنجاز الأسبوع ${activeWeek}</span><span>${wP}%</span></div>
-                    <div class="p-bar"><div class="p-fill" style="width:${wP}%; background:#4caf50;"></div></div>
-                </div>
-                <div class="progress-wrap">
-                    <div class="p-text"><span>النسبة التراكمية (44)</span><span>${tP}%</span></div>
-                    <div class="p-bar"><div class="p-fill" style="width:${tP}%; background:#6a11cb;"></div></div>
-                </div>
-                <a href="${link}" target="_blank" class="btn-link">📋 فتح الاستمارة</a>
-            `;
-            display.appendChild(card);
+            renderData();
+            document.getElementById('loading').classList.add('hidden');
+        } catch (error) {
+            document.getElementById('loading').innerHTML = "خطأ في تحميل البيانات. تأكد من إعدادات المشاركة.";
         }
-    });
-}
-init();
+    }
+
+    function renderData() {
+        const showCompleted = document.getElementById('toggleCompleted').checked;
+        const content = document.getElementById('content');
+        content.innerHTML = '';
+
+        // تجميع البيانات لكل مشرف
+        const supervisors = {};
+        allData.forEach(item => {
+            if (!supervisors[item.name]) {
+                supervisors[item.name] = { totalDone: 0, indicators: [] };
+            }
+            if (item.status === "جاري التنفيذ" || item.status === "تم التنفيذ") {
+                supervisors[item.name].totalDone++;
+            }
+            supervisors[item.name].indicators.push(item);
+        });
+
+        for (const [name, data] of Object.entries(supervisors)) {
+            const percentage = ((data.totalDone / 44) * 100).toFixed(1);
+            
+            let indicatorsHtml = '';
+            data.indicators.forEach(ind => {
+                const isDone = (ind.status === "تم التنفيذ" || ind.status === "جاري التنفيذ");
+                if (!isDone || (isDone && showCompleted)) {
+                    indicatorsHtml += `
+                        <div class="indicator-item ${isDone ? 'success-text' : ''}">
+                            <span>${ind.indicator}</span>
+                            <span>${ind.status}</span>
+                        </div>`;
+                }
+            });
+
+            content.innerHTML += `
+                <div class="card">
+                    <h3>المشرف: ${name}</h3>
+                    <div class="progress-section">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-box">الإنجاز: ${data.totalDone} / 44</div>
+                            <div class="stat-box">النسبة: ${percentage}%</div>
+                        </div>
+                    </div>
+                    <div class="indicator-list">
+                        <strong>المؤشرات:</strong>
+                        ${indicatorsHtml}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    fetchData();
 </script>
+
 </body>
 </html>
