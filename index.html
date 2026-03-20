@@ -25,7 +25,7 @@
 <div class="container">
     <header>
         <h1>📊 لوحة متابعة المشرفين</h1>
-        <p id="msg" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.9;">جاري المزامنة مع صفحة Dashboard...</p>
+        <p id="msg" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.9;">جاري تحديث البيانات...</p>
     </header>
     <div class="nav" id="weekNav"></div>
     <div class="grid" id="dataGrid"></div>
@@ -35,10 +35,10 @@
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const TOTAL_INDICATORS = 44;
 
-// قاموس لربط الأرقام بالكلمات العربية كما في جدولك
-const WEEK_WORDS = {
-    1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس",
-    6: "السادس", 7: "السابع", 8: "الثامن", 9: "التاسع", 10: "العاشر"
+const WEEK_LABELS = {
+    1: ["الأول", "الاول", "1"], 2: ["الثاني", "الثاني", "2"], 3: ["الثالث", "الثالث", "3"],
+    4: ["الرابع", "الرابع", "4"], 5: ["الخامس", "الخامس", "5"], 6: ["السادس", "6"],
+    7: ["السابع", "7"], 8: ["الثامن", "8"], 9: ["التاسع", "9"], 10: ["العاشر", "10"]
 };
 
 let state = { data: [], currentWeek: 5 };
@@ -48,15 +48,16 @@ async function loadData() {
         const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
         const text = await response.text();
         state.data = parseCSV(text);
-        document.getElementById('msg').innerText = "✅ متصل بصفحة المدير";
+        document.getElementById('msg').innerText = "✅ متصل بصفحة Dashboard (تشمل جاري التنفيذ)";
         render();
     } catch (e) {
-        document.getElementById('msg').innerText = "❌ فشل الاتصال";
+        document.getElementById('msg').innerText = "❌ فشل الاتصال بالبيانات";
     }
 }
 
 function parseCSV(text) {
     const lines = text.split('\n').filter(l => l.trim());
+    if (!lines.length) return [];
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
     return lines.slice(1).map(line => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
@@ -80,19 +81,19 @@ function render() {
 
     const keys = Object.keys(state.data[0] || {});
     const nameCol = keys.find(k => k.includes("مشرف")) || keys[0];
-    const weekCol = keys.find(k => k.includes("أسبوع") || k.includes("أسابيع")) || keys[1];
+    const weekCol = keys.find(k => k.includes("أسبوع") || k.includes("أسابيع") || k.includes("الاسبوع")) || keys[1];
     const statusCol = keys.find(k => k.includes("حالة")) || keys[2];
 
-    const weekWord = WEEK_WORDS[state.currentWeek] || "";
+    const allowedWeeks = WEEK_LABELS[state.currentWeek] || [state.currentWeek.toString()];
 
     const filtered = state.data.filter(row => {
         const val = (row[weekCol] || "").toString();
-        // يبحث عن الكلمة (الخامس) أو الرقم (5) في الخلية
-        return val.includes(weekWord) || val.includes(state.currentWeek.toString());
+        // فحص ذكي للهمزة والنص
+        return allowedWeeks.some(w => val.includes(w));
     });
 
     if (!filtered.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1; padding:20px; border:1px dashed #fff; border-radius:10px;">لا توجد بيانات للأسبوع ${state.currentWeek}</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; padding:20px; border:1px dashed #fff; border-radius:10px;">لا توجد بيانات مسجلة لـ ${allowedWeeks[0]}</div>`;
         return;
     }
 
@@ -102,8 +103,8 @@ function render() {
         if(!name) return;
         if(!summary[name]) summary[name] = { name, done: 0 };
         
-        const s = (row[statusCol] || "").toString();
-        // يقبل "تم" أو "جاري" أو "نعم" أو أي خلية غير فارغة
+        const s = (row[statusCol] || "").toString().trim();
+        // الآن يقبل "جاري التنفيذ" أو "تم" أو أي نص غير فارغ
         if(s.includes("تم") || s.includes("جاري") || s.includes("تنفيذ") || (s !== "" && s !== "0")) {
             summary[name].done++;
         }
