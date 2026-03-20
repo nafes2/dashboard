@@ -16,7 +16,7 @@
         .card { background: #fff; color: #333; border-radius: 12px; padding: 15px; text-align: right; border-right: 5px solid var(--accent); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
         .card h3 { color: var(--primary); font-size: 1.1rem; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .prog-bg { background: #eee; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; }
-        .prog-fill { background: var(--success); height: 100%; transition: width 0.8s ease-in-out; }
+        .prog-fill { background: var(--success); height: 100%; transition: width 0.8s; }
         .stats { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; }
     </style>
 </head>
@@ -25,34 +25,38 @@
 <div class="container">
     <header>
         <h1>📊 لوحة متابعة المشرفين</h1>
-        <p id="msg" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.9;">جاري المزامنة مع صفحة المدير...</p>
+        <p id="msg" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.9;">جاري المزامنة مع صفحة Dashboard...</p>
     </header>
     <div class="nav" id="weekNav"></div>
     <div class="grid" id="dataGrid"></div>
 </div>
 
 <script>
-// الرابط المباشر لملفك المنشور كـ CSV
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const TOTAL_INDICATORS = 44;
 
-let state = { data: [], currentWeek: 5 }; // نبدأ بالأسبوع 5 كما في صورتك
+// قاموس لربط الأرقام بالكلمات العربية كما في جدولك
+const WEEK_WORDS = {
+    1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس",
+    6: "السادس", 7: "السابع", 8: "الثامن", 9: "التاسع", 10: "العاشر"
+};
+
+let state = { data: [], currentWeek: 5 };
 
 async function loadData() {
     try {
         const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
         const text = await response.text();
         state.data = parseCSV(text);
-        document.getElementById('msg').innerText = "✅ البيانات محدثة الآن (تشمل جاري التنفيذ)";
+        document.getElementById('msg').innerText = "✅ متصل بصفحة المدير";
         render();
     } catch (e) {
-        document.getElementById('msg').innerText = "❌ تعذر جلب البيانات، تأكد من النشر على الويب";
+        document.getElementById('msg').innerText = "❌ فشل الاتصال";
     }
 }
 
 function parseCSV(text) {
     const lines = text.split('\n').filter(l => l.trim());
-    if (!lines.length) return [];
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
     return lines.slice(1).map(line => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
@@ -74,19 +78,17 @@ function render() {
     const grid = document.getElementById('dataGrid');
     grid.innerHTML = '';
 
-    if (!state.data.length) return;
-
-    const keys = Object.keys(state.data[0]);
-    // البحث عن الأعمدة الصحيحة حتى لو تغيرت أسماؤها قليلاً
+    const keys = Object.keys(state.data[0] || {});
     const nameCol = keys.find(k => k.includes("مشرف")) || keys[0];
-    const weekCol = keys.find(k => k.includes("أسبوع") || k.includes("أسابيع") || k.includes("الاسبوع")) || keys[1];
+    const weekCol = keys.find(k => k.includes("أسبوع") || k.includes("أسابيع")) || keys[1];
     const statusCol = keys.find(k => k.includes("حالة")) || keys[2];
+
+    const weekWord = WEEK_WORDS[state.currentWeek] || "";
 
     const filtered = state.data.filter(row => {
         const val = (row[weekCol] || "").toString();
-        // استخراج الرقم من النص (مثلاً "الأسبوع الخامس" سيستخرج الرقم المرتبط بالزر)
-        const numInCell = val.replace(/\D/g, "");
-        return numInCell == state.currentWeek || val.includes("خامس") && state.currentWeek == 5 || val.includes("أول") && state.currentWeek == 1;
+        // يبحث عن الكلمة (الخامس) أو الرقم (5) في الخلية
+        return val.includes(weekWord) || val.includes(state.currentWeek.toString());
     });
 
     if (!filtered.length) {
@@ -101,8 +103,8 @@ function render() {
         if(!summary[name]) summary[name] = { name, done: 0 };
         
         const s = (row[statusCol] || "").toString();
-        // التعديل: اعتبار أي شيء غير فارغ أو يحتوي على "جاري" كإنجاز
-        if(s.includes("تم") || s.includes("جاري") || s.includes("تنفيذ") || s !== "") {
+        // يقبل "تم" أو "جاري" أو "نعم" أو أي خلية غير فارغة
+        if(s.includes("تم") || s.includes("جاري") || s.includes("تنفيذ") || (s !== "" && s !== "0")) {
             summary[name].done++;
         }
     });
@@ -113,10 +115,7 @@ function render() {
             <div class="card">
                 <h3>${sup.name}</h3>
                 <div class="prog-bg"><div class="prog-fill" style="width: ${percent}%"></div></div>
-                <div class="stats">
-                    <span>المنجز: ${sup.done}</span>
-                    <span style="color: var(--primary)">${percent}%</span>
-                </div>
+                <div class="stats"><span>المنجز: ${sup.done}</span><span>${percent}%</span></div>
             </div>`;
     });
 }
