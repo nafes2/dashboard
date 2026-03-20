@@ -1,1 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة متابعة المشرفين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-color: #1a3a63; --secondary-color: #f8f9fa; --accent-color: #007bff; --success-color: #28a745; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
+        .header { background-color: var(--primary-color); color: white; padding: 25px 20px; text-align: center; }
+        .container { max-width: 900px; margin: -30px auto 20px; padding: 0 15px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 5px solid var(--primary-color); }
+        .progress-container { background-color: #e9ecef; border-radius: 10px; height: 15px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, #28a745, #34ce57); height: 100%; transition: width 0.8s ease; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .stat-box { background-color: var(--secondary-color); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #dee2e6; }
+        .indicator-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .status-tag { padding: 4px 10px; border-radius: 6px; font-size: 0.85em; font-weight: bold; }
+        .status-done { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        /* ستايل زر التحكم */
+        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>📊 لوحة متابعة المشرفين</h2>
+    <p>تحديث تلقائي من النظام المركزي</p>
+</div>
+
+<div class="container">
+    <div class="controls">
+        <input type="checkbox" id="showDone" onchange="displayData(window.lastRawData)">
+        <label for="showDone" style="cursor:pointer">إظهار المؤشرات المنفذة (المكتملة)</label>
+    </div>
+    <div id="dashboard">جاري تحميل البيانات...</div>
+</div>
+
+<script>
+    const sheetId = '1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s';
+    const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+
+    async function init() {
+        try {
+            const response = await fetch(base);
+            const data = await response.text();
+            // تقسيم البيانات بنفس الطريقة التي كانت تعمل عندك
+            const rows = data.split('\n').slice(1).map(row => {
+                const parts = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return parts.map(p => p.replace(/^"|"$/g, '').trim());
+            });
+            window.lastRawData = rows;
+            displayData(rows);
+        } catch (err) {
+            document.getElementById('dashboard').innerText = "خطأ في الاتصال";
+        }
+    }
+
+    function displayData(rows) {
+        const showAll = document.getElementById('showDone').checked;
+        const container = document.getElementById('dashboard');
+        container.innerHTML = '';
+
+        const groups = {};
+        rows.forEach(row => {
+            const name = row[0];
+            const status = row[1];
+            const task = row[2];
+            if (!name) return;
+
+            if (!groups[name]) groups[name] = { done: 0, tasks: [] };
+
+            const isFinished = (status === "تم التنفيذ" || status === "جاري التنفيذ");
+            if (isFinished) groups[name].done++;
+            
+            // الفلترة: إذا كان غير منفذ أو إذا اختار المستخدم إظهار الكل
+            if (!isFinished || showAll) {
+                groups[name].tasks.push({ task, status, isFinished });
+            }
+        });
+
+        for (const name in groups) {
+            const g = groups[name];
+            // النسبة من 44 كما طلبت
+            const percent = ((g.done / 44) * 100).toFixed(1);
+            
+            let listHtml = g.tasks.map(t => `
+                <div class="indicator-item">
+                    <span>${t.task}</span>
+                    <span class="status-tag ${t.isFinished ? 'status-done' : 'status-pending'}">${t.status}</span>
+                </div>
+            `).join('');
+
+            container.innerHTML += `
+                <div class="card">
+                    <h3 style="margin:0 0 10px 0;">المشرف: ${name}</h3>
+                    <div class="progress-container"><div class="progress-bar" style="width: ${percent}%"></div></div>
+                    <div class="stats-grid">
+                        <div class="stat-box">الإنجاز: ${g.done} / 44</div>
+                        <div class="stat-box">النسبة: ${percent}%</div>
+                    </div>
+                    <div style="margin-top:15px;">${listHtml}</div>
+                </div>`;
+        }
+    }
+
+    init();
+    setInterval(init, 60000);
+</script>
+</body>
+</html>
 
