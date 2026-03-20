@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة متابعة المشرفين - تحديث جاري التنفيذ</title>
+    <title>لوحة متابعة المشرفين - الإصدار المعتمد</title>
     <style>
         :root { --primary: #1e3c72; --secondary: #2a5298; --accent: #ffd700; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,9 +34,8 @@
 <script>
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const GOAL = 44;
-let app = { data: [], week: 2 }; // نبدأ بالأسبوع الثاني كما في صورتك الناجحة
+let app = { data: [], week: 3 };
 
-// دالة عد المؤشرات بناءً على الفواصل (تطابق معادلتك)
 function countInds(val) {
     if (!val) return 0;
     return val.split(',').filter(x => x.trim().length > 0).length;
@@ -54,7 +53,7 @@ async function fetchData() {
         const text = await r.text();
         app.data = parse(text);
         render();
-    } catch(e) { console.error(e); }
+    } catch(e) { document.getElementById('content').innerHTML = "⚠️ فشل في جلب البيانات"; }
 }
 
 function parse(csv) {
@@ -89,7 +88,7 @@ function render() {
     let totals = {};
     app.data.forEach(r => {
         const name = r[nK];
-        if (name && r[sK]?.includes("تم التنفيذ")) {
+        if (name && r[sK]?.includes("تم")) {
             totals[name] = (totals[name] || 0) + countInds(r[iK]);
         }
     });
@@ -106,14 +105,17 @@ function render() {
         if(!sups[n]) sups[n] = { n, wDone: 0, wProg: 0, tDone: totals[n] || 0, list: [], link: "#" };
         
         const c = countInds(r[iK]);
-        const isDone = r[sK]?.includes("تم التنفيذ");
-        const isProg = r[sK]?.includes("جاري");
-
-        if(isDone) sups[n].wDone += c;
-        if(isProg) sups[n].wProg += c;
+        const statusStr = r[sK] || "";
+        
+        // تعديل جوهري: فحص الحالة لكل سطر
+        if(statusStr.includes("تم")) {
+            sups[n].wDone += c;
+        } else if(statusStr.includes("جاري")) {
+            sups[n].wProg += c; // هنا سيظهر رقم 2 بدلاً من 0
+        }
 
         r[iK].split(',').forEach(txt => { 
-            if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: isDone, p: isProg }); 
+            if(txt.trim()) sups[n].list.push({ t: txt.trim(), d: statusStr.includes("تم"), p: statusStr.includes("جاري") }); 
         });
         
         const l = Object.values(r).find(v => v.toString().startsWith('http'));
@@ -126,13 +128,13 @@ function render() {
         cont.innerHTML += `
             <div class="card">
                 <h2>${s.n}</h2>
-                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px; border:1px solid #eee;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:15px; margin-bottom:15px;">
                     ${s.list.map(i => `<div class="ind-item"><span>${i.d?'✅':(i.p?'⏳':'⚪')}</span><span>${i.t}</span></div>`).join('')}
                 </div>
                 <div class="stats-grid">
                     <div class="stat-box done"><span class="stat-num">${s.wDone}</span>تم</div>
                     <div class="stat-box pending"><span class="stat-num">${s.wProg}</span>جاري</div>
-                    <div class="stat-box info"><span class="stat-num">${s.wDone}</span>هذا الأسبوع</div>
+                    <div class="stat-box info"><span class="stat-num">${s.wDone + s.wProg}</span>هذا الأسبوع</div>
                 </div>
                 <div class="total-box">
                     <p>📊 الإجمالي التراكمي</p>
