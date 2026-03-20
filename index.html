@@ -6,46 +6,37 @@
 <title>لوحة متابعة المشرفين</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; min-height: 100vh; padding: 20px; }
+body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; min-height: 100vh; padding: 20px; }
 .container { max-width: 1200px; margin: 0 auto; }
 header { text-align: center; padding: 20px 0; }
-header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
 .nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 25px 0; }
-.btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
-.btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding: 10px; }
-.card { background: #fff; color: #333; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
-.card-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
-.indicators-toggle { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 12px; border-radius: 10px; color: #fff; width: 100%; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
-.indicators-list { display: none; background: #f8f9fa; border-radius: 12px; padding: 10px; margin-bottom: 15px; border: 1px solid #eee; max-height: 200px; overflow-y: auto; }
-.indicators-list.show { display: block; }
-.indicator-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9em; }
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 18px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+.btn.active { background: #ffd700; color: #1e3c72; font-weight: bold; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+.card { background: #fff; color: #333; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.card h3 { color: #1e3c72; text-align: center; margin-bottom: 15px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
 .stat-box { text-align: center; padding: 10px; border-radius: 12px; font-weight: bold; }
-.stat-box.done { background: #e8f5e9; color: #2e7d32; }
-.stat-box.pending { background: #fff3e0; color: #ef6c00; }
-.stat-box.total { background: #e3f2fd; color: #1565c0; }
+.done { background: #e8f5e9; color: #2e7d32; }
+.pending { background: #fff3e0; color: #ef6c00; }
+.total { background: #e3f2fd; color: #1565c0; }
 .stat-number { font-size: 1.5em; display: block; }
-.summary-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
-.progress-section { background: #f8f9fa; padding: 15px; border-radius: 12px; }
-.progress { background: #e0e0e0; height: 25px; border-radius: 15px; overflow: hidden; margin-top: 5px; }
-.bar { height: 100%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; transition: width 1s; }
-.bar.purple { background: #9c27b0; }
-.bar.green { background: #4caf50; }
-.link-btn { display: block; text-align: center; background: #2a5298; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 15px; }
+.summary-box { background: #764ba2; color: white; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px; }
+.link-btn { display: block; text-align: center; background: #2a5298; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; margin-top: 10px; font-weight: bold; }
+.loading { text-align: center; padding: 50px; }
 </style>
 </head>
 <body>
 <div class="container">
-    <header><h1>📊 لوحة متابعة المشرفين</h1><p>متابعة تنفيذ المؤشرات الأسبوعية</p></header>
+    <header><h1>📊 لوحة متابعة المشرفين</h1></header>
     <div class="nav" id="weeks"></div>
+    <div id="status" class="loading">جاري جلب البيانات من جوجل...</div>
     <div class="grid" id="cards"></div>
 </div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
 const PROXY = "https://api.allorigins.win/raw?url=";
-const TOTAL_INDICATORS = 44;
 let appData = { allData: [], currentWeek: 3 };
 
 async function loadData() {
@@ -53,8 +44,11 @@ async function loadData() {
         const response = await fetch(PROXY + encodeURIComponent(SHEET_URL + "&t=" + Date.now()));
         const text = await response.text();
         appData.allData = parseCSV(text);
+        document.getElementById("status").style.display = "none";
         render();
-    } catch (e) { console.error("Error loading data", e); }
+    } catch (e) {
+        document.getElementById("status").innerHTML = "⚠️ فشل الاتصال. تأكد من الإنترنت أو الرابط.";
+    }
 }
 
 function parseCSV(csv) {
@@ -81,59 +75,38 @@ function render() {
 
     const container = document.getElementById("cards");
     container.innerHTML = "";
-
-    const nameCol = "اسم المشرف";
-    const weekCol = "الأسبوع";
-    const statusCol = "الحالة";
-    const indCol = "رقم المؤشر";
-
-    const supervisorTotals = {};
-    appData.allData.forEach(row => {
-        const name = row[nameCol]; if(!name) return;
-        if(!supervisorTotals[name]) supervisorTotals[name] = 0;
-        if(row[statusCol]?.trim() === "تم التنفيذ") {
-            supervisorTotals[name] += (row[indCol]?.split(',').length || 1);
-        }
-    });
+    
+    // تحديد الأعمدة برمجياً لضمان عدم توقف الكود
+    const sample = appData.allData[0] || {};
+    const nameCol = Object.keys(sample).find(k => k.includes("مشرف")) || "";
+    const weekCol = Object.keys(sample).find(k => k.includes("سبوع")) || "";
+    const statusCol = Object.keys(sample).find(k => k.includes("حالة")) || "";
+    const indCol = Object.keys(sample).find(k => k.includes("مؤشر")) || "";
 
     const weekData = appData.allData.filter(r => parseInt(r[weekCol]) === appData.currentWeek);
-    
-    weekData.forEach((row, index) => {
-        const name = row[nameCol];
+
+    weekData.forEach(row => {
         const status = (row[statusCol] || "").trim();
-        const indicators = row[indCol]?.split(',').filter(x => x.trim()) || [];
-        const count = indicators.length;
+        const indicators = (row[indCol] || "").split(',').filter(x => x.trim());
+        const count = indicators.length || 0;
 
-        // التعديل الجوهري هنا لقراءة "جاري" بشكل صحيح
+        // ✅ الحل الجذري لمشكلة جاري التنفيذ
         let done = status === "تم التنفيذ" ? count : 0;
-        let pending = status.includes("جار") ? count : 0;
-
-        const totalDoneAll = supervisorTotals[name] || 0;
-        const totalPercent = ((totalDoneAll / TOTAL_INDICATORS) * 100).toFixed(1);
+        let pending = status.includes("جار") ? count : 0; 
 
         container.innerHTML += `
             <div class="card">
-                <div class="card-header"><h3>${name}</h3><span>الأسبوع ${appData.currentWeek}</span></div>
-                <button class="indicators-toggle" onclick="this.nextElementSibling.classList.toggle('show')">📋 عرض المؤشرات (${count})</button>
-                <div class="indicators-list">
-                    ${indicators.map(num => `<div class="indicator-item"><span>مؤشر ${num}</span><span>${status}</span></div>`).join('')}
-                </div>
+                <h3>${row[nameCol]}</h3>
                 <div class="stats-grid">
                     <div class="stat-box done"><span class="stat-number">${done}</span>تم</div>
                     <div class="stat-box pending"><span class="stat-number">${pending}</span>جاري</div>
                     <div class="stat-box total"><span class="stat-number">${count}</span>الإجمالي</div>
                 </div>
-                <div class="summary-box">
-                    <p>الإجمالي التراكمي: <strong>${totalDoneAll}</strong> من ${TOTAL_INDICATORS}</p>
-                </div>
-                <div class="progress-section">
-                    <p>نسبة الإنجاز العام: ${totalPercent}%</p>
-                    <div class="progress"><div class="bar purple" style="width:${totalPercent}%">${totalPercent}%</div></div>
-                </div>
+                <div class="summary-box">المؤشرات: ${indicators.join(' - ') || 'لا يوجد'}</div>
+                <a href="${Object.values(row).find(v => v.toString().startsWith('http')) || '#'}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
             </div>`;
     });
 }
-
 loadData();
 </script>
 </body>
