@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,19 +7,24 @@
     <title>لوحة متابعة المشرفين</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a3a63; --success: #28a745; }
+        :root { --primary-color: #1a3a63; --secondary-color: #f8f9fa; --accent-color: #007bff; --success-color: #28a745; }
         body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; }
-        .container { max-width: 800px; margin: 20px auto; padding: 15px; }
-        .controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .progress-container { background: #eee; border-radius: 10px; height: 12px; margin: 10px 0; overflow: hidden; }
-        .progress-fill { background: var(--success); height: 100%; transition: width 0.5s; }
-        .stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
-        .ind-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 0.9em; }
-        .status-done { color: var(--success); font-weight: bold; }
-        .status-wait { color: #856404; }
-        #loading { text-align: center; padding: 40px; font-size: 1.2em; }
+        .header { background-color: var(--primary-color); color: white; padding: 25px 20px; text-align: center; }
+        .container { max-width: 900px; margin: -30px auto 20px; padding: 0 15px; }
+        
+        /* إضافة ستايل التحكم */
+        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 5px solid var(--primary-color); }
+        .progress-container { background-color: #e9ecef; border-radius: 10px; height: 15px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, #28a745, #34ce57); height: 100%; transition: width 0.8s ease; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .stat-box { background-color: var(--secondary-color); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #dee2e6; }
+        .indicator-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .status-tag { padding: 4px 10px; border-radius: 6px; font-size: 0.85em; font-weight: bold; }
+        .status-done { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        #loading { text-align: center; padding: 50px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -30,96 +36,92 @@
 
 <div class="container">
     <div class="controls">
-        <input type="checkbox" id="showAll" onchange="renderView()">
-        <label for="showAll">إظهار المؤشرات المنفذة (المكتملة)</label>
+        <input type="checkbox" id="toggleDone" onchange="displayData()">
+        <label for="toggleDone" style="cursor:pointer">إظهار المؤشرات المنفذة (المكتملة)</label>
     </div>
 
     <div id="loading">جاري جلب البيانات...</div>
-    <div id="display-area"></div>
+    <div id="dashboard"></div>
 </div>
 
 <script>
-    // الرابط الذي كان يعمل لديك سابقاً
-    const url = 'https://docs.google.com/spreadsheets/d/1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s/gviz/tq?tqx=out:csv';
+    const sheetId = '1X-p1E6mK-M10B6Zsc56WlO2_Q2YhZ7L8G8Xp_vT8h7s';
+    const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
     
-    let globalData = [];
+    let rawData = [];
 
-    async function getData() {
+    async function init() {
         try {
-            const response = await fetch(url);
-            const text = await response.text();
-            
-            // تحويل النص إلى أسطر
-            const lines = text.split('\n').map(line => line.split('","').map(item => item.replace(/"/g, '')));
-            globalData = lines.slice(1); // تجاهل الهيدر
-            
-            renderView();
+            const res = await fetch(base);
+            const data = await res.text();
+            // تقسيم البيانات بنفس طريقتك الأصلية المستقرة
+            rawData = data.split('\n').slice(1).map(row => {
+                const parts = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return parts.map(p => p.replace(/^"|"$/g, '').trim());
+            });
+            displayData();
             document.getElementById('loading').style.display = 'none';
-        } catch (e) {
-            document.getElementById('loading').innerHTML = "خطأ في جلب البيانات";
+        } catch (err) {
+            document.getElementById('loading').innerText = "خطأ في الاتصال بالسيرفر";
         }
     }
 
-    function renderView() {
-        const showAll = document.getElementById('showAll').checked;
-        const area = document.getElementById('display-area');
-        area.innerHTML = '';
+    function displayData() {
+        const showDone = document.getElementById('toggleDone').checked;
+        const container = document.getElementById('dashboard');
+        container.innerHTML = '';
 
         const groups = {};
-        
-        globalData.forEach(row => {
-            const name = row[0]; // اسم المشرف
-            const status = row[1]; // الحالة
-            const task = row[2]; // المؤشر
-
+        rawData.forEach(row => {
+            const name = row[0];
+            const status = row[1];
+            const task = row[2];
             if (!name) return;
 
-            if (!groups[name]) {
-                groups[name] = { done: 0, list: [] };
-            }
-
-            const isDone = (status === "تم التنفيذ" || status === "جاري التنفيذ");
-            if (isDone) groups[name].done++;
+            if (!groups[name]) groups[name] = { doneCount: 0, tasks: [] };
             
-            groups[name].list.push({ task, status, isDone });
+            const isFinished = (status === "تم التنفيذ" || status === "جاري التنفيذ");
+            if (isFinished) groups[name].doneCount++;
+            
+            groups[name].tasks.push({ task, status, isFinished });
         });
 
         for (const name in groups) {
-            const person = groups[name];
-            const percent = ((person.done / 44) * 100).toFixed(1);
+            const info = groups[name];
+            // التصحيح: النسبة من 44
+            const percent = ((info.doneCount / 44) * 100).toFixed(1);
             
-            let listHtml = '';
-            person.list.forEach(item => {
-                // التحكم في الإظهار والإخفاء
-                if (!item.isDone || showAll) {
-                    listHtml += `
-                        <div class="ind-item">
-                            <span>${item.task}</span>
-                            <span class="${item.isDone ? 'status-done' : 'status-wait'}">${item.status}</span>
+            let tasksHtml = '';
+            info.tasks.forEach(t => {
+                // الفلترة: إذا كان منفذ ولا نريد إظهار المنفذ، نتخطاه
+                if (!t.isFinished || showDone) {
+                    tasksHtml += `
+                        <div class="indicator-item">
+                            <span>${t.task}</span>
+                            <span class="status-tag ${t.isFinished ? 'status-done' : 'status-pending'}">${t.status}</span>
                         </div>`;
                 }
             });
 
-            area.innerHTML += `
+            container.innerHTML += `
                 <div class="card">
-                    <div class="stats">
-                        <span>المشرف: ${name}</span>
-                        <span>${percent}%</span>
-                    </div>
+                    <h3 style="margin:0 0 10px 0; color:var(--primary-color)">المشرف: ${name}</h3>
                     <div class="progress-container">
-                        <div class="progress-fill" style="width: ${percent}%"></div>
+                        <div class="progress-bar" style="width: ${percent}%"></div>
                     </div>
-                    <div style="text-align:center; font-size:0.85em; margin-bottom:10px;">
-                        الإنجاز: ${person.done} من 44
+                    <div class="stats-grid">
+                        <div class="stat-box">الإنجاز: ${info.doneCount} / 44</div>
+                        <div class="stat-box">النسبة: ${percent}%</div>
                     </div>
-                    <div class="ind-list">${listHtml}</div>
+                    <div style="margin-top:15px;">
+                        ${tasksHtml || '<p style="text-align:center; color:gray">تم إنجاز جميع المهام الحالية</p>'}
+                    </div>
                 </div>`;
         }
     }
 
-    getData();
-    setInterval(getData, 60000); // تحديث كل دقيقة
+    init();
+    setInterval(init, 60000);
 </script>
-
 </body>
 </html>
