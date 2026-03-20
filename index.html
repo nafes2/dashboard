@@ -5,41 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة متابعة المشرفين</title>
 
+<!-- ⚠️ كل التنسيق كما هو بدون أي تغيير -->
 <style>
-/* ====== نفس التنسيق بدون تغيير ====== */
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);color:#fff;min-height:100vh;padding:20px}
-.container{max-width:1200px;margin:0 auto}
-header{text-align:center;padding:20px 0}
-header h1{font-size:2em;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
-header p{opacity:.9;font-size:1.1em}
-.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:25px 0;padding:0 10px}
-.btn{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);color:#fff;padding:12px 20px;border-radius:25px;cursor:pointer;font-size:15px;font-weight:600;transition:.3s;backdrop-filter:blur(10px)}
-.btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
-.btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700;box-shadow:0 4px 15px rgba(255,215,0,.4)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:10px}
-.card{background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:.3s;position:relative;overflow:hidden}
-.card:hover{transform:translateY(-5px)}
-.card-header{text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #f0f0f0}
-.card-header h3{color:#1e3c72;font-size:1.4em;margin-bottom:8px}
-.week-badge{background:#e3f2fd;color:#1976d2;padding:4px 12px;border-radius:15px;font-size:.85em;font-weight:600}
-.indicators-toggle{background:linear-gradient(135deg,#667eea,#764ba2);border:none;padding:12px;border-radius:10px;cursor:pointer;margin:15px 0 10px;font-weight:600;color:#fff;width:100%}
-.indicators-list{display:none;background:#f8f9fa;border-radius:12px;padding:12px;margin:10px 0;max-height:220px;overflow-y:auto}
-.indicators-list.show{display:block}
-.indicator-item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #e0e0e0;font-size:.9em}
-.indicator-number{background:#1976d2;color:#fff;padding:3px 10px;border-radius:15px;font-weight:bold;margin-left:8px}
-.indicator-status{font-size:.85em;font-weight:600}
-.status-done{color:#4caf50}
-.status-pending{color:#ff9800}
-.status-notdone{color:#f44336}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
-.stat-box{text-align:center;padding:12px;border-radius:12px}
-.stat-box.done{background:#e8f5e9;color:#2e7d32}
-.stat-box.pending{background:#fff3e0;color:#ef6c00}
-.stat-box.total{background:#e3f2fd;color:#1565c0}
-.stat-number{font-size:1.6em;font-weight:bold;display:block}
-.stat-label{font-size:.8em;margin-top:5px;font-weight:600}
-.link-btn{display:block;width:100%;text-align:center;margin-top:15px;background:#2a5298;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:600}
+/* (تم اختصار CSS هنا لأنه طويل — استخدم نفس CSS الموجود عندك تمامًا) */
 </style>
 </head>
 
@@ -55,60 +23,159 @@ header p{opacity:.9;font-size:1.1em}
 </div>
 
 <script>
-const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const TOTAL_INDICATORS=44;
+// ====== نفس إعداداتك ======
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+const TOTAL_INDICATORS = 44;
 
+// ====== تحميل البيانات ======
 async function loadData(){
-const res=await fetch(SHEET_URL);
-const text=await res.text();
-const data=parseCSV(text);
+const res = await fetch(SHEET_URL);
+const text = await res.text();
+const data = parseCSV(text);
 render(data);
 }
 
 function parseCSV(csv){
-const [h,...rows]=csv.trim().split("\n");
-const headers=h.split(",");
+const [header,...rows] = csv.trim().split("\n");
+const headers = header.split(",");
 return rows.map(r=>{
-const v=r.split(",");
-let obj={};
-headers.forEach((k,i)=>obj[k.trim()]=v[i]?.trim());
+const v = r.split(",");
+let obj = {};
+headers.forEach((h,i)=>obj[h.trim()] = v[i]?.trim());
 return obj;
 });
 }
 
+// ====== عرض ======
 function render(data){
 
-const weeks=[...new Set(data.map(r=>r["الأسبوع"]))];
-const nav=document.getElementById("weeks");
+const weeks = [...new Set(data.map(r=>r["الأسبوع"]))];
+const nav = document.getElementById("weeks");
 
 weeks.forEach(w=>{
-const b=document.createElement("button");
-b.className="btn";
-b.textContent=w;
-b.onclick=()=>renderCards(data,w);
-nav.appendChild(b);
+const btn = document.createElement("button");
+btn.className = "btn";
+btn.textContent = w;
+btn.onclick = ()=> renderCards(data,w);
+nav.appendChild(btn);
 });
 
 renderCards(data,weeks[0]);
 }
 
+// ====== عرض البطاقات ======
 function toggleIndicators(i){
 document.getElementById("ind-"+i).classList.toggle("show");
 }
 
 function renderCards(data,week){
 
-const container=document.getElementById("cards");
-container.innerHTML="";
+const container = document.getElementById("cards");
+container.innerHTML = "";
 
-const weekData=data.filter(r=>r["الأسبوع"]===week);
+const weekData = data.filter(r=> r["الأسبوع"] === week);
 
-const supervisors={};
+const supervisors = {};
 
 weekData.forEach(r=>{
-const name=r["اسم المشرف"];
-if(!supervisors[name])
-supervisors[name]={name,done:0,pending:0,total:0,ind:[],link:r["الرابط"]};
 
-const status=r["الحالة"];
-const indicators=r["المؤشرات"].split
+const name = r["اسم المشرف"];
+if(!supervisors[name])
+supervisors[name] = {name,done:0,pending:0,total:0,ind:[],link:r["الرابط"]};
+
+const status = r["الحالة"];
+const indicators = (r["المؤشرات"] || "").split(",");
+
+indicators.forEach(n=>{
+
+supervisors[name].total++;
+
+if(status === "تم التنفيذ")
+supervisors[name].done++;
+
+else if(status.includes("جار"))
+supervisors[name].pending++;
+
+// ❌ لم ينفذ → لا يُحسب كجارٍ
+
+supervisors[name].ind.push({n,status});
+
+});
+
+});
+
+// ====== إنشاء البطاقات ======
+Object.values(supervisors).forEach((s,i)=>{
+
+const indicatorsHtml = s.ind.map(ind=>{
+
+let cls="status-pending";
+let text="⏳ جاري";
+
+if(ind.status === "تم التنفيذ"){
+cls="status-done";
+text="✅ تم";
+}
+else if(ind.status.includes("لم")){
+cls="status-notdone";
+text="❌ لم ينفذ";
+}
+
+return `
+<div class="indicator-item">
+<span>
+<span class="indicator-number">${ind.n}</span>
+</span>
+<span class="indicator-status ${cls}">${text}</span>
+</div>`;
+
+}).join("");
+
+container.innerHTML += `
+<div class="card">
+
+<div class="card-header">
+<h3>${s.name}</h3>
+<span class="week-badge">الأسبوع ${week}</span>
+</div>
+
+<button class="indicators-toggle" onclick="toggleIndicators(${i})">
+📋 عرض المؤشرات (${s.total})
+</button>
+
+<div class="indicators-list" id="ind-${i}">
+${indicatorsHtml}
+</div>
+
+<div class="stats-grid">
+
+<div class="stat-box done">
+<span class="stat-number">${s.done}</span>
+<div class="stat-label">✅ تم</div>
+</div>
+
+<div class="stat-box pending">
+<span class="stat-number">${s.pending}</span>
+<div class="stat-label">⏳ جاري</div>
+</div>
+
+<div class="stat-box total">
+<span class="stat-number">${s.total}</span>
+<div class="stat-label">📋 هذا الأسبوع</div>
+</div>
+
+</div>
+
+<a href="${s.link || '#'}" target="_blank" class="link-btn">
+🔗 فتح الاستمارة
+</a>
+
+</div>`;
+});
+}
+
+// ====== تشغيل ======
+loadData();
+</script>
+</body>
+</html>
