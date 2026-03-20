@@ -3,185 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة متابعة المشرفين الذكية - الإصدار المحدث</title>
+<title>لوحة متابعة المشرفين - النسخة التصحيحية</title>
 <style>
-/* التنسيقات العامة */
+/* التنسيقات العامة للحفاظ على المظهر */
 * { box-sizing: border-box; margin:0; padding:0; }
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:20px; }
+body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg,#1e3c72 0%,#2a5298 100%); color:#fff; min-height:100vh; padding:20px; text-align:center; }
 .container { max-width:1200px; margin:0 auto; }
-header { text-align:center; padding:20px 0; }
-header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
 .nav { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:25px 0; }
-.btn { background: rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); color:#fff; padding:12px 18px; border-radius:25px; cursor:pointer; font-weight:600; transition: 0.3s; }
-.btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; box-shadow:0 4px 15px rgba(255,215,0,0.4); }
+.btn { background: rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); color:#fff; width:50px; height:50px; border-radius:50%; cursor:pointer; font-weight:bold; transition: 0.3s; }
+.btn.active { background:#ffd700; color:#1e3c72; border-color:#ffd700; transform: scale(1.1); }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
-.card { background:#fff; color:#333; border-radius:20px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.3); position:relative; overflow:hidden; }
-.card-header { text-align:center; margin-bottom:15px; border-bottom:2px solid #f0f0f0; padding-bottom:10px; }
-.card-header h3 { color:#1e3c72; }
-.indicators-toggle { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); border:none; padding:10px; border-radius:10px; cursor:pointer; color:#fff; width:100%; margin-bottom:10px; font-weight:bold; }
-.indicators-list { display:none; background:#f8f9fa; border-radius:10px; padding:10px; margin-bottom:10px; max-height:200px; overflow-y:auto; border:1px solid #ddd; }
+.card { background:#fff; color:#333; border-radius:20px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+.card h3 { color:#1e3c72; margin-bottom:15px; border-bottom:2px solid #eee; padding-bottom:10px; }
+.indicators-toggle { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); border:none; padding:12px; border-radius:10px; cursor:pointer; color:#fff; width:100%; font-weight:bold; margin-bottom:10px; }
+.indicators-list { display:none; background:#f8f9fa; border-radius:10px; padding:10px; max-height:200px; overflow-y:auto; border:1px solid #ddd; text-align:right; }
 .indicators-list.show { display:block; }
-.indicator-item { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; font-size:0.9em; }
+.indicator-item { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; font-size:0.85em; }
 .status-done { color:#4caf50; font-weight:bold; }
 .status-pending { color:#ff9800; font-weight:bold; }
 .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:15px 0; }
 .stat-box { text-align:center; padding:10px; border-radius:10px; }
 .stat-box.done { background:#e8f5e9; color:#2e7d32; }
 .stat-box.pending { background:#fff3e0; color:#ef6c00; }
-.stat-box.total { background:#e3f2fd; color:#1565c0; }
-.stat-number { font-size:1.4em; font-weight:bold; display:block; }
-.progress-container { background: #eee; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; }
-.progress-bar { background: #4caf50; height: 100%; transition: width 0.5s; }
+.stat-number { font-size:1.3em; font-weight:bold; display:block; }
 .link-btn { display:block; text-align:center; background:#2a5298; color:#fff; padding:12px; border-radius:10px; text-decoration:none; font-weight:bold; }
-.link-btn.disabled { background:#ccc; cursor:not-allowed; }
-.status-text { font-size: 0.8em; color: #666; margin-right: 5px; }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <header>
-    <h1>📊 لوحة متابعة المشرفين</h1>
-    <p id="conn-status">جاري جلب البيانات من صفحة المدير...</p>
-  </header>
-
+  <header><h1>📊 متابعة المشرفين (نسخة التصحيح)</h1><p id="msg">جاري الربط مع البيانات...</p></header>
   <div class="nav" id="weeks"></div>
-  <div id="cards" class="grid">
-    <div style="grid-column:1/-1; text-align:center; padding:50px;">جاري التحميل...</div>
-  </div>
+  <div id="cards" class="grid"></div>
 </div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const TOTAL_INDICATORS = 44; 
-const WEEK_NAMES = {1:"الأول",2:"الثاني",3:"الثالث",4:"الرابع",5:"الخامس",6:"السادس",7:"السابع",8:"الثامن",9:"التاسع",10:"العاشر",11:"الحادي عشر",12:"الثاني عشر",13:"الثالث عشر",14:"الرابع عشر",15:"الخامس عشر"};
-
+const TOTAL_INDICATORS = 44;
 let appData = { allData: [], currentWeek: 5 };
 
-function weekTextToNumber(text) {
-  if (!text) return null;
-  const t = text.toString().trim();
-  const num = parseInt(t.replace(/[^0-9]/g, ''));
-  if (!isNaN(num)) return num;
-  for (let [key, val] of Object.entries(WEEK_NAMES)) {
-    if (t.includes(val)) return parseInt(key);
-  }
-  return null;
-}
-
 async function loadData() {
-  try {
-    const res = await fetch(SHEET_URL + "&t=" + Date.now());
-    const text = await res.text();
-    appData.allData = parseCSV(text);
-    document.getElementById("conn-status").innerText = "✅ تم تحديث البيانات بنجاح";
-    render();
-  } catch (err) {
-    document.getElementById("cards").innerHTML = `<div style="grid-column:1/-1;" class="error-box">حدث خطأ في جلب البيانات</div>`;
-  }
+    try {
+        const res = await fetch(SHEET_URL + "&t=" + Date.now());
+        const text = await res.text();
+        appData.allData = parseCSV(text);
+        document.getElementById("msg").innerText = "✅ تم جلب كافة البيانات وتصحيح العد";
+        render();
+    } catch (e) { document.getElementById("msg").innerText = "❌ خطأ في الاتصال"; }
 }
 
 function parseCSV(csv) {
-  const lines = csv.split('\n').filter(l => l.trim() !== "");
-  const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-  return lines.slice(1).map(line => {
-    const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-    let row = {};
-    headers.forEach((h, i) => row[h] = values[i] || "");
-    return row;
-  });
+    const lines = csv.split('\n').filter(l => l.trim());
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+    return lines.slice(1).map(line => {
+        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
+        return headers.reduce((obj, h, i) => ({ ...obj, [h]: values[i] || "" }), {});
+    });
 }
 
 function render() {
-  renderWeeks();
-  renderCards();
-}
-
-function renderWeeks() {
-  const container = document.getElementById("weeks");
-  container.innerHTML = "";
-  [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].forEach(num => {
-    const btn = document.createElement("button");
-    btn.className = "btn" + (num === appData.currentWeek ? " active" : "");
-    btn.textContent = num;
-    btn.onclick = () => { appData.currentWeek = num; render(); };
-    container.appendChild(btn);
-  });
-}
-
-function toggleIndicators(idx) {
-  const el = document.getElementById(`list-${idx}`);
-  el.classList.toggle('show');
+    const nav = document.getElementById("weeks");
+    nav.innerHTML = "";
+    for(let i=1; i<=15; i++) {
+        const b = document.createElement("button");
+        b.className = "btn" + (i === appData.currentWeek ? " active" : "");
+        b.innerText = i;
+        b.onclick = () => { appData.currentWeek = i; render(); };
+        nav.appendChild(b);
+    }
+    renderCards();
 }
 
 function renderCards() {
-  const container = document.getElementById("cards");
-  container.innerHTML = "";
-  
-  if (appData.allData.length === 0) return;
+    const container = document.getElementById("cards");
+    container.innerHTML = "";
+    const sample = appData.allData[0] || {};
+    const nameCol = Object.keys(sample).find(k => k.includes("مشرف")) || "اسم المشرف";
+    const weekCol = Object.keys(sample).find(k => k.includes("أسبوع") || k.includes("الأسابيع")) || "الأسابيع";
+    const statusCol = Object.keys(sample).find(k => k.includes("حالة")) || "الحالة";
+    const indCol = Object.keys(sample).find(k => k.includes("مؤشر")) || "المؤشر";
 
-  const sample = appData.allData[0];
-  const nameCol = Object.keys(sample).find(k => k.includes("مشرف")) || Object.keys(sample)[0];
-  const weekCol = Object.keys(sample).find(k => k.includes("أسبوع") || k.includes("الأسابيع")) || Object.keys(sample)[1];
-  const statusCol = Object.keys(sample).find(k => k.includes("حالة") || k.includes("الحالة")) || Object.keys(sample)[2];
-  const indCol = Object.keys(sample).find(k => k.includes("مؤشر") || k.includes("المؤشر")) || Object.keys(sample)[3];
-
-  const weekData = appData.allData.filter(row => weekTextToNumber(row[weekCol]) === appData.currentWeek);
-
-  if (weekData.length === 0) {
-    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px;"><h3>لا توجد بيانات للأسبوع ${appData.currentWeek}</h3></div>`;
-    return;
-  }
-
-  const supervisors = {};
-  weekData.forEach(row => {
-    const name = row[nameCol];
-    if (!name) return;
-    if (!supervisors[name]) supervisors[name] = { name, done: 0, indicators: [], link: "#" };
-    
-    const status = (row[statusCol] || "").toString().trim();
-    const indVal = row[indCol] || "1";
-    
-    // فحص ذكي للحالة ليشمل "جاري التنفيذ"
-    const isDone = status.includes("تم") || status.includes("جاري") || status.includes("تنفيذ");
-    
-    if (isDone) supervisors[name].done++;
-    
-    supervisors[name].indicators.push({ 
-        n: indVal, 
-        s: isDone ? 'done' : 'pending',
-        rawStatus: status 
+    const filtered = appData.allData.filter(row => {
+        const val = row[weekCol] || "";
+        return val.includes("الخامس") && appData.currentWeek === 5 || val.includes(appData.currentWeek.toString());
     });
 
-    for (let v of Object.values(row)) { if(v && v.toString().startsWith("http")) supervisors[name].link = v; }
-  });
+    const supervisors = {};
+    filtered.forEach(row => {
+        const name = row[nameCol];
+        if (!name) return;
+        if (!supervisors[name]) supervisors[name] = { name, done: 0, indicators: [], link: "#" };
 
-  Object.values(supervisors).forEach((sup, i) => {
-    const percent = ((sup.done / TOTAL_INDICATORS) * 100).toFixed(1);
-    const card = document.createElement("div");
-    card.className = "card";
-    
-    const indHtml = sup.indicators.map(ind => `
-      <div class="indicator-item">
-        <span>مؤشر ${ind.n} <span class="status-text">(${ind.rawStatus})</span></span>
-        <span class="${ind.s === 'done' ? 'status-done' : 'status-pending'}">${ind.s === 'done' ? '✅' : '⏳'}</span>
-      </div>`).join('');
+        // حل مشكلة دمج النصوص داخل الخلية الواحدة
+        const indContent = (row[indCol] || "").split('\n'); 
+        const statusContent = (row[statusCol] || "").split('\n');
 
-    card.innerHTML = `
-      <div class="card-header"><h3>${sup.name}</h3></div>
-      <div class="progress-container"><div class="progress-bar" style="width:${percent}%"></div></div>
-      <button class="indicators-toggle" onclick="toggleIndicators(${i})">📋 المؤشرات (${sup.done}/${TOTAL_INDICATORS})</button>
-      <div class="indicators-list" id="list-${i}">${indHtml}</div>
-      <div class="stats-grid">
-        <div class="stat-box done"><span class="stat-number">${sup.done}</span>تم</div>
-        <div class="stat-box pending"><span class="stat-number">${TOTAL_INDICATORS - sup.done}</span>متبقي</div>
-        <div class="stat-box total"><span class="stat-number">${percent}%</span>نسبة</div>
-      </div>
-      <a href="${sup.link}" target="_blank" class="link-btn ${sup.link==='#'?'disabled':''}">🔗 فتح الرابط</a>`;
-    container.appendChild(card);
-  });
+        indContent.forEach((txt, idx) => {
+            if (!txt.trim()) return;
+            const currentStatus = (statusContent[idx] || statusContent[0] || "").trim();
+            
+            // احتساب "تم" و "جاري التنفيذ" كلاهما منجز
+            const isDone = currentStatus.includes("تم") || currentStatus.includes("جاري") || currentStatus.includes("تنفيذ");
+            
+            if (isDone) supervisors[name].done++;
+            
+            supervisors[name].indicators.push({
+                label: txt.trim(),
+                statusText: currentStatus,
+                isDone: isDone
+            });
+        });
+
+        for (let v of Object.values(row)) { if(v && v.toString().startsWith("http")) supervisors[name].link = v; }
+    });
+
+    Object.values(supervisors).forEach((sup, i) => {
+        const percent = ((sup.done / TOTAL_INDICATORS) * 100).toFixed(1);
+        const indHtml = sup.indicators.map(ind => `
+            <div class="indicator-item">
+                <span>${ind.label} <small>(${ind.statusText})</small></span>
+                <span class="${ind.isDone ? 'status-done' : 'status-pending'}">${ind.isDone ? '✅' : '⏳'}</span>
+            </div>`).join('');
+
+        container.innerHTML += `
+            <div class="card">
+                <h3>${sup.name}</h3>
+                <button class="indicators-toggle" onclick="this.nextElementSibling.classList.toggle('show')">
+                    📋 المؤشرات (${sup.done}/${TOTAL_INDICATORS})
+                </button>
+                <div class="indicators-list">${indHtml}</div>
+                <div class="stats-grid">
+                    <div class="stat-box done"><span class="stat-number">${sup.done}</span>تم</div>
+                    <div class="stat-box pending"><span class="stat-number">${TOTAL_INDICATORS - sup.done}</span>متبقي</div>
+                    <div class="stat-box total"><span class="stat-number">${percent}%</span>نسبة</div>
+                </div>
+                <a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الرابط</a>
+            </div>`;
+    });
 }
-
 loadData();
 </script>
 </body>
