@@ -464,8 +464,9 @@ header p {
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
-const ADMIN_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv";
+// روابط CSV المحدثة
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=1526100112&single=true&output=csv";
+const ADMIN_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=719031885&single=true&output=csv";
 
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
@@ -659,7 +660,7 @@ function renderWeeks() {
 }
 
 function toggleIndicators(index, status) {
-  const list = document.getElementById(indicators-${index});
+  const list = document.getElementById(`indicators-${index}`);
   const btn = list.previousElementSibling;
   
   let statusText = "المؤشرات";
@@ -669,10 +670,10 @@ function toggleIndicators(index, status) {
   
   if (list.classList.contains('show')) {
     list.classList.remove('show');
-    btn.innerHTML = 📋 عرض ${statusText} ▼;
+    btn.innerHTML = `📋 عرض ${statusText} ▼`;
   } else {
     list.classList.add('show');
-    btn.innerHTML = 🔼 إخفاء ${statusText} ▲;
+    btn.innerHTML = `🔼 إخفاء ${statusText} ▲`;
   }
 }
 
@@ -723,7 +724,7 @@ function renderCards() {
   container.innerHTML = "";
   
   if (appData.allData.length === 0) {
-    container.innerHTML = <div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات</h3></div>;
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات</h3></div>`;
     return;
   }
   
@@ -969,8 +970,8 @@ function renderCards() {
       </div>
       
       ${isLinkActive 
-        ? <a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>
-        : <button class="link-btn disabled" disabled>🔗 غير متاح</button>
+        ? `<a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>`
+        : `<button class="link-btn disabled" disabled>🔗 غير متاح</button>`
       }
       
       <div class="note-box">
