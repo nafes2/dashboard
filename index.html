@@ -439,7 +439,7 @@ let appData = {
   mySupervisors: [],
   supervisorPhones: {},
   dashboardData: [],
-  currentWeek: 4,
+  currentWeek: 1,
   availableWeeks: []
 };
 
@@ -548,8 +548,6 @@ async function loadDashboardData() {
     const response = await fetch(API_URL + "?action=dashboard&t=" + Date.now());
     const data = await response.json();
     
-    console.log('Dashboard data:', data); // للتصحيح
-    
     if (data && data.length > 0) {
       const headers = data[0];
       const rows = [];
@@ -562,38 +560,27 @@ async function loadDashboardData() {
         rows.push(row);
       }
       
-      console.log('Parsed rows:', rows); // للتصحيح
-      console.log('My supervisors:', appData.mySupervisors); // للتصحيح
-      
       appData.dashboardData = rows;
       
+      // البحث عن عمود الأسبوع
+      const weekCol = headers.find(h => h && (h.toString().includes('الأسبوع') || h.toString().includes('الأسابيع')));
+      
       // تحديد الأسابيع المتوفرة
-      const weekCol = findColumn(headers, ['الأسبوع', 'الأسابيع', 'week']);
-      const supervisorCol = findColumn(headers, ['اسم المشرف', 'المشرف', 'supervisor']);
+      const availableWeeks = new Set();
       
-      console.log('Week column:', weekCol); // للتصحيح
-      console.log('Supervisor column:', supervisorCol); // للتصحيح
-      
-      const myData = rows.filter(row => {
-        const supervisorName = normalizeText(row[supervisorCol] || '');
-        const isMySupervisor = appData.mySupervisors.some(mySup => {
-          const normalizedMySup = normalizeText(mySup);
-          const match = supervisorName === normalizedMySup ||
-                 supervisorName.includes(normalizedMySup) ||
-                 normalizedMySup.includes(supervisorName);
-          console.log(`Comparing: "${supervisorName}" vs "${normalizedMySup}" = ${match}`); // للتصحيح
-          return match;
-        });
-        return isMySupervisor;
+      rows.forEach(row => {
+        if (weekCol && row[weekCol]) {
+          const weekNum = weekTextToNumber(row[weekCol]);
+          if (weekNum) availableWeeks.add(weekNum);
+        }
       });
       
-      console.log('My data:', myData); // للتصحيح
+      appData.availableWeeks = Array.from(availableWeeks);
       
-      appData.availableWeeks = [...new Set(myData.map(row => {
-        return weekTextToNumber(row[weekCol] || '');
-      }))].filter(w => w);
-      
-      console.log('Available weeks:', appData.availableWeeks); // للتصحيح
+      // إذا كان الأسبوع الحالي غير متوفر، اختر أول أسبوع متوفر
+      if (appData.availableWeeks.length > 0 && !appData.availableWeeks.includes(appData.currentWeek)) {
+        appData.currentWeek = appData.availableWeeks[0];
+      }
       
       renderWeeks();
       renderSupervisors();
@@ -629,6 +616,42 @@ function renderWeeks() {
   });
 }
 
+// دالة تنظيف الاسم (إزالة الفراغات الزائدة والتشكيل)
+function normalizeName(name) {
+  if (!name) return '';
+  return name.toString()
+    .trim()
+    .replace(/\s+/g, ' ') // إزالة الفراغات المتعددة
+    .replace(/[\u064B-\u065F\u0670]/g, '') // إزالة التشكيل
+    .toLowerCase();
+}
+
+// دالة التطابق المرن بين اسمين
+function namesMatch(name1, name2) {
+  const n1 = normalizeName(name1);
+  const n2 = normalizeName(name2);
+  
+  // تطابق كامل
+  if (n1 === n2) return true;
+  
+  // أحدهما يحتوي على الآخر
+  if (n1.includes(n2) || n2.includes(n1)) return true;
+  
+  // تقسيم الأسماء ونتحقق من وجود كلمة مشتركة مهمة (مثل الاسم الأول)
+  const parts1 = n1.split(' ').filter(p => p.length > 2);
+  const parts2 = n2.split(' ').filter(p => p.length > 2);
+  
+  // إذا كان هناك جزء مشترك طوله أكثر من 3 أحرف
+  for (let p1 of parts1) {
+    for (let p2 of parts2) {
+      if (p1 === p2 && p1.length > 3) return true;
+      if (p1.includes(p2) || p2.includes(p1)) return true;
+    }
+  }
+  
+  return false;
+}
+
 function renderSupervisors() {
   const container = document.getElementById('supervisorsGrid');
   container.innerHTML = '';
@@ -643,28 +666,46 @@ function renderSupervisors() {
     return;
   }
   
-  // استخدام headers الأصلية للعثور على الأعمدة
+  // البحث عن أعمدة البيانات - التعديل هنا: "اسم المشرف" بدلاً من "المشرف"
   const headers = Object.keys(appData.dashboardData[0]);
-  const weekCol = headers.find(h => h.includes('الأسبوع') || h.includes('week')) || headers[1];
-  const supervisorCol = headers.find(h => h.includes('المشرف') || h.includes('supervisor')) || headers[0];
+  const weekCol = headers.find(h => h && (h.toString().includes('الأسبوع') || h.toString().includes('الأسابيع')));
+  const supervisorCol = headers.find(h => h && h.toString().includes('المشرف')); // هذا سيجد "اسم المشرف"
+  const indicatorsCol = headers.find(h => h && (h.toString().includes('مؤشرات') || h.toString().includes('منفذة')));
+  const linkCol = headers.find(h => h && h.toString().includes('رابط'));
+  const notesCol = headers.find(h => h && h.toString().includes('ملاحظات'));
   
-  console.log('Rendering - Week col:', weekCol, 'Supervisor col:', supervisorCol); // للتصحيح
+  if (!supervisorCol) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div style="font-size: 4em; margin-bottom: 20px;">❌</div>
+        <h3>خطأ في البيانات</h3>
+        <p>لم يتم العثور على عمود المشرف</p>
+        <p style="font-size: 0.8em; margin-top: 10px;">الأعمدة المتوفرة: ${headers.join('، ')}</p>
+      </div>
+    `;
+    return;
+  }
   
+  // فلترة البيانات حسب المشرفين والأسبوع
   const filteredData = appData.dashboardData.filter(row => {
-    const supervisorName = normalizeText(row[supervisorCol] || '');
-    const rowWeek = weekTextToNumber(row[weekCol] || '');
+    // التحقق من المشرف
+    if (!row[supervisorCol]) return false;
     
-    const isMySupervisor = appData.mySupervisors.some(mySup => {
-      const normalizedMySup = normalizeText(mySup);
-      return supervisorName === normalizedMySup ||
-             supervisorName.includes(normalizedMySup) ||
-             normalizedMySup.includes(supervisorName);
-    });
+    const supervisorName = row[supervisorCol].toString();
     
-    return isMySupervisor && rowWeek === appData.currentWeek;
+    // استخدام التطابق المرن
+    const isMySupervisor = appData.mySupervisors.some(sup => 
+      namesMatch(supervisorName, sup)
+    );
+    
+    if (!isMySupervisor) return false;
+    
+    // التحقق من الأسبوع
+    if (!weekCol || !row[weekCol]) return false;
+    
+    const rowWeek = weekTextToNumber(row[weekCol]);
+    return rowWeek === appData.currentWeek;
   });
-  
-  console.log('Filtered data for display:', filteredData); // للتصحيح
   
   if (filteredData.length === 0) {
     container.innerHTML = `
@@ -672,21 +713,22 @@ function renderSupervisors() {
         <div style="font-size: 4em; margin-bottom: 20px;">📭</div>
         <h3>لا توجد بيانات لهذا الأسبوع</h3>
         <p>لم يتم إدخال بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</p>
+        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">
+          المشرفين المتابعين: ${appData.mySupervisors.join('، ')}
+        </p>
       </div>
     `;
     return;
   }
   
   filteredData.forEach((row, index) => {
-    const supervisor = row[supervisorCol] || 'غير معروف';
-    const indicatorsCol = headers.find(h => h.includes('المؤشرات') || h.includes('إنجاز') || h.includes('indicators')) || headers[2];
-    const indicatorsText = row[indicatorsCol] || '';
-    const linkCol = headers.find(h => h.includes('رابط') || h.includes('link')) || headers[3];
-    const link = row[linkCol] || '';
-    const noteCol = headers.find(h => h.includes('ملاحظات') || h.includes('notes')) || headers[4];
-    const existingNote = row[noteCol] || '';
+    const supervisor = supervisorCol ? row[supervisorCol] : 'غير معروف';
+    const weekDisplay = weekCol ? row[weekCol] : WEEK_NAMES[appData.currentWeek];
+    const indicatorsText = indicatorsCol ? row[indicatorsCol] : '';
+    const link = linkCol ? row[linkCol] : '';
+    const existingNote = notesCol ? row[notesCol] : '';
     
-    const indicators = indicatorsText.split(/[,\n]/).map(i => i.trim()).filter(i => i);
+    const indicators = indicatorsText ? indicatorsText.split(/[,\n]/).map(i => i.trim()).filter(i => i) : [];
     const doneCount = indicators.filter(i => i.includes('✅') || i.includes('تم')).length;
     const pendingCount = indicators.filter(i => i.includes('⏳') || i.includes('جار')).length;
     const totalCount = indicators.length || TOTAL_INDICATORS;
@@ -703,7 +745,7 @@ function renderSupervisors() {
     card.innerHTML = `
       <div class="card-header">
         <h3>👤 ${supervisor}</h3>
-        <span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
+        <span class="week-badge">${weekDisplay}</span>
       </div>
       
       <div class="stats-row">
@@ -786,7 +828,15 @@ function toggleIndicators(index) {
 }
 
 function sendWhatsApp(supervisorName) {
-  const phone = appData.supervisorPhones[supervisorName];
+  // البحث عن رقم الجوال باستخدام التطابق المرن أيضاً
+  let phone = null;
+  
+  for (let [name, num] of Object.entries(appData.supervisorPhones)) {
+    if (namesMatch(name, supervisorName)) {
+      phone = num;
+      break;
+    }
+  }
   
   if (!phone) {
     alert('رقم الجوال غير متوفر لهذا المشرف');
@@ -817,9 +867,12 @@ function sendWhatsApp(supervisorName) {
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
-  const num = parseInt(t);
-  if (!isNaN(num)) return num;
   
+  // إذا كان رقم مباشر
+  const num = parseInt(t);
+  if (!isNaN(num) && num >= 1 && num <= 15) return num;
+  
+  // البحث عن اسم الأسبوع
   if (t.includes("خامس عشر")) return 15;
   if (t.includes("رابع عشر")) return 14;
   if (t.includes("ثالث عشر")) return 13;
@@ -837,19 +890,6 @@ function weekTextToNumber(text) {
   if (t.includes("أول")) return 1;
   
   return null;
-}
-
-function findColumn(headers, possibleNames) {
-  for (let name of possibleNames) {
-    const found = headers.find(h => h && h.toString().toLowerCase().includes(name.toLowerCase()));
-    if (found) return found;
-  }
-  return headers[0];
-}
-
-function normalizeText(text) {
-  if (!text) return '';
-  return text.toString().trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
 function updateTimestamp() {
