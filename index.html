@@ -1,15 +1,36 @@
-<!DOCTYPE html>
+[٩:٤٩ م, ٢١‏/٣‏/٢٠٢٦] ابو محمد: function doGet(e) {
+  const action = e.parameter.action;
+  
+  if (action === 'dashboard') {
+    return getDashboardData();
+  } else if (action === 'admin') {
+    return getAdminData();
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getDashboardData() {
+  const ss = SpreadsheetApp.openById('17Bf1TEoRC2h_uWlh8ezOEo-Fius5IgVzaIyLU9ByR1o');
+  const sheet = ss.getSheetByName('Dashboard');
+  const data = sheet.getDataRange().getValues();
+  
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getAdminData() {
+  const ss = SpreadsheetApp.openById('17Bf1TEoRC2h_uWlh8ezOEo-Fius5IgVzaIyLU9ByR1o');…
+[٩:٥٨ م, ٢١‏/٣‏/٢٠٢٦] ابو محمد: https://script.google.com/macros/s/AKfycbxWxJqk7fBNsTz6xvMADNFoy2_p_1aOapGVXnbIj_rlvnYhPBJwuezmDbkPs-bfDdqHPQ/exec
+[١٠:٠٩ م, ٢١‏/٣‏/٢٠٢٦] ابو محمد: <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
+<base target="_top">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة متابعة المشرفين</title>
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -17,23 +38,9 @@ body {
   min-height: 100vh;
   padding: 20px;
 }
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-header {
-  text-align: center;
-  padding: 20px 0;
-}
-header h1 {
-  font-size: 2em;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-header p {
-  opacity: 0.9;
-  font-size: 1.1em;
-}
+.container { max-width: 1200px; margin: 0 auto; }
+header { text-align: center; padding: 20px 0; }
+header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
 .manager-badge {
   background: #ffd700;
   color: #1e3c72;
@@ -49,7 +56,6 @@ header p {
   justify-content: center;
   flex-wrap: wrap;
   margin: 25px 0;
-  padding: 0 10px;
 }
 .btn {
   background: rgba(255,255,255,0.15);
@@ -61,29 +67,14 @@ header p {
   font-size: 15px;
   font-weight: 600;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
-.btn:hover {
-  background: rgba(255,255,255,0.25);
-  transform: translateY(-2px);
-}
-.btn.active {
-  background: #ffd700;
-  color: #1e3c72;
-  border-color: #ffd700;
-  box-shadow: 0 4px 15px rgba(255,215,0,0.4);
-}
-.btn.empty {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.5);
-  cursor: default;
-}
+.btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+.btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; }
+.btn.empty { opacity: 0.5; cursor: default; }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 20px;
-  padding: 10px;
 }
 .card {
   background: #fff;
@@ -91,34 +82,23 @@ header p {
   border-radius: 20px;
   padding: 25px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  transition: transform 0.3s ease;
 }
+.card:hover { transform: translateY(-5px); }
 .card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
+  top: 0; left: 0; right: 0; height: 5px;
   background: linear-gradient(90deg, #4caf50, #8bc34a);
-}
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 .card-header {
   text-align: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 2px solid #f0f0f0;
+  position: relative;
 }
-.card-header h3 {
-  color: #1e3c72;
-  font-size: 1.4em;
-  margin-bottom: 8px;
-}
+.card-header h3 { color: #1e3c72; font-size: 1.4em; margin-bottom: 8px; }
 .week-badge {
   display: inline-block;
   background: #e3f2fd;
@@ -138,12 +118,7 @@ header p {
   font-weight: 600;
   color: #fff;
   width: 100%;
-  transition: all 0.3s;
   font-size: 0.95em;
-}
-.indicators-toggle:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 .indicators-list {
   display: none;
@@ -155,14 +130,7 @@ header p {
   overflow-y: auto;
   border: 1px solid #e0e0e0;
 }
-.indicators-list.show {
-  display: block;
-  animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.indicators-list.show { display: block; }
 .indicator-item {
   display: flex;
   justify-content: space-between;
@@ -170,15 +138,8 @@ header p {
   padding: 10px 8px;
   border-bottom: 1px solid #e0e0e0;
   font-size: 0.9em;
-  transition: background 0.2s;
 }
-.indicator-item:hover {
-  background: #fff;
-  border-radius: 6px;
-}
-.indicator-item:last-child {
-  border-bottom: none;
-}
+.indicator-item:last-child { border-bottom: none; }
 .indicator-number {
   background: #1976d2;
   color: white;
@@ -188,15 +149,8 @@ header p {
   font-weight: bold;
   margin-left: 8px;
 }
-.indicator-name {
-  color: #555;
-  flex: 1;
-  text-align: right;
-}
-.indicator-status {
-  font-size: 0.85em;
-  font-weight: 600;
-}
+.indicator-name { color: #555; flex: 1; text-align: right; }
+.indicator-status { font-size: 0.85em; font-weight: 600; }
 .status-done { color: #4caf50; }
 .status-pending { color: #ff9800; }
 .status-not-done { color: #f44336; }
@@ -206,44 +160,17 @@ header p {
   gap: 10px;
   margin: 20px 0;
 }
-.stat-box {
-  text-align: center;
-  padding: 12px 8px;
-  border-radius: 12px;
-}
-.stat-box.done {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-.stat-box.pending {
-  background: #fff3e0;
-  color: #ef6c00;
-}
-.stat-box.total {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-.stat-number {
-  font-size: 1.6em;
-  font-weight: bold;
-  display: block;
-}
-.stat-label {
-  font-size: 0.8em;
-  margin-top: 5px;
-  font-weight: 600;
-}
+.stat-box { text-align: center; padding: 12px 8px; border-radius: 12px; }
+.stat-box.done { background: #e8f5e9; color: #2e7d32; }
+.stat-box.pending { background: #fff3e0; color: #ef6c00; }
+.stat-box.total { background: #e3f2fd; color: #1565c0; }
+.stat-number { font-size: 1.6em; font-weight: bold; display: block; }
+.stat-label { font-size: 0.8em; margin-top: 5px; font-weight: 600; }
 .progress-section {
   margin: 20px 0;
   padding: 15px;
   background: #f8f9fa;
   border-radius: 12px;
-}
-.progress-item {
-  margin-bottom: 15px;
-}
-.progress-item:last-child {
-  margin-bottom: 0;
 }
 .progress-label {
   display: flex;
@@ -274,28 +201,6 @@ header p {
 .bar.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
 .bar.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
 .bar.low { background: linear-gradient(90deg, #f44336, #ef5350); }
-.bar.purple { background: linear-gradient(90deg, #9c27b0, #ab47bc); }
-.summary-box {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 15px;
-  border-radius: 12px;
-  margin: 15px 0;
-  text-align: center;
-}
-.summary-box h4 {
-  font-size: 0.9em;
-  margin-bottom: 8px;
-  opacity: 0.9;
-}
-.summary-box .big-number {
-  font-size: 2.2em;
-  font-weight: bold;
-}
-.summary-box .small-text {
-  font-size: 0.85em;
-  opacity: 0.9;
-}
 .link-btn {
   display: block;
   width: 100%;
@@ -308,19 +213,9 @@ header p {
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
 }
-.link-btn:hover {
-  background: #1e3c72;
-  transform: scale(1.02);
-}
-.link-btn.disabled {
-  background: #ccc;
-  color: #888;
-  cursor: not-allowed;
-  pointer-events: none;
-}
+.link-btn:hover { background: #1e3c72; transform: scale(1.02); }
+.link-btn.disabled { background: #ccc; color: #888; cursor: not-allowed; }
 .note-box {
   margin-top: 15px;
   padding: 15px;
@@ -328,12 +223,7 @@ header p {
   border-radius: 12px;
   border: 1px solid #d0d8f0;
 }
-.note-box-title {
-  font-weight: bold;
-  color: #1e3c72;
-  margin-bottom: 10px;
-  font-size: 0.95em;
-}
+.note-box-title { font-weight: bold; color: #1e3c72; margin-bottom: 10px; font-size: 0.95em; }
 .note-textarea {
   width: 100%;
   padding: 12px;
@@ -343,10 +233,6 @@ header p {
   min-height: 80px;
   font-family: inherit;
   font-size: 14px;
-}
-.note-textarea:focus {
-  outline: none;
-  border-color: #667eea;
 }
 .whatsapp-btn {
   margin-top: 10px;
@@ -359,18 +245,8 @@ header p {
   font-weight: bold;
   width: 100%;
   font-size: 15px;
-  transition: transform 0.2s;
 }
-.whatsapp-btn:hover {
-  transform: scale(1.02);
-}
-.whatsapp-btn:active {
-  transform: scale(0.98);
-}
-.loading {
-  text-align: center;
-  padding: 60px 20px;
-}
+.loading { text-align: center; padding: 60px 20px; }
 .spinner {
   width: 50px;
   height: 50px;
@@ -380,9 +256,7 @@ header p {
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 .error-box {
   background: #ff5252;
   color: white;
@@ -403,15 +277,8 @@ header p {
   font-size: 16px;
   margin-top: 15px;
 }
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: rgba(255,255,255,0.8);
-}
-.empty-state-icon {
-  font-size: 4em;
-  margin-bottom: 20px;
-}
+.empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.8); }
+.empty-state-icon { font-size: 4em; margin-bottom: 20px; }
 .last-update {
   text-align: center;
   margin-top: 30px;
@@ -428,15 +295,10 @@ header p {
   border-radius: 20px;
   cursor: pointer;
   margin-right: 10px;
-  transition: all 0.3s;
-}
-.refresh-btn:hover {
-  background: rgba(255,255,255,0.3);
 }
 @media (max-width: 768px) {
   header h1 { font-size: 1.5em; }
   .grid { grid-template-columns: 1fr; }
-  .btn { padding: 10px 16px; font-size: 14px; }
 }
 </style>
 </head>
@@ -464,10 +326,6 @@ header p {
 </div>
 
 <script>
-// روابط CSV المحدثة
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=1526100112&single=true&output=csv";
-const ADMIN_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=719031885&single=true&output=csv";
-
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
@@ -480,12 +338,10 @@ const WEEK_NAMES = {
 let appData = {
   allData: [],
   currentWeek: 1,
-  lastUpdate: null,
   managersData: {},
   currentManager: null
 };
 
-// الحصول على المدير من الرابط
 function getManagerFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('manager');
@@ -516,7 +372,7 @@ function weekTextToNumber(text) {
   return null;
 }
 
-async function loadData() {
+function loadData() {
   document.getElementById("weeks").innerHTML = `
     <div class="loading">
       <div class="spinner"></div>
@@ -524,107 +380,43 @@ async function loadData() {
     </div>
   `;
 
-  try {
-    // تحميل بيانات المدراء أولاً
-    appData.currentManager = getManagerFromUrl();
-    appData.managersData = await loadManagersData();
-    
-    // عرض اسم المدير إذا موجود
-    if (appData.currentManager) {
-      const badge = document.getElementById('managerBadge');
-      badge.textContent = '👤 ' + appData.currentManager;
-      badge.style.display = 'inline-block';
-    }
-    
-    const data = await fetchData();
-    if (data && data.length > 0) {
-      appData.allData = data;
-      appData.currentWeek = 1;
-      render();
-      updateTimestamp();
-    } else {
-      showError("لا توجد بيانات");
-    }
-  } catch (err) {
-    console.error("خطأ:", err);
-    showError("فشل الاتصال: " + err.message);
+  appData.currentManager = getManagerFromUrl();
+  
+  if (appData.currentManager) {
+    const badge = document.getElementById('managerBadge');
+    badge.textContent = '👤 ' + appData.currentManager;
+    badge.style.display = 'inline-block';
   }
-}
 
-async function loadManagersData() {
-  try {
-    const response = await fetch(ADMIN_URL + "&t=" + Date.now());
-    const csvText = await response.text();
-    const rows = parseCSV(csvText);
-    
-    const managers = {};
-    
-    rows.forEach(row => {
-      const managerName = row[0]; // العمود A
-      const supervisorsList = row[1]; // العمود B
-      const phonesList = row[2]; // العمود C
-      
-      if (managerName && supervisorsList) {
-        const supervisors = supervisorsList.split(/[،,]/).map(s => s.trim()).filter(s => s);
-        const phones = phonesList ? phonesList.split(/[،,]/).map(p => p.trim()).filter(p => p) : [];
-        
-        // ربط كل مشرف برقمه
-        const supervisorPhones = {};
-        supervisors.forEach((sup, idx) => {
-          supervisorPhones[sup] = phones[idx] || '';
-        });
-        
-        managers[managerName] = {
-          supervisors: supervisors,
-          phones: supervisorPhones
-        };
+  // استدعاء دالة Google Apps Script
+  google.script.run
+    .withSuccessHandler(function(data) {
+      if (data && data.error) {
+        showError(data.error);
+        return;
       }
-    });
+      if (data && data.length > 0) {
+        appData.allData = data;
+        render();
+        updateTimestamp();
+      } else {
+        showError("لا توجد بيانات");
+      }
+    })
+    .withFailureHandler(function(err) {
+      showError("فشل الاتصال: " + err.message);
+    })
+    .getDashboardData();
     
-    return managers;
-  } catch (error) {
-    console.error("خطأ في قراءة بيانات المدراء:", error);
-    return {};
-  }
-}
-
-async function fetchData() {
-  const url = SHEET_URL + "&t=" + Date.now();
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("HTTP " + response.status);
-  const text = await response.text();
-  if (text.includes("<!DOCTYPE")) throw new Error("HTML");
-  return parseCSV(text);
-}
-
-function parseCSV(csv) {
-  const lines = csv.trim().split('\n');
-  if (lines.length < 2) return [];
-  
-  const headers = parseLine(lines[0]);
-  const data = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseLine(lines[i]);
-    if (values.length === 0) continue;
-    
-    let row = {};
-    headers.forEach((h, idx) => row[h.trim()] = values[idx] ? values[idx].trim() : "");
-    data.push(row);
-  }
-  return data;
-}
-
-function parseLine(line) {
-  const result = [];
-  let current = '', inQuotes = false;
-  for (let char of line) {
-    if (char === '"') inQuotes = !inQuotes;
-    else if (char === ',' && !inQuotes) { result.push(current); current = ''; }
-    else current += char;
-  }
-  result.push(current);
-  return result;
+  // تحميل بيانات المدراء أيضاً
+  google.script.run
+    .withSuccessHandler(function(data) {
+      appData.managersData = data || {};
+    })
+    .withFailureHandler(function(err) {
+      console.error("خطأ في تحميل بيانات المدراء:", err);
+    })
+    .getManagersData();
 }
 
 function render() {
@@ -660,7 +452,7 @@ function renderWeeks() {
 }
 
 function toggleIndicators(index, status) {
-  const list = document.getElementById(`indicators-${index}`);
+  const list = document.getElementById(indicators-${index});
   const btn = list.previousElementSibling;
   
   let statusText = "المؤشرات";
@@ -670,22 +462,20 @@ function toggleIndicators(index, status) {
   
   if (list.classList.contains('show')) {
     list.classList.remove('show');
-    btn.innerHTML = `📋 عرض ${statusText} ▼`;
+    btn.innerHTML = 📋 عرض ${statusText} ▼;
   } else {
     list.classList.add('show');
-    btn.innerHTML = `🔼 إخفاء ${statusText} ▲`;
+    btn.innerHTML = 🔼 إخفاء ${statusText} ▲;
   }
 }
 
 function sendWhatsApp(supervisorName) {
-  // البحث عن رقم المشرف في بيانات المدير الحالي
   let phone = '';
   
   if (appData.currentManager && appData.managersData[appData.currentManager]) {
     phone = appData.managersData[appData.currentManager].phones[supervisorName] || '';
   }
   
-  // إذا لم يوجد، نبحث في جميع المدراء
   if (!phone) {
     for (let manager in appData.managersData) {
       const mgr = appData.managersData[manager];
@@ -711,311 +501,200 @@ function sendWhatsApp(supervisorName) {
   
   const fullMessage = 
     "مرحباً " + supervisorName + "،\n\n" +
-    "ملاحظة من " + (appData.currentManager || 'المدير') + ":\n" +
-    message + "\n\n" +
-    "يرجى مراجعة الاستمارة.";
+    "ملاحظة من المدير:\n" + message + "\n\n" +
+    "📊 لوحة متابعة المشرفين";
   
   const whatsappUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(fullMessage);
   window.open(whatsappUrl, '_blank');
+}
+
+function findCol(row, possibleNames) {
+  const cols = Object.keys(row);
+  for (let name of possibleNames) {
+    for (let col of cols) {
+      if (col && col.toString().toLowerCase().includes(name.toLowerCase())) {
+        return col;
+      }
+    }
+  }
+  return cols[0];
+}
+
+function getStatusColor(status) {
+  if (!status) return "gray";
+  const s = status.toString().toLowerCase();
+  if (s.includes("تم") || s.includes("done") || s.includes("complete")) return "green";
+  if (s.includes("جار") || s.includes("pending") || s.includes("progress")) return "orange";
+  if (s.includes("لم") || s.includes("not") || s.includes("no")) return "red";
+  return "gray";
+}
+
+function getStatusIcon(status) {
+  if (!status) return "⚪";
+  const s = status.toString().toLowerCase();
+  if (s.includes("تم") || s.includes("done")) return "✅";
+  if (s.includes("جار") || s.includes("pending")) return "⏳";
+  if (s.includes("لم") || s.includes("not")) return "❌";
+  return "⚪";
 }
 
 function renderCards() {
   const container = document.getElementById("cards");
   container.innerHTML = "";
   
-  if (appData.allData.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات</h3></div>`;
-    return;
-  }
-  
-  const sample = appData.allData[0];
-  
-  const nameCol = findCol(sample, ["اسم المشرف", "المشرف", "الاسم"]);
-  const weekCol = findCol(sample, ["الأسابيع", "الأسبوع", "الاسبوع", "أسابيع", "week"]);
-  const statusCol = findCol(sample, ["الحالة", "حالة", "status"]);
-  const countCol = findCol(sample, ["عدد", "count", "العدد", "مؤشرات"]) || findColByValue(sample, ["3", "2", "1"]);
-  
-  const supervisorTotals = {};
-  
-  appData.allData.forEach(row => {
-    const name = row[nameCol];
-    if (!name || name === "undefined") return;
-    
-    if (!supervisorTotals[name]) {
-      supervisorTotals[name] = { totalDoneAll: 0 };
-    }
-    
-    const status = (row[statusCol] || "").toString().trim();
-    if (status === "تم التنفيذ") {
-      let indicatorCount = 1;
-      
-      if (countCol && row[countCol]) {
-        const val = parseInt(row[countCol]);
-        if (!isNaN(val) && val > 0) indicatorCount = val;
-      } else {
-        const indicatorCol = findCol(row, ["رقم المؤشر", "المؤشر", "indicator"]);
-        if (indicatorCol && row[indicatorCol]) {
-          const indicators = row[indicatorCol].toString().split(',').filter(x => x.trim());
-          indicatorCount = indicators.length || 1;
-        }
-      }
-      
-      supervisorTotals[name].totalDoneAll += indicatorCount;
-    }
-  });
+  const weekCol = findCol(appData.allData[0], ["الأسابيع", "الأسبوع", "الاسبوع", "أسابيع", "week"]);
+  const nameCol = findCol(appData.allData[0], ["المشرف", "اسم المشرف", "name", "supervisor"]);
+  const indicatorCol = findCol(appData.allData[0], ["المؤشر", "المؤشرات", "indicator", "رقم المؤشر"]);
+  const statusCol = findCol(appData.allData[0], ["الحالة", "حالة", "status", "state"]);
+  const linkCol = findCol(appData.allData[0], ["الرابط", "رابط", "link", "url"]);
   
   const weekData = appData.allData.filter(row => {
-    const rowWeek = row[weekCol];
-    const rowWeekNum = weekTextToNumber(rowWeek);
-    return rowWeekNum === appData.currentWeek;
+    const weekNum = weekTextToNumber(row[weekCol]);
+    return weekNum === appData.currentWeek;
   });
   
-  if (weekData.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-state-icon">📭</div>
-        <h3>لا توجد بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</h3>
-      </div>
-    `;
-    return;
-  }
-  
   const supervisors = {};
-  
   weekData.forEach(row => {
     const name = row[nameCol];
-    if (!name || name === "undefined") return;
+    if (!name) return;
     
     if (!supervisors[name]) {
-      supervisors[name] = { 
-        name, 
-        doneCount: 0,
-        pendingCount: 0,
-        notDoneCount: 0,
-        totalCount: 0,
-        link: null,
+      supervisors[name] = {
         indicators: [],
-        status: "لم ينفذ"
+        done: 0,
+        pending: 0,
+        notDone: 0,
+        total: 0,
+        link: row[linkCol] || ""
       };
     }
     
-    const status = (row[statusCol] || "").toString().trim();
-    const indicatorCol = findCol(row, ["رقم المؤشر", "المؤشر", "indicator", "المؤشرات"]);
-    const indicatorsText = row[indicatorCol] || "";
+    const status = row[statusCol] || "";
+    supervisors[name].indicators.push({
+      number: row[indicatorCol],
+      name: row[findCol(row, ["نص المؤشر", "المؤشر", "text"])] || "",
+      status: status
+    });
     
-    supervisors[name].status = status;
-    
-    let indicatorCount = 1;
-    if (countCol && row[countCol]) {
-      const val = parseInt(row[countCol]);
-      if (!isNaN(val) && val > 0) indicatorCount = val;
-    } else if (indicatorCol && row[indicatorCol]) {
-      const indicators = indicatorsText.toString().split(',').filter(x => x.trim());
-      indicatorCount = indicators.length || 1;
-    }
-    
-    supervisors[name].totalCount += indicatorCount;
-    
-    if (status === "تم التنفيذ") {
-      supervisors[name].doneCount += indicatorCount;
-    } else if (status.includes("جار")) {
-      supervisors[name].pendingCount += indicatorCount;
-    } else if (status === "لم ينفذ") {
-      supervisors[name].notDoneCount += indicatorCount;
-    }
-    
-    if (indicatorsText) {
-      const indicatorsList = indicatorsText.toString().split(',').filter(x => x.trim());
-      indicatorsList.forEach(num => {
-        supervisors[name].indicators.push({
-          number: num.trim(),
-          status: status
-        });
-      });
-    }
-    
-    if (!supervisors[name].link) {
-      for (let val of Object.values(row)) {
-        if (val && val.toString().startsWith("http")) {
-          supervisors[name].link = val;
-          break;
-        }
-      }
-    }
+    supervisors[name].total++;
+    const s = status.toString().toLowerCase();
+    if (s.includes("تم") || s.includes("done")) supervisors[name].done++;
+    else if (s.includes("جار") || s.includes("pending")) supervisors[name].pending++;
+    else if (s.includes("لم") || s.includes("not")) supervisors[name].notDone++;
   });
   
-  // فلترة المشرفين حسب المدير إذا كان محدداً
-  if (appData.currentManager && appData.managersData[appData.currentManager]) {
-    const allowedSupervisors = appData.managersData[appData.currentManager].supervisors;
-    
-    Object.keys(supervisors).forEach(name => {
-      if (!allowedSupervisors.includes(name)) {
-        delete supervisors[name];
-      }
-    });
-  }
-  
-  // إذا لم يوجد مشرفين بعد الفلترة
-  if (Object.keys(supervisors).length === 0) {
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-state-icon">👤</div>
-        <h3>لا يوجد مشرفين مسندين لهذا المدير في هذا الأسبوع</h3>
-      </div>
-    `;
-    return;
-  }
-  
-  Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name)).forEach((sup, index) => {
-    const totalDoneAll = supervisorTotals[sup.name]?.totalDoneAll || 0;
-    const weekPercent = ((sup.doneCount / TOTAL_INDICATORS) * 100).toFixed(2);
-    const percentOf44 = ((totalDoneAll / TOTAL_INDICATORS) * 100).toFixed(2);
-    const barClass = weekPercent >= 70 ? "high" : (weekPercent >= 40 ? "medium" : "low");
-    
-    const status = sup.status;
-    let btnText = "المؤشرات";
-    let icon = "⏳";
-    let iconClass = "status-pending";
-    
-    if (status === "تم التنفيذ") {
-      btnText = "المؤشرات المنفذة";
-      icon = "✅";
-      iconClass = "status-done";
-    } else if (status === "لم ينفذ") {
-      btnText = "المؤشرات غير المنفذة";
-      icon = "❌";
-      iconClass = "status-not-done";
-    } else if (status.includes("جار")) {
-      btnText = "المؤشرات قيد التنفيذ";
-      icon = "⏳";
-      iconClass = "status-pending";
-    }
-    
-    const indicatorsHtml = sup.indicators.map(ind => `
-      <div class="indicator-item">
-        <span>
-          <span class="indicator-number">${ind.number}</span>
-          <span class="indicator-name">مؤشر ${ind.number}</span>
-        </span>
-        <span class="indicator-status ${iconClass}">
-          ${icon} ${status}
-        </span>
-      </div>
-    `).join('');
-    
-    const isLinkActive = (sup.link && status === "تم التنفيذ");
-    const noteId = 'note_' + sup.name.replace(/\s+/g, '_');
-    
+  Object.entries(supervisors).forEach(([name, data], index) => {
+    const percentage = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
     const card = document.createElement("div");
     card.className = "card";
+    card.style.position = "relative";
+    
+    let barClass = "low";
+    if (percentage >= 80) barClass = "high";
+    else if (percentage >= 50) barClass = "medium";
+    
+    const indicatorsList = data.indicators.map((ind, i) => `
+      <div class="indicator-item">
+        <span class="indicator-number">${ind.number || i + 1}</span>
+        <span class="indicator-name">${ind.name || "مؤشر " + (i + 1)}</span>
+        <span class="indicator-status status-${getStatusColor(ind.status)}">
+          ${getStatusIcon(ind.status)} ${ind.status || "غير محدد"}
+        </span>
+      </div>
+    `).join("");
+    
+    const noteId = 'note_' + name.replace(/\s+/g, '_');
+    
     card.innerHTML = `
       <div class="card-header">
-        <h3>${sup.name}</h3>
+        <h3>👤 ${name}</h3>
         <span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
-      </div>
-      
-      <button class="indicators-toggle" onclick="toggleIndicators(${index}, '${status}')">
-        📋 عرض ${btnText} (${sup.totalCount}) ▼
-      </button>
-      
-      <div class="indicators-list" id="indicators-${index}">
-        ${indicatorsHtml || '<div class="indicator-item">لا توجد مؤشرات</div>'}
       </div>
       
       <div class="stats-grid">
         <div class="stat-box done">
-          <span class="stat-number">${sup.doneCount}</span>
-          <div class="stat-label">✅ تم</div>
+          <span class="stat-number">${data.done}</span>
+          <span class="stat-label">✅ تم</span>
         </div>
         <div class="stat-box pending">
-          <span class="stat-number">${sup.pendingCount}</span>
-          <div class="stat-label">⏳ جاري</div>
+          <span class="stat-number">${data.pending}</span>
+          <span class="stat-label">⏳ جاري</span>
         </div>
         <div class="stat-box total">
-          <span class="stat-number">${sup.notDoneCount}</span>
-          <div class="stat-label">❌ لم ينفذ</div>
+          <span class="stat-number">${data.total}</span>
+          <span class="stat-label">📊 الكل</span>
         </div>
-      </div>
-      
-      <div class="summary-box">
-        <h4>📊 إجمالي المؤشرات المنفذة (جميع الأسابيع)</h4>
-        <div class="big-number">${totalDoneAll}</div>
-        <div class="small-text">من ${TOTAL_INDICATORS} مؤشر = ${percentOf44}%</div>
       </div>
       
       <div class="progress-section">
         <div class="progress-item">
           <div class="progress-label">
-            <span>نسبة الإنجاز في الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
-            <span>${weekPercent}%</span>
+            <span>نسبة الإنجاز</span>
+            <span>${percentage}%</span>
           </div>
           <div class="progress">
-            <div class="bar ${barClass}" style="width: ${Math.max(weekPercent, 3)}%">
-              ${weekPercent}%
-            </div>
-          </div>
-        </div>
-        
-        <div class="progress-item">
-          <div class="progress-label">
-            <span>النسبة من إجمالي المؤشرات (44)</span>
-            <span>${percentOf44}%</span>
-          </div>
-          <div class="progress">
-            <div class="bar purple" style="width: ${Math.max(percentOf44, 3)}%">
-              ${percentOf44}%
-            </div>
+            <div class="bar ${barClass}" style="width: ${percentage}%">${percentage}%</div>
           </div>
         </div>
       </div>
       
-      ${isLinkActive 
-        ? `<a href="${sup.link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>`
-        : `<button class="link-btn disabled" disabled>🔗 غير متاح</button>`
-      }
+      <button class="indicators-toggle" onclick="toggleIndicators(${index}, '${data.done === data.total ? "تم التنفيذ" : data.pending > 0 ? "جاري التنفيذ" : "لم ينفذ"}')">
+        📋 عرض المؤشرات ▼
+      </button>
+      <div class="indicators-list" id="indicators-${index}">
+        ${indicatorsList}
+      </div>
+      
+      ${data.link ? <a href="${data.link}" target="_blank" class="link-btn">🔗 عرض الاستمارة</a> : <div class="link-btn disabled">🔗 لا يوجد رابط</div>}
       
       <div class="note-box">
-        <div class="note-box-title">💬 ملاحظات المدير (اختياري):</div>
-        <textarea id="${noteId}" class="note-textarea" placeholder="اكتب ملاحظتك للمشرف هنا..."></textarea>
-        <button class="whatsapp-btn" onclick="sendWhatsApp('${sup.name}')">
-          📤 إرسال ملاحظة عبر واتساب
+        <div class="note-box-title">📝 إرسال ملاحظة</div>
+        <textarea class="note-textarea" id="${noteId}" placeholder="اكتب ملاحظتك هنا..."></textarea>
+        <button class="whatsapp-btn" onclick="sendWhatsApp('${name}')">
+          📱 إرسال عبر واتساب
         </button>
       </div>
     `;
+    
     container.appendChild(card);
   });
-}
-
-function findCol(sample, names) {
-  const keys = Object.keys(sample);
-  for (let name of names) {
-    const found = keys.find(k => k.toLowerCase().includes(name.toLowerCase()));
-    if (found) return found;
+  
+  if (Object.keys(supervisors).length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>لا توجد بيانات</h3>
+        <p>لم يتم إدخال بيانات لهذا الأسبوع بعد</p>
+      </div>
+    `;
   }
-  return null;
-}
-
-function findColByValue(sample, values) {
-  const keys = Object.keys(sample);
-  for (let key of keys) {
-    const val = sample[key];
-    if (values.includes(val)) return key;
-  }
-  return null;
 }
 
 function showError(msg) {
-  document.getElementById("weeks").innerHTML = `
-    <div class="error-box"><h3>⚠️ ${msg}</h3><button class="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button></div>
+  document.getElementById("cards").innerHTML = `
+    <div class="error-box">
+      <h3>⚠️ خطأ</h3>
+      <p>${msg}</p>
+      <button class="retry-btn" onclick="loadData()">إعادة المحاولة</button>
+    </div>
   `;
+  document.getElementById("weeks").innerHTML = "";
+  document.getElementById("footer").style.display = "none";
 }
 
 function updateTimestamp() {
-  document.getElementById("updateTime").textContent = new Date().toLocaleTimeString('ar-SA', {
-    hour: '2-digit', minute: '2-digit'
+  const now = new Date();
+  const timeString = now.toLocaleString('ar-SA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
+  document.getElementById("updateTime").textContent = timeString;
 }
 
+// تحميل البيانات عند بدء التطبيق
 loadData();
 </script>
 </body>
