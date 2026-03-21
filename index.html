@@ -14,8 +14,57 @@ body {
   padding: 20px;
 }
 .container { max-width: 1200px; margin: 0 auto; }
+
+/* صفحة تسجيل الدخول */
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+.login-box {
+  background: rgba(255,255,255,0.1);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.login-box h2 { margin-bottom: 30px; font-size: 1.8em; }
+.pin-input {
+  width: 200px;
+  padding: 15px;
+  font-size: 24px;
+  text-align: center;
+  border: none;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.9);
+  color: #333;
+  margin-bottom: 20px;
+  letter-spacing: 10px;
+}
+.login-btn {
+  background: #ffd700;
+  color: #1e3c72;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.login-btn:hover { transform: scale(1.05); }
+.error-msg {
+  color: #ff6b6b;
+  margin-top: 15px;
+  display: none;
+}
+
+/* Dashboard */
 header { text-align: center; padding: 20px 0; }
-header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+header h1 { font-size: 2em; margin-bottom: 10px; }
 .manager-badge {
   background: #ffd700;
   color: #1e3c72;
@@ -25,44 +74,74 @@ header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0
   display: inline-block;
   margin-top: 10px;
 }
-.nav {
+.logout-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+/* أسابيع */
+.weeks-container {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
   margin: 25px 0;
 }
-.btn {
-  background: rgba(255,255,255,0.15);
+.week-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
   color: #fff;
-  padding: 12px 20px;
-  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
-.btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
-.btn.active { background: #ffd700; color: #1e3c72; border-color: #ffd700; }
-.btn.empty { opacity: 0.5; cursor: default; }
-.grid {
+.week-btn:hover { 
+  background: rgba(255,255,255,0.3); 
+  transform: scale(1.05);
+}
+.week-btn.active {
+  background: #ffd700;
+  color: #1e3c72;
+  border-color: #ffd700;
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255,215,0,0.5);
+}
+.week-btn.empty { 
+  opacity: 0.3; 
+  cursor: default;
+  background: rgba(255,255,255,0.05);
+}
+.week-btn.empty:hover {
+  transform: none;
+  background: rgba(255,255,255,0.05);
+}
+
+/* بطاقات المشرفين */
+.supervisors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 20px;
 }
-.card {
+.supervisor-card {
   background: #fff;
   color: #333;
-  border-radius: 20px;
+  border-radius: 25px;
   padding: 25px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  transition: transform 0.3s ease;
   position: relative;
   overflow: hidden;
 }
-.card:hover { transform: translateY(-5px); }
-.card::before {
+.supervisor-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; height: 5px;
@@ -74,155 +153,198 @@ header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0
   padding-bottom: 15px;
   border-bottom: 2px solid #f0f0f0;
 }
-.card-header h3 { color: #1e3c72; font-size: 1.4em; margin-bottom: 8px; }
+.card-header h3 { 
+  color: #1e3c72; 
+  font-size: 1.5em; 
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
 .week-badge {
   display: inline-block;
   background: #e3f2fd;
   color: #1976d2;
-  padding: 4px 12px;
-  border-radius: 15px;
-  font-size: 0.85em;
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
   font-weight: 600;
 }
-.indicators-toggle {
+
+/* الإحصائيات */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+.stat-box { 
+  text-align: center; 
+  padding: 15px 10px; 
+  border-radius: 15px;
+  background: #f8f9fa;
+}
+.stat-box.total { background: #e3f2fd; color: #1565c0; }
+.stat-box.pending { background: #fff3e0; color: #ef6c00; }
+.stat-box.done { background: #e8f5e9; color: #2e7d32; }
+.stat-number { font-size: 2em; font-weight: bold; display: block; }
+.stat-label { font-size: 0.85em; margin-top: 5px; font-weight: 600; }
+
+/* نسبة الإنجاز */
+.progress-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 15px;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #555;
+}
+.progress-bar {
+  background: #e0e0e0;
+  height: 30px;
+  border-radius: 15px;
+  overflow: hidden;
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  transition: width 1s ease;
+}
+.progress-fill.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
+.progress-fill.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
+.progress-fill.low { background: linear-gradient(90deg, #f44336, #ef5350); }
+
+/* أزرار */
+.toggle-btn {
+  width: 100%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  padding: 12px 15px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin: 15px 0 10px;
-  font-weight: 600;
   color: #fff;
-  width: 100%;
-  font-size: 0.95em;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 15px 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 .indicators-list {
   display: none;
   background: #f8f9fa;
   border-radius: 12px;
-  padding: 12px;
-  margin: 10px 0;
-  max-height: 220px;
+  padding: 15px;
+  margin-bottom: 15px;
+  max-height: 250px;
   overflow-y: auto;
-  border: 1px solid #e0e0e0;
 }
 .indicators-list.show { display: block; }
 .indicator-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 8px;
+  padding: 12px;
   border-bottom: 1px solid #e0e0e0;
-  font-size: 0.9em;
 }
 .indicator-item:last-child { border-bottom: none; }
-.indicator-number {
+.indicator-num {
   background: #1976d2;
   color: white;
-  padding: 3px 10px;
-  border-radius: 15px;
-  font-size: 0.85em;
-  font-weight: bold;
-  margin-left: 8px;
-}
-.indicator-name { color: #555; flex: 1; text-align: right; }
-.indicator-status { font-size: 0.85em; font-weight: 600; }
-.status-done { color: #4caf50; }
-.status-pending { color: #ff9800; }
-.status-not-done { color: #f44336; }
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 20px 0;
-}
-.stat-box { text-align: center; padding: 12px 8px; border-radius: 12px; }
-.stat-box.done { background: #e8f5e9; color: #2e7d32; }
-.stat-box.pending { background: #fff3e0; color: #ef6c00; }
-.stat-box.total { background: #e3f2fd; color: #1565c0; }
-.stat-number { font-size: 1.6em; font-weight: bold; display: block; }
-.stat-label { font-size: 0.8em; margin-top: 5px; font-weight: 600; }
-.progress-section {
-  margin: 20px 0;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 12px;
-}
-.progress-label {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #555;
-  font-size: 0.95em;
-}
-.progress {
-  background: #e0e0e0;
+  width: 28px;
   height: 28px;
-  border-radius: 14px;
-  overflow: hidden;
-  position: relative;
-}
-.bar {
-  height: 100%;
-  border-radius: 14px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  font-size: 12px;
   font-weight: bold;
-  font-size: 13px;
-  transition: width 1s ease;
 }
-.bar.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
-.bar.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
-.bar.low { background: linear-gradient(90deg, #f44336, #ef5350); }
-.link-btn {
+.indicator-name { flex: 1; text-align: right; margin: 0 10px; color: #555; }
+.indicator-status { font-weight: 600; font-size: 0.9em; }
+.status-done { color: #4caf50; }
+.status-pending { color: #ff9800; }
+.status-not-done { color: #f44336; }
+
+/* رابط الاستمارة */
+.form-link {
   display: block;
   width: 100%;
   text-align: center;
-  margin-top: 15px;
   background: #2a5298;
   color: #fff;
   padding: 14px;
   border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.3s ease;
+  margin: 15px 0;
+  transition: all 0.3s;
 }
-.link-btn:hover { background: #1e3c72; transform: scale(1.02); }
-.link-btn.disabled { background: #ccc; color: #888; cursor: not-allowed; pointer-events: none; }
-.note-box {
-  margin-top: 15px;
-  padding: 15px;
+.form-link:hover { background: #1e3c72; }
+.form-link.disabled { background: #ccc; color: #888; cursor: not-allowed; }
+
+/* ملاحظات وواتساب */
+.notes-section {
   background: #f0f4ff;
   border-radius: 12px;
+  padding: 15px;
+  margin-top: 15px;
   border: 1px solid #d0d8f0;
 }
-.note-box-title { font-weight: bold; color: #1e3c72; margin-bottom: 10px; font-size: 0.95em; }
-.note-textarea {
+.notes-title {
+  font-weight: bold;
+  color: #1e3c72;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notes-textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 10px;
   resize: vertical;
   min-height: 80px;
   font-family: inherit;
   font-size: 14px;
+  margin-bottom: 10px;
 }
 .whatsapp-btn {
-  margin-top: 10px;
+  width: 100%;
   background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
-  width: 100%;
-  font-size: 15px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
-.loading { text-align: center; padding: 60px 20px; }
+
+/* تحميل وخطأ */
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+}
 .spinner {
   width: 50px;
   height: 50px;
@@ -233,28 +355,11 @@ header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0
   margin: 0 auto 20px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.error-box {
-  background: #ff5252;
-  color: white;
-  padding: 30px;
-  border-radius: 15px;
+.empty-state {
   text-align: center;
-  margin: 20px auto;
-  max-width: 500px;
+  padding: 60px 20px;
+  color: rgba(255,255,255,0.8);
 }
-.retry-btn {
-  background: #fff;
-  color: #ff5252;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 16px;
-  margin-top: 15px;
-}
-.empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.8); }
-.empty-state-icon { font-size: 4em; margin-bottom: 20px; }
 .last-update {
   text-align: center;
   margin-top: 30px;
@@ -272,33 +377,49 @@ header h1 { font-size: 2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0
   cursor: pointer;
   margin-right: 10px;
 }
+
 @media (max-width: 768px) {
   header h1 { font-size: 1.5em; }
-  .grid { grid-template-columns: 1fr; }
+  .supervisors-grid { grid-template-columns: 1fr; }
+  .week-btn { width: 50px; height: 50px; font-size: 16px; }
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <header>
-    <h1>📊 لوحة متابعة المشرفين</h1>
-    <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
-    <div class="manager-badge" id="managerBadge" style="display:none;"></div>
-  </header>
-
-  <div class="nav" id="weeks">
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>جاري تحميل البيانات...</p>
+  
+  <!-- صفحة تسجيل الدخول -->
+  <div id="loginPage" class="login-page">
+    <div class="login-box">
+      <h2>🔐 تسجيل الدخول</h2>
+      <p style="margin-bottom: 20px; opacity: 0.9;">أدخل رقمك السري المكون من 4 أرقام</p>
+      <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••">
+      <br>
+      <button onclick="login()" class="login-btn">دخول</button>
+      <p id="loginError" class="error-msg">رقم سري غير صحيح</p>
     </div>
   </div>
 
-  <div class="grid" id="cards"></div>
+  <!-- Dashboard -->
+  <div id="dashboardPage" style="display: none;">
+    <header>
+      <h1>📊 لوحة متابعة المشرفين</h1>
+      <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
+      <div class="manager-badge" id="managerName"></div>
+      <br>
+      <button onclick="logout()" class="logout-btn">🚪 تسجيل خروج</button>
+    </header>
 
-  <div class="last-update" id="footer" style="display:none;">
-    <span>🕐 آخر تحديث: <span id="updateTime">--</span></span>
-    <button class="refresh-btn" onclick="loadData()">🔄 تحديث</button>
+    <div class="weeks-container" id="weeksContainer"></div>
+
+    <div class="supervisors-grid" id="supervisorsGrid"></div>
+
+    <div class="last-update" id="footer" style="display:none;">
+      <span>🕐 آخر تحديث: <span id="updateTime">--</span></span>
+      <button class="refresh-btn" onclick="loadDashboardData()">🔄 تحديث</button>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -313,17 +434,384 @@ const WEEK_NAMES = {
 };
 
 let appData = {
-  allData: [],
-  currentWeek: 1,
-  managersData: {},
   currentManager: null,
+  currentPin: null,
+  mySupervisors: [],
   supervisorPhones: {},
-  allowedSupervisors: []
+  dashboardData: [],
+  currentWeek: 4,
+  availableWeeks: []
 };
 
-function getManagerFromUrl() {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('manager');
+// تسجيل الدخول
+async function login() {
+  const pin = document.getElementById('pinInput').value;
+  if (pin.length !== 4) {
+    showLoginError('الرجاء إدخال 4 أرقام');
+    return;
+  }
+  
+  document.getElementById('loginError').style.display = 'none';
+  
+  try {
+    const response = await fetch(API_URL + "?action=admin&t=" + Date.now());
+    const adminData = await response.json();
+    
+    if (!adminData || adminData.length < 2) {
+      showLoginError('خطأ في الاتصال');
+      return;
+    }
+    
+    let foundManager = null;
+    let foundSupervisors = [];
+    let foundPhones = {};
+    
+    for (let i = 1; i < adminData.length; i++) {
+      const managerName = adminData[i][0];
+      const supervisorsList = adminData[i][1] ? adminData[i][1].toString().split(/[،,]/).map(s => s.trim()).filter(s => s) : [];
+      const phonesList = adminData[i][2] ? adminData[i][2].toString().split(/[،,]/).map(p => p.trim()).filter(p => p) : [];
+      const pinCode = adminData[i][3];
+      
+      if (pinCode && pinCode.toString() === pin) {
+        foundManager = managerName;
+        foundSupervisors = supervisorsList;
+        
+        supervisorsList.forEach((sup, idx) => {
+          foundPhones[sup] = phonesList[idx] || '';
+        });
+        
+        break;
+      }
+    }
+    
+    if (foundManager) {
+      appData.currentManager = foundManager;
+      appData.currentPin = pin;
+      appData.mySupervisors = foundSupervisors;
+      appData.supervisorPhones = foundPhones;
+      
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboardPage').style.display = 'block';
+      document.getElementById('managerName').textContent = '👤 ' + foundManager;
+      
+      renderWeeksInitial();
+      loadDashboardData();
+    } else {
+      showLoginError('رقم سري غير صحيح');
+    }
+    
+  } catch (err) {
+    showLoginError('فشل الاتصال بالخادم');
+    console.error(err);
+  }
+}
+
+function showLoginError(msg) {
+  const errorEl = document.getElementById('loginError');
+  errorEl.textContent = msg;
+  errorEl.style.display = 'block';
+}
+
+function logout() {
+  appData.currentManager = null;
+  appData.currentPin = null;
+  appData.mySupervisors = [];
+  appData.supervisorPhones = {};
+  appData.availableWeeks = [];
+  document.getElementById('pinInput').value = '';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('dashboardPage').style.display = 'none';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// عرض الأسابيع الأولي (جميعها متاحة للضغط)
+function renderWeeksInitial() {
+  const container = document.getElementById('weeksContainer');
+  container.innerHTML = '';
+  
+  ALL_WEEKS.forEach(weekNum => {
+    const btn = document.createElement('button');
+    btn.className = 'week-btn' + (weekNum === appData.currentWeek ? ' active' : '');
+    btn.textContent = weekNum;
+    btn.onclick = () => {
+      appData.currentWeek = weekNum;
+      renderWeeks();
+      renderSupervisors();
+    };
+    container.appendChild(btn);
+  });
+}
+
+// تحميل بيانات Dashboard
+async function loadDashboardData() {
+  try {
+    const response = await fetch(API_URL + "?action=dashboard&t=" + Date.now());
+    const data = await response.json();
+    
+    console.log('Dashboard data:', data); // للتصحيح
+    
+    if (data && data.length > 0) {
+      const headers = data[0];
+      const rows = [];
+      
+      for (let i = 1; i < data.length; i++) {
+        let row = {};
+        for (let j = 0; j < headers.length; j++) {
+          row[headers[j]] = data[i][j] ? data[i][j].toString() : "";
+        }
+        rows.push(row);
+      }
+      
+      console.log('Parsed rows:', rows); // للتصحيح
+      console.log('My supervisors:', appData.mySupervisors); // للتصحيح
+      
+      appData.dashboardData = rows;
+      
+      // تحديد الأسابيع المتوفرة
+      const weekCol = findColumn(headers, ['الأسبوع', 'الأسابيع', 'week']);
+      const supervisorCol = findColumn(headers, ['اسم المشرف', 'المشرف', 'supervisor']);
+      
+      console.log('Week column:', weekCol); // للتصحيح
+      console.log('Supervisor column:', supervisorCol); // للتصحيح
+      
+      const myData = rows.filter(row => {
+        const supervisorName = normalizeText(row[supervisorCol] || '');
+        const isMySupervisor = appData.mySupervisors.some(mySup => {
+          const normalizedMySup = normalizeText(mySup);
+          const match = supervisorName === normalizedMySup ||
+                 supervisorName.includes(normalizedMySup) ||
+                 normalizedMySup.includes(supervisorName);
+          console.log(`Comparing: "${supervisorName}" vs "${normalizedMySup}" = ${match}`); // للتصحيح
+          return match;
+        });
+        return isMySupervisor;
+      });
+      
+      console.log('My data:', myData); // للتصحيح
+      
+      appData.availableWeeks = [...new Set(myData.map(row => {
+        return weekTextToNumber(row[weekCol] || '');
+      }))].filter(w => w);
+      
+      console.log('Available weeks:', appData.availableWeeks); // للتصحيح
+      
+      renderWeeks();
+      renderSupervisors();
+      updateTimestamp();
+      document.getElementById('footer').style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+
+function renderWeeks() {
+  const container = document.getElementById('weeksContainer');
+  container.innerHTML = '';
+  
+  ALL_WEEKS.forEach(weekNum => {
+    const btn = document.createElement('button');
+    const hasData = appData.availableWeeks.includes(weekNum);
+    
+    btn.className = 'week-btn' + 
+      (weekNum === appData.currentWeek ? ' active' : '') + 
+      (!hasData ? ' empty' : '');
+    
+    btn.textContent = weekNum;
+    
+    btn.onclick = () => {
+      appData.currentWeek = weekNum;
+      renderWeeks();
+      renderSupervisors();
+    };
+    
+    container.appendChild(btn);
+  });
+}
+
+function renderSupervisors() {
+  const container = document.getElementById('supervisorsGrid');
+  container.innerHTML = '';
+  
+  if (!appData.dashboardData.length) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div style="font-size: 4em; margin-bottom: 20px;">⏳</div>
+        <h3>جاري تحميل البيانات...</h3>
+      </div>
+    `;
+    return;
+  }
+  
+  // استخدام headers الأصلية للعثور على الأعمدة
+  const headers = Object.keys(appData.dashboardData[0]);
+  const weekCol = headers.find(h => h.includes('الأسبوع') || h.includes('week')) || headers[1];
+  const supervisorCol = headers.find(h => h.includes('المشرف') || h.includes('supervisor')) || headers[0];
+  
+  console.log('Rendering - Week col:', weekCol, 'Supervisor col:', supervisorCol); // للتصحيح
+  
+  const filteredData = appData.dashboardData.filter(row => {
+    const supervisorName = normalizeText(row[supervisorCol] || '');
+    const rowWeek = weekTextToNumber(row[weekCol] || '');
+    
+    const isMySupervisor = appData.mySupervisors.some(mySup => {
+      const normalizedMySup = normalizeText(mySup);
+      return supervisorName === normalizedMySup ||
+             supervisorName.includes(normalizedMySup) ||
+             normalizedMySup.includes(supervisorName);
+    });
+    
+    return isMySupervisor && rowWeek === appData.currentWeek;
+  });
+  
+  console.log('Filtered data for display:', filteredData); // للتصحيح
+  
+  if (filteredData.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div style="font-size: 4em; margin-bottom: 20px;">📭</div>
+        <h3>لا توجد بيانات لهذا الأسبوع</h3>
+        <p>لم يتم إدخال بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</p>
+      </div>
+    `;
+    return;
+  }
+  
+  filteredData.forEach((row, index) => {
+    const supervisor = row[supervisorCol] || 'غير معروف';
+    const indicatorsCol = headers.find(h => h.includes('المؤشرات') || h.includes('إنجاز') || h.includes('indicators')) || headers[2];
+    const indicatorsText = row[indicatorsCol] || '';
+    const linkCol = headers.find(h => h.includes('رابط') || h.includes('link')) || headers[3];
+    const link = row[linkCol] || '';
+    const noteCol = headers.find(h => h.includes('ملاحظات') || h.includes('notes')) || headers[4];
+    const existingNote = row[noteCol] || '';
+    
+    const indicators = indicatorsText.split(/[,\n]/).map(i => i.trim()).filter(i => i);
+    const doneCount = indicators.filter(i => i.includes('✅') || i.includes('تم')).length;
+    const pendingCount = indicators.filter(i => i.includes('⏳') || i.includes('جار')).length;
+    const totalCount = indicators.length || TOTAL_INDICATORS;
+    
+    const percentage = Math.round((doneCount / totalCount) * 100);
+    
+    let progressClass = 'low';
+    if (percentage >= 70) progressClass = 'high';
+    else if (percentage >= 40) progressClass = 'medium';
+    
+    const card = document.createElement('div');
+    card.className = 'supervisor-card';
+    
+    card.innerHTML = `
+      <div class="card-header">
+        <h3>👤 ${supervisor}</h3>
+        <span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
+      </div>
+      
+      <div class="stats-row">
+        <div class="stat-box total">
+          <span class="stat-number">${totalCount}</span>
+          <div class="stat-label">📊 الكل</div>
+        </div>
+        <div class="stat-box pending">
+          <span class="stat-number">${pendingCount}</span>
+          <div class="stat-label">⏳ جاري</div>
+        </div>
+        <div class="stat-box done">
+          <span class="stat-number">${doneCount}</span>
+          <div class="stat-label">✅ تم</div>
+        </div>
+      </div>
+      
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>نسبة الإنجاز</span>
+          <span>${percentage}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill ${progressClass}" style="width: ${percentage}%">
+            ${percentage > 0 ? percentage + '%' : ''}
+          </div>
+        </div>
+      </div>
+      
+      <button class="toggle-btn" onclick="toggleIndicators(${index})">
+        <span>▼</span> عرض المؤشرات قيد التنفيذ
+      </button>
+      
+      <div class="indicators-list" id="indicators-${index}">
+        ${indicators.map((ind, i) => {
+          const isDone = ind.includes('✅') || ind.includes('تم');
+          const isPending = ind.includes('⏳') || ind.includes('جار');
+          const statusClass = isDone ? 'status-done' : isPending ? 'status-pending' : 'status-not-done';
+          const statusText = isDone ? 'تم' : isPending ? 'جاري' : 'لم ينفذ';
+          
+          return `
+            <div class="indicator-item">
+              <span class="indicator-num">${i + 1}</span>
+              <span class="indicator-name">${ind.replace(/[✅❌⏳]/g, '').trim()}</span>
+              <span class="indicator-status ${statusClass}">${statusText}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      ${link ? 
+        `<a href="${link}" target="_blank" class="form-link">🔗 فتح الاستمارة</a>` : 
+        `<div class="form-link disabled">🔗 لا يوجد رابط</div>`
+      }
+      
+      <div class="notes-section">
+        <div class="notes-title">📝 ملاحظات</div>
+        <textarea class="notes-textarea" id="note-${index}" placeholder="اكتب ملاحظتك هنا...">${existingNote}</textarea>
+        <button class="whatsapp-btn" onclick="sendWhatsApp('${supervisor}')">
+          📱 إرسال عبر واتساب
+        </button>
+      </div>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+function toggleIndicators(index) {
+  const list = document.getElementById(`indicators-${index}`);
+  const btn = list.previousElementSibling;
+  
+  if (list.classList.contains('show')) {
+    list.classList.remove('show');
+    btn.innerHTML = '<span>▼</span> عرض المؤشرات قيد التنفيذ';
+  } else {
+    list.classList.add('show');
+    btn.innerHTML = '<span>▲</span> إخفاء المؤشرات';
+  }
+}
+
+function sendWhatsApp(supervisorName) {
+  const phone = appData.supervisorPhones[supervisorName];
+  
+  if (!phone) {
+    alert('رقم الجوال غير متوفر لهذا المشرف');
+    return;
+  }
+  
+  const cards = document.querySelectorAll('.supervisor-card');
+  let note = '';
+  
+  for (let card of cards) {
+    if (card.innerHTML.includes(supervisorName)) {
+      const textarea = card.querySelector('.notes-textarea');
+      if (textarea) note = textarea.value;
+      break;
+    }
+  }
+  
+  if (!note.trim()) {
+    alert('الرجاء كتابة ملاحظة أولاً');
+    return;
+  }
+  
+  const message = `مرحباً ${supervisorName}،\n\nملاحظة من ${appData.currentManager}:\n${note}\n\n📊 لوحة متابعة المشرفين`;
+  const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank');
 }
 
 function weekTextToNumber(text) {
@@ -351,353 +839,30 @@ function weekTextToNumber(text) {
   return null;
 }
 
-async function loadData() {
-  document.getElementById("weeks").innerHTML = `
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>جاري الاتصال بالخادم...</p>
-    </div>
-  `;
-
-  try {
-    appData.currentManager = getManagerFromUrl();
-    
-    if (appData.currentManager) {
-      const badge = document.getElementById('managerBadge');
-      badge.textContent = '👤 ' + appData.currentManager;
-      badge.style.display = 'inline-block';
-    }
-    
-    // جلب بيانات المدراء أولاً
-    const adminResponse = await fetch(API_URL + "?action=admin&t=" + Date.now());
-    const adminData = await adminResponse.json();
-    
-    // معالجة بيانات المدراء والحصول على مشرفين المدير الحالي
-    if (adminData && adminData.length > 0) {
-      for (let i = 1; i < adminData.length; i++) {
-        const managerName = adminData[i][0];
-        const supervisors = adminData[i][1] ? adminData[i][1].toString().split(/[،,]/).map(s => s.trim()).filter(s => s) : [];
-        const phones = adminData[i][2] ? adminData[i][2].toString().split(/[،,]/).map(p => p.trim()).filter(p => p) : [];
-        
-        if (managerName) {
-          appData.managersData[managerName] = supervisors;
-          
-          // إذا كان هذا هو المدير المطلوب، نحفظ مشرفيه
-          if (managerName === appData.currentManager) {
-            appData.allowedSupervisors = supervisors;
-          }
-          
-          // حفظ أرقام الهواتف لجميع المشرفين
-          supervisors.forEach((sup, idx) => {
-            appData.supervisorPhones[sup] = phones[idx] || '';
-          });
-        }
-      }
-    }
-    
-    // جلب جميع بيانات Dashboard
-    const dashboardResponse = await fetch(API_URL + "?action=dashboard&t=" + Date.now());
-    const dashboardData = await dashboardResponse.json();
-    
-    if (dashboardData && dashboardData.error) {
-      showError(dashboardData.error);
-      return;
-    }
-    
-    if (dashboardData && dashboardData.length > 0) {
-      const headers = dashboardData[0];
-      const result = [];
-      
-      for (let i = 1; i < dashboardData.length; i++) {
-        let row = {};
-        for (let j = 0; j < headers.length; j++) {
-          row[headers[j]] = dashboardData[i][j] ? dashboardData[i][j].toString() : "";
-        }
-        
-        // فلترة حسب المشرفين المسموح لهم فقط - مقارنة مرنة للأسماء
-        const supervisorName = row['اسم المشرف'] || '';
-        const isAllowed = !appData.currentManager || appData.allowedSupervisors.some(sup => 
-          supervisorName.includes(sup) || sup.includes(supervisorName)
-        );
-        if (isAllowed) {
-          result.push(row);
-        }
-      }
-      
-      appData.allData = result;
-      appData.currentWeek = 1;
-      render();
-      updateTimestamp();
-    } else {
-      showError("لا توجد بيانات");
-    }
-    
-  } catch (err) {
-    console.error("خطأ:", err);
-    showError("فشل الاتصال: " + err.message);
-  }
-}
-
-function render() {
-  renderWeeks();
-  renderCards();
-  document.getElementById("footer").style.display = "block";
-}
-
-function renderWeeks() {
-  const container = document.getElementById("weeks");
-  container.innerHTML = "";
-  
-  if (!appData.allData || appData.allData.length === 0) return;
-  
-  const sample = appData.allData[0];
-  const weekCol = findCol(sample, ["الأسابيع", "الأسبوع", "الاسبوع", "أسابيع", "week"]);
-  const availableWeeks = [...new Set(appData.allData.map(row => weekTextToNumber(row[weekCol])))].filter(w => w);
-  
-  ALL_WEEKS.forEach(weekNum => {
-    const btn = document.createElement("button");
-    const hasData = availableWeeks.includes(weekNum);
-    
-    btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "") + (!hasData ? " empty" : "");
-    btn.textContent = weekNum;
-    btn.title = "الأسبوع " + WEEK_NAMES[weekNum] + (hasData ? "" : " (لا توجد بيانات)");
-    
-    btn.onclick = () => {
-      appData.currentWeek = weekNum;
-      renderWeeks();
-      renderCards();
-    };
-    
-    container.appendChild(btn);
-  });
-}
-
-function toggleIndicators(index, status) {
-  const list = document.getElementById(`indicators-${index}`);
-  const btn = list.previousElementSibling;
-  
-  let statusText = "المؤشرات";
-  if (status === "تم التنفيذ") statusText = "المؤشرات المنفذة";
-  else if (status === "لم ينفذ") statusText = "المؤشرات غير المنفذة";
-  else if (status.includes("جار")) statusText = "المؤشرات قيد التنفيذ";
-  
-  if (list.classList.contains('show')) {
-    list.classList.remove('show');
-    btn.innerHTML = `📋 عرض ${statusText} ▼`;
-  } else {
-    list.classList.add('show');
-    btn.innerHTML = `🔼 إخفاء ${statusText} ▲`;
-  }
-}
-
-function sendWhatsApp(supervisorName) {
-  const phone = appData.supervisorPhones[supervisorName];
-  
-  if (!phone) {
-    alert('رقم المشرف غير متوفر في النظام');
-    return;
-  }
-  
-  const noteId = 'note_' + supervisorName.replace(/\s+/g, '_');
-  const message = document.getElementById(noteId).value;
-  
-  if (!message.trim()) {
-    alert('الرجاء كتابة ملاحظة أولاً');
-    return;
-  }
-  
-  const fullMessage = 
-    "مرحباً " + supervisorName + "،\n\n" +
-    "ملاحظة من المدير:\n" + message + "\n\n" +
-    "📊 لوحة متابعة المشرفين";
-  
-  const whatsappUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(fullMessage);
-  window.open(whatsappUrl, '_blank');
-}
-
-function findCol(row, possibleNames) {
-  const cols = Object.keys(row);
+function findColumn(headers, possibleNames) {
   for (let name of possibleNames) {
-    for (let col of cols) {
-      if (col && col.toString().toLowerCase().includes(name.toLowerCase())) {
-        return col;
-      }
-    }
+    const found = headers.find(h => h && h.toString().toLowerCase().includes(name.toLowerCase()));
+    if (found) return found;
   }
-  return cols[0];
+  return headers[0];
 }
 
-function getStatusColor(status) {
-  if (!status) return "gray";
-  const s = status.toString().toLowerCase();
-  if (s.includes("تم") || s.includes("done") || s.includes("complete")) return "green";
-  if (s.includes("جار") || s.includes("pending") || s.includes("progress")) return "orange";
-  if (s.includes("لم") || s.includes("not") || s.includes("no")) return "red";
-  return "gray";
-}
-
-function getStatusIcon(status) {
-  if (!status) return "⚪";
-  const s = status.toString().toLowerCase();
-  if (s.includes("تم") || s.includes("done")) return "✅";
-  if (s.includes("جار") || s.includes("pending")) return "⏳";
-  if (s.includes("لم") || s.includes("not")) return "❌";
-  return "⚪";
-}
-
-function renderCards() {
-  const container = document.getElementById("cards");
-  container.innerHTML = "";
-  
-  const weekData = appData.allData.filter(row => {
-    const weekCol = findCol(row, ["الأسابيع", "الأسبوع", "الاسبوع", "أسابيع", "week"]);
-    return weekTextToNumber(row[weekCol]) === appData.currentWeek;
-  });
-  
-  if (weekData.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column: 1/-1;">
-        <div class="empty-state-icon">📭</div>
-        <h3>لا توجد بيانات لهذا الأسبوع</h3>
-        <p>لم يتم إدخال بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</p>
-      </div>
-    `;
-    return;
-  }
-  
-  weekData.forEach((row, index) => {
-    const supervisorCol = findCol(row, ["اسم المشرف", "المشرف", "supervisor"]);
-    const supervisor = row[supervisorCol] || "غير معروف";
-    
-    const statusCol = findCol(row, ["حالة التنفيذ", "الحالة", "status"]);
-    const status = row[statusCol] || "غير محدد";
-    
-    const indicatorsCol = findCol(row, ["المؤشرات", "indicators", "الإنجاز"]);
-    const indicatorsText = row[indicatorsCol] || "";
-    
-    const linkCol = findCol(row, ["رابط الاستمارة", "الرابط", "link"]);
-    const link = row[linkCol] || "";
-    
-    const noteCol = findCol(row, ["ملاحظات", "notes", "note"]);
-    const existingNote = row[noteCol] || "";
-    
-    // تحليل المؤشرات
-    const indicators = indicatorsText.split(/[,\n]/).map(i => i.trim()).filter(i => i);
-    const doneCount = indicators.filter(i => i.toLowerCase().includes('✅') || i.toLowerCase().includes('تم')).length;
-    const pendingCount = indicators.filter(i => i.toLowerCase().includes('⏳') || i.toLowerCase().includes('جار')).length;
-    const totalCount = indicators.length || TOTAL_INDICATORS;
-    const notDoneCount = totalCount - doneCount - pendingCount;
-    
-    const percentage = Math.round((doneCount / totalCount) * 100);
-    
-    const card = document.createElement("div");
-    card.className = "card";
-    
-    const statusColor = getStatusColor(status);
-    const statusIcon = getStatusIcon(status);
-    
-    let barClass = "low";
-    if (percentage >= 70) barClass = "high";
-    else if (percentage >= 40) barClass = "medium";
-    
-    const noteId = 'note_' + supervisor.replace(/\s+/g, '_');
-    
-    card.innerHTML = `
-      <div class="card-header">
-        <h3>${supervisor}</h3>
-        <span class="week-badge">الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
-      </div>
-      
-      <div style="text-align: center; margin: 15px 0;">
-        <span style="font-size: 2em;">${statusIcon}</span>
-        <div style="color: ${statusColor === 'green' ? '#4caf50' : statusColor === 'orange' ? '#ff9800' : '#f44336'}; 
-                    font-weight: bold; margin-top: 5px;">${status}</div>
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-box done">
-          <span class="stat-number">${doneCount}</span>
-          <div class="stat-label">تم التنفيذ</div>
-        </div>
-        <div class="stat-box pending">
-          <span class="stat-number">${pendingCount}</span>
-          <div class="stat-label">قيد التنفيذ</div>
-        </div>
-        <div class="stat-box total">
-          <span class="stat-number">${totalCount}</span>
-          <div class="stat-label">المجموع</div>
-        </div>
-      </div>
-      
-      <div class="progress-section">
-        <div class="progress-label">
-          <span>نسبة الإنجاز</span>
-          <span>${percentage}%</span>
-        </div>
-        <div class="progress">
-          <div class="bar ${barClass}" style="width: ${percentage}%">${percentage}%</div>
-        </div>
-      </div>
-      
-      <button class="indicators-toggle" onclick="toggleIndicators(${index}, '${status}')">
-        📋 عرض المؤشرات ▼
-      </button>
-      <div class="indicators-list" id="indicators-${index}">
-        ${indicators.map((ind, i) => `
-          <div class="indicator-item">
-            <span class="indicator-number">${i + 1}</span>
-            <span class="indicator-name">${ind.replace(/[✅❌⏳]/g, '').trim()}</span>
-            <span class="indicator-status ${ind.includes('✅') ? 'status-done' : ind.includes('⏳') ? 'status-pending' : 'status-not-done'}">
-              ${ind.includes('✅') ? 'تم' : ind.includes('⏳') ? 'جاري' : 'لم يتم'}
-            </span>
-          </div>
-        `).join('')}
-      </div>
-      
-      ${link ? `<a href="${link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>` : 
-        `<div class="link-btn disabled">🔗 لا يوجد رابط</div>`}
-      
-      <div class="note-box">
-        <div class="note-box-title">📝 ملاحظات المدير</div>
-        <textarea class="note-textarea" id="${noteId}" placeholder="اكتب ملاحظتك هنا...">${existingNote}</textarea>
-        <button class="whatsapp-btn" onclick="sendWhatsApp('${supervisor}')">
-          📱 إرسال عبر واتساب
-        </button>
-      </div>
-    `;
-    
-    container.appendChild(card);
-  });
+function normalizeText(text) {
+  if (!text) return '';
+  return text.toString().trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
 function updateTimestamp() {
   const now = new Date();
-  const timeString = now.toLocaleString('ar-SA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  document.getElementById('updateTime').textContent = now.toLocaleString('ar-SA', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   });
-  document.getElementById("updateTime").textContent = timeString;
 }
 
-function showError(message) {
-  document.getElementById("weeks").innerHTML = `
-    <div class="error-box">
-      <div style="font-size: 3em; margin-bottom: 10px;">⚠️</div>
-      <h3>حدث خطأ</h3>
-      <p>${message}</p>
-      <button class="retry-btn" onclick="loadData()">إعادة المحاولة</button>
-    </div>
-  `;
-  document.getElementById("cards").innerHTML = "";
-  document.getElementById("footer").style.display = "none";
-}
-
-// تحميل البيانات عند بدء الصفحة
-window.onload = loadData;
+document.getElementById('pinInput')?.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') login();
+});
 </script>
 </body>
 </html>
-
