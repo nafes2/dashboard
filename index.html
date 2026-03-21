@@ -98,11 +98,6 @@
       font-family: inherit;
     }
     
-    .response-box textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
     .send-btn {
       background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
       color: white;
@@ -113,20 +108,6 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .send-btn:active {
-      transform: scale(0.98);
-    }
-    
-    .loading {
-      display: none;
-      text-align: center;
-      color: #667eea;
-      padding: 20px;
     }
     
     .success-msg {
@@ -156,51 +137,93 @@
   <div class="manager-title" id="managerTitle">جاري التحميل...</div>
   
   <div id="supervisorsList">
-    <div class="loading">جاري تحميل البيانات...</div>
+    <div style="text-align:center;padding:20px;">جاري تحميل البيانات...</div>
   </div>
 </div>
 
 <script>
-  // الحصول على اسم المدير من الرابط
+  // ============================================
+  // رابط CSV للـ Dashboard
+  // ============================================
+  const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?output=csv';
+  
+  // بيانات المدراء والمشرفين
+  const MANAGERS_DATA = {
+    "مدير 1": {
+      supervisors: ["عبدالعزيز محمد القضيبي", "حسين سليمان"],
+      phones: ["966555179649", "966550000000"]
+    },
+    "مدير 2": {
+      supervisors: ["صالح سليمان السديس", "خالد عبدالله"],
+      phones: ["966542145125", "9665412451452"]
+    },
+    "مدير 3": {
+      supervisors: ["علي سعد"],
+      phones: ["966542145125"]
+    }
+  };
+  
+  // ============================================
+  
   function getManagerFromUrl() {
-    var urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('manager') || 'all';
   }
   
-  var currentManager = getManagerFromUrl();
+  const currentManager = getManagerFromUrl();
   
-  // تحميل البيانات
-  function loadData() {
-    google.script.run
-      .withSuccessHandler(renderData)
-      .withFailureHandler(function(error) {
-        document.getElementById('supervisorsList').innerHTML = 
-          '<div style="color:red;text-align:center;">خطأ: ' + error + '</div>';
-      })
-      .getDashboardDataByManager(currentManager);
+  async function loadData() {
+    try {
+      const response = await fetch(SHEET_CSV_URL);
+      const csvText = await response.text();
+      const rows = parseCSV(csvText);
+      
+      renderData(rows);
+    } catch (error) {
+      document.getElementById('supervisorsList').innerHTML = 
+        '<div style="color:red;text-align:center;">خطأ في تحميل البيانات</div>';
+    }
   }
   
-  // عرض البيانات
-  function renderData(data) {
-    if (data.error) {
-      document.getElementById('supervisorsList').innerHTML = 
-        '<div style="color:red;text-align:center;">' + data.error + '</div>';
-      return;
+  function parseCSV(csv) {
+    const lines = csv.split('\n');
+    return lines.map(line => line.split(','));
+  }
+  
+  function renderData(allData) {
+    document.getElementById('managerTitle').textContent = 
+      currentManager === 'all' ? 'جميع المشرفين' : currentManager;
+    
+    const data = allData.filter(row => row[1] && row[1].trim() !== '');
+    
+    let filteredData = [];
+    let phones = {};
+    
+    if (currentManager !== 'all' && MANAGERS_DATA[currentManager]) {
+      const managerInfo = MANAGERS_DATA[currentManager];
+      const allowedSupervisors = managerInfo.supervisors;
+      
+      data.forEach(row => {
+        const supervisorName = row[1].trim();
+        const index = allowedSupervisors.indexOf(supervisorName);
+        if (index !== -1) {
+          filteredData.push(row);
+          phones[supervisorName] = managerInfo.phones[index];
+        }
+      });
+    } else {
+      filteredData = data;
     }
     
-    // عنوان المدير
-    document.getElementById('managerTitle').textContent = 
-      data.manager === 'all' ? 'جميع المشرفين' : data.manager;
+    let html = '';
     
-    var html = '';
-    
-    if (data.supervisors.length === 0) {
-      html = '<div style="text-align:center;padding:40px;color:#666;">لا توجد بيانات</div>';
+    if (filteredData.length === 0) {
+      html = '<div style="text-align:center;padding:40px;">لا توجد بيانات</div>';
     } else {
-      data.supervisors.forEach(function(row, index) {
-        var supervisorName = row[1] || 'غير معروف';
-        var week = row[0] || '';
-        var phone = data.phones[supervisorName] || '';
+      filteredData.forEach((row, index) => {
+        const supervisorName = row[1] || 'غير معروف';
+        const week = row[0] || '';
+        const phone = phones[supervisorName] || '';
         
         html += '<div class="supervisor-card">';
         html += '<div class="supervisor-name">';
@@ -210,8 +233,7 @@
         
         html += '<div class="supervisor-info">';
         
-        // عرض باقي الأعمدة
-        for (var i = 2; i < row.length; i++) {
+        for (let i = 2; i < row.length; i++) {
           if (row[i]) {
             html += '<div class="info-item">';
             html += '<div class="info-label">بيان ' + (i-1) + '</div>';
@@ -222,14 +244,13 @@
         
         html += '</div>';
         
-        // مربع رد المدير
         if (currentManager !== 'all' && phone) {
           html += '<div class="response-box">';
-          html += '<div class="info-label" style="margin-bottom:10px;">💬 رد المدير (يُرسل واتساب):</div>';
-          html += '<textarea id="msg_' + index + '" placeholder="اكتب ملاحظاتك على الاستمارة..."></textarea>';
+          html += '<div class="info-label" style="margin-bottom:10px;">💬 رد المدير:</div>';
+          html += '<textarea id="msg_' + index + '" placeholder="اكتب ملاحظاتك..."></textarea>';
           html += '<br>';
-          html += '<button class="send-btn" onclick="sendResponse(\'' + supervisorName + '\', \'' + phone + '\', ' + index + ')">';
-          html += '📤 إرسال للمشرف';
+          html += '<button class="send-btn" onclick="sendWhatsApp(\'' + supervisorName + '\', \'' + phone + '\', ' + index + ')">';
+          html += '📤 إرسال واتساب';
           html += '</button>';
           html += '<div class="success-msg" id="success_' + index + '">✅ تم فتح واتساب!</div>';
           html += '</div>';
@@ -242,31 +263,26 @@
     document.getElementById('supervisorsList').innerHTML = html;
   }
   
-  // إرسال الرد
-  function sendResponse(supervisorName, phone, index) {
-    var message = document.getElementById('msg_' + index).value;
+  function sendWhatsApp(supervisorName, phone, index) {
+    const message = document.getElementById('msg_' + index).value;
     
     if (!message.trim()) {
       alert('الرجاء كتابة رسالة أولاً');
       return;
     }
     
-    google.script.run
-      .withSuccessHandler(function(result) {
-        if (result.success) {
-          document.getElementById('success_' + index).style.display = 'block';
-          window.open(result.whatsappUrl, '_blank');
-        } else {
-          alert('خطأ: ' + result.error);
-        }
-      })
-      .withFailureHandler(function(error) {
-        alert('خطأ في الإرسال: ' + error);
-      })
-      .sendManagerResponse(supervisorName, phone, message, currentManager);
+    const fullMessage = 
+      "مرحباً " + supervisorName + "،\n\n" +
+      "ملاحظات من " + currentManager + ":\n" +
+      message + "\n\n" +
+      "يرجى مراجعة الاستمارة.";
+    
+    const whatsappUrl = "https://wa.me/" + phone + "?text=" + encodeURIComponent(fullMessage);
+    
+    document.getElementById('success_' + index).style.display = 'block';
+    window.open(whatsappUrl, '_blank');
   }
   
-  // تحميل البيانات عند فتح الصفحة
   loadData();
 </script>
 
