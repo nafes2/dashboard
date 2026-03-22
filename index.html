@@ -314,12 +314,13 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxxb1P8SBF4obokOVRDnBtmdCSLbYvWvsNbyoCW9Fd_bdzK4n6fFIFrantxHyQAFQVcjA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwG_d2ln3Xksr_BnDa4zM_3R1anjlT1q1hIv6hHtPy2qoKV1zlQM1OEOHOf8ZEUVLrvfw/exec";
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 let appData = {
   currentManager: null,
   currentPin: null,
+  supervisorIds: [],
   mySupervisors: [],
   supervisorPhones: {},
   dashboardData: [],
@@ -327,40 +328,38 @@ let appData = {
   availableWeeks: []
 };
 
-function callAPI(action, params) {
-  return new Promise(function(resolve, reject) {
-    var iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+function jsonpRequest(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const callbackId = 'cb_' + Date.now();
     
-    var callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    
-    var url = API_URL + '?action=' + action + '&callback=' + callbackName;
-    for (var key in params) {
-      url += '&' + key + '=' + encodeURIComponent(params[key]);
-    }
-    url += '&t=' + Date.now();
-    
-    window[callbackName] = function(data) {
+    window[callbackId] = function(data) {
       resolve(data);
-      delete window[callbackName];
-      if (iframe.parentNode) document.body.removeChild(iframe);
+      delete window[callbackId];
+      if (script.parentNode) document.head.removeChild(script);
     };
     
-    iframe.src = url;
-    document.body.appendChild(iframe);
+    script.src = url + (url.indexOf('?') > -1 ? '&' : '?') + 'callback=' + callbackId;
+    script.onerror = () => {
+      reject(new Error('فشل تحميل السكربت'));
+      delete window[callbackId];
+      if (script.parentNode) document.head.removeChild(script);
+    };
     
-    setTimeout(function() {
-      if (window[callbackName]) {
+    document.head.appendChild(script);
+    
+    setTimeout(() => {
+      if (window[callbackId]) {
         reject(new Error('انتهى الوقت'));
-        delete window[callbackName];
-        if (iframe.parentNode) document.body.removeChild(iframe);
+        delete window[callbackId];
+        if (script.parentNode) document.head.removeChild(script);
       }
-    }, 15000);
+    }, 20000);
   });
 }
 
 async function login() {
-  var pin = document.getElementById('pinInput').value;
+  const pin = document.getElementById('pinInput').value;
   if (pin.length !== 4) {
     showLoginError('الرجاء إدخال 4 أرقام');
     return;
@@ -369,13 +368,14 @@ async function login() {
   document.getElementById('loginError').style.display = 'none';
   
   try {
-    var result = await callAPI('verifyPin', {pin: pin});
+    const result = await jsonpRequest(API_URL + "?action=verifyPin&pin=" + pin + "&t=" + Date.now());
     
     console.log('LOGIN RESULT:', result);
     
     if (result.success) {
       appData.currentManager = result.manager;
       appData.currentPin = pin;
+      appData.supervisorIds = result.supervisorIds || [];
       appData.mySupervisors = result.supervisors || [];
       appData.supervisorPhones = result.phones || {};
       appData.dashboardData = [];
@@ -397,7 +397,7 @@ async function login() {
 }
 
 function showLoginError(msg) {
-  var errorEl = document.getElementById('loginError');
+  const errorEl = document.getElementById('loginError');
   errorEl.textContent = msg;
   errorEl.style.display = 'block';
 }
@@ -406,6 +406,7 @@ function logout() {
   appData = {
     currentManager: null,
     currentPin: null,
+    supervisorIds: [],
     mySupervisors: [],
     supervisorPhones: {},
     dashboardData: [],
@@ -423,28 +424,26 @@ function logout() {
 }
 
 function renderWeeksInitial() {
-  var container = document.getElementById('weeksContainer');
+  const container = document.getElementById('weeksContainer');
   container.innerHTML = '';
   
-  for (var i = 0; i < ALL_WEEKS.length; i++) {
-    var weekNum = ALL_WEEKS[i];
-    var btn = document.createElement('button');
+  for (let i = 0; i < ALL_WEEKS.length; i++) {
+    const weekNum = ALL_WEEKS[i];
+    const btn = document.createElement('button');
     btn.className = 'week-btn' + (weekNum === appData.currentWeek ? ' active' : '');
     btn.textContent = weekNum;
-    btn.onclick = (function(w) {
-      return function() {
-        appData.currentWeek = w;
-        renderWeeks();
-        renderSupervisors();
-      };
-    })(weekNum);
+    btn.onclick = () => {
+      appData.currentWeek = weekNum;
+      renderWeeks();
+      renderSupervisors();
+    };
     container.appendChild(btn);
   }
 }
 
 function getColumnValue(row, possibleNames) {
-  for (var i = 0; i < possibleNames.length; i++) {
-    var name = possibleNames[i];
+  for (let i = 0; i < possibleNames.length; i++) {
+    const name = possibleNames[i];
     if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
       return row[name];
     }
@@ -452,56 +451,50 @@ function getColumnValue(row, possibleNames) {
   return '';
 }
 
+function updateTimestamp() {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('ar-SA');
+  document.getElementById('updateTime').textContent = timeStr;
+}
+
 async function loadDashboardData() {
-  var loadingDiv = document.getElementById('loadingDiv');
-  var grid = document.getElementById('supervisorsGrid');
+  const loadingDiv = document.getElementById('loadingDiv');
+  const grid = document.getElementById('supervisorsGrid');
   
   loadingDiv.style.display = 'block';
   grid.innerHTML = '';
   
   try {
-    console.log('Loading dashboard, mySupervisors:', appData.mySupervisors);
-    
-    var data = await callAPI('dashboard', {});
-    
-    console.log('Raw data:', data);
+    const data = await jsonpRequest(API_URL + "?action=dashboard&t=" + Date.now());
     
     if (data && data.length > 1) {
-      var headers = data[0];
-      var rows = [];
+      const headers = data[0];
+      const rows = [];
       
-      for (var i = 1; i < data.length; i++) {
-        var row = {};
-        for (var j = 0; j < headers.length; j++) {
+      for (let i = 1; i < data.length; i++) {
+        let row = {};
+        for (let j = 0; j < headers.length; j++) {
           row[headers[j]] = data[i][j] !== undefined ? data[i][j].toString() : "";
         }
         rows.push(row);
       }
       
-      console.log('All rows:', rows);
-      
-      // فلترة الصفوف حسب أسماء المشرفين
-      appData.dashboardData = rows.filter(function(row) {
-        var supervisorName = getColumnValue(row, ['اسم المشرف', 'اسم_المشرف', 'المشرف']);
-        var isMatch = appData.mySupervisors.indexOf(supervisorName.trim()) !== -1;
-        console.log('Row:', supervisorName, 'Match:', isMatch);
-        return isMatch;
+      appData.dashboardData = rows.filter(row => {
+        const supervisorName = getColumnValue(row, ['اسم المشرف', 'اسم_المشرف', 'المشرف']);
+        return appData.mySupervisors.indexOf(supervisorName.trim()) !== -1;
       });
       
-      console.log('Filtered data:', appData.dashboardData);
+      const availableWeeks = new Set();
       
-      var availableWeeks = new Set();
-      
-      appData.dashboardData.forEach(function(row) {
-        var weekText = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
-        var weekNum = weekTextToNumber(weekText);
+      appData.dashboardData.forEach(row => {
+        const weekText = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
+        const weekNum = weekTextToNumber(weekText);
         if (weekNum) availableWeeks.add(weekNum);
       });
       
-      appData.availableWeeks = Array.from(availableWeeks).sort(function(a,b) { return a-b; });
-      console.log('Available weeks:', appData.availableWeeks);
+      appData.availableWeeks = Array.from(availableWeeks).sort((a,b) => a-b);
       
-      if (appData.availableWeeks.length > 0 && appData.availableWeeks.indexOf(appData.currentWeek) === -1) {
+      if (appData.availableWeeks.length > 0 && !appData.availableWeeks.includes(appData.currentWeek)) {
         appData.currentWeek = appData.availableWeeks[0];
       }
       
@@ -514,75 +507,67 @@ async function loadDashboardData() {
     }
   } catch (err) {
     console.error('Error:', err);
-    grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div style="font-size: 4em; margin-bottom: 20px;">❌</div><h3>فشل تحميل البيانات</h3><p>' + err.message + '</p><p style="margin-top: 15px; font-size: 0.9em;">المشرفون: ' + appData.mySupervisors.join('، ') + '</p></div>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div style="font-size: 4em; margin-bottom: 20px;">❌</div><h3>فشل تحميل البيانات</h3><p>' + err.message + '</p></div>';
   } finally {
     loadingDiv.style.display = 'none';
   }
 }
 
 function renderWeeks() {
-  var container = document.getElementById('weeksContainer');
+  const container = document.getElementById('weeksContainer');
   container.innerHTML = '';
   
-  for (var i = 0; i < ALL_WEEKS.length; i++) {
-    var weekNum = ALL_WEEKS[i];
-    var hasData = appData.availableWeeks.indexOf(weekNum) !== -1;
+  for (let i = 0; i < ALL_WEEKS.length; i++) {
+    const weekNum = ALL_WEEKS[i];
+    const hasData = appData.availableWeeks.includes(weekNum);
     
-    var btn = document.createElement('button');
+    const btn = document.createElement('button');
     btn.className = 'week-btn' + (weekNum === appData.currentWeek ? ' active' : '') + (!hasData ? ' empty' : '');
     btn.textContent = weekNum;
-    btn.onclick = (function(w) {
-      return function() {
-        appData.currentWeek = w;
-        renderWeeks();
-        renderSupervisors();
-      };
-    })(weekNum);
+    btn.onclick = () => {
+      appData.currentWeek = weekNum;
+      renderWeeks();
+      renderSupervisors();
+    };
     
     container.appendChild(btn);
   }
 }
 
 function renderSupervisors() {
-  var container = document.getElementById('supervisorsGrid');
+  const container = document.getElementById('supervisorsGrid');
   container.innerHTML = '';
   
-  console.log('Rendering, data count:', appData.dashboardData.length);
-  
   if (appData.dashboardData.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div style="font-size: 4em; margin-bottom: 20px;">📭</div><h3>لا توجد بيانات</h3><p>المشرفون المسجلين: ' + appData.mySupervisors.join('، ') + '</p><p style="margin-top: 15px; font-size: 0.9em; opacity: 0.8;">تأكد من تطابق الأسماء في Dashboard مع أسماء المشرفين المسجلين</p></div>';
+    container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div style="font-size: 4em; margin-bottom: 20px;">📭</div><h3>لا توجد بيانات</h3><p>المشرفون المسجلون: ' + appData.mySupervisors.join('، ') + '</p></div>';
     return;
   }
   
-  var filteredData = appData.dashboardData.filter(function(row) {
-    var weekText = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
-    var rowWeek = weekTextToNumber(weekText);
+  const filteredData = appData.dashboardData.filter(row => {
+    const weekText = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
+    const rowWeek = weekTextToNumber(weekText);
     return rowWeek === appData.currentWeek;
   });
   
-  console.log('Filtered by week:', filteredData.length);
-  
   if (filteredData.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div style="font-size: 4em; margin-bottom: 20px;">📭</div><h3>لا توجد بيانات لهذا الأسبوع</h3><p>الأسبوع المحدد: ' + appData.currentWeek + '</p><p>الأسابيع المتاحة: ' + appData.availableWeeks.join('، ') + '</p></div>';
+    container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div style="font-size: 4em; margin-bottom: 20px;">📭</div><h3>لا توجد بيانات لهذا الأسبوع</h3><p>الأسبوع المحدد: ' + appData.currentWeek + '</p></div>';
     return;
   }
   
-  for (var idx = 0; idx < filteredData.length; idx++) {
-    var row = filteredData[idx];
-    var supervisor = getColumnValue(row, ['اسم المشرف', 'اسم_المشرف', 'المشرف']);
+  filteredData.forEach((row, idx) => {
+    const supervisor = getColumnValue(row, ['اسم المشرف', 'اسم_المشرف', 'المشرف']);
+    const weekDisplay = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
+    const totalCount = parseInt(getColumnValue(row, ['عدد المؤشرات', 'عدد_المؤشرات', 'المؤشرات'])) || 0;
+    const doneCount = parseInt(getColumnValue(row, ['تم التنفيذ', 'تم_التنفيذ', 'تم'])) || 0;
+    const pendingCount = parseInt(getColumnValue(row, ['جار التنفيذ', 'جار_التنفيذ', 'جاري'])) || 0;
+    const percentageText = getColumnValue(row, ['نسبة الإنجاز الأسبوعي', 'نسبة_الإنجاز', 'نسبة']) || '0%';
+    const percentage = parseFloat(percentageText.toString().replace('%', '')) || 0;
     
-    var weekDisplay = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
-    var totalCount = parseInt(getColumnValue(row, ['عدد المؤشرات', 'عدد_المؤشرات', 'المؤشرات'])) || 0;
-    var doneCount = parseInt(getColumnValue(row, ['تم التنفيذ', 'تم_التنفيذ', 'تم'])) || 0;
-    var pendingCount = parseInt(getColumnValue(row, ['جار التنفيذ', 'جار_التنفيذ', 'جاري'])) || 0;
-    var percentageText = getColumnValue(row, ['نسبة الإنجاز الأسبوعي', 'نسبة_الإنجاز', 'نسبة']) || '0%';
-    var percentage = parseFloat(percentageText.toString().replace('%', '')) || 0;
-    
-    var progressClass = 'low';
+    let progressClass = 'low';
     if (percentage >= 70) progressClass = 'high';
     else if (percentage >= 40) progressClass = 'medium';
     
-    var card = document.createElement('div');
+    const card = document.createElement('div');
     card.className = 'supervisor-card';
     
     card.innerHTML = 
@@ -624,23 +609,23 @@ function renderSupervisors() {
       '</div>';
     
     container.appendChild(card);
-  }
+  });
 }
 
 function sendWhatsApp(supervisorName) {
-  var phone = appData.supervisorPhones[supervisorName];
+  const phone = appData.supervisorPhones[supervisorName];
   
   if (!phone) {
     alert('رقم الجوال غير متوفر لهذا المشرف');
     return;
   }
   
-  var cards = document.querySelectorAll('.supervisor-card');
-  var note = '';
+  const cards = document.querySelectorAll('.supervisor-card');
+  let note = '';
   
-  for (var i = 0; i < cards.length; i++) {
-    if (cards[i].innerHTML.indexOf(supervisorName) !== -1) {
-      var textarea = cards[i].querySelector('.notes-textarea');
+  for (let i = 0; i < cards.length; i++) {
+    if (cards[i].innerHTML.includes(supervisorName)) {
+      const textarea = cards[i].querySelector('.notes-textarea');
       if (textarea) note = textarea.value;
       break;
     }
@@ -651,25 +636,40 @@ function sendWhatsApp(supervisorName) {
     return;
   }
   
-  var message = 'مرحباً ' + supervisorName + '،\\n\\nملاحظة من ' + appData.currentManager + ':\\n' + note + '\\n\\n📊 لوحة متابعة المشرفين';
-  var whatsappUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+  const message = 'مرحباً ' + supervisorName + '،\n\nملاحظة من ' + appData.currentManager + ':\n' + note + '\n\n📊 لوحة متابعة المشرفين';
+  const whatsappUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
   window.open(whatsappUrl, '_blank');
 }
 
 function weekTextToNumber(text) {
   if (!text) return null;
-  var t = text.toString().trim();
-  var match = t.match(/(\d+)/);
-  if (match) return parseInt(match[1]);
+  const t = text.toString().trim();
+  const match = t.match(/(\d+)/);
+  if (match) return parseInt(match[1], 10);
+  
+  const arabicNums = {
+    'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
+    'الثاني': 2, 'ثاني': 2,
+    'الثالث': 3, 'ثالث': 3,
+    'الرابع': 4, 'رابع': 4,
+    'الخامس': 5, 'خامس': 5,
+    'السادس': 6, 'سادس': 6,
+    'السابع': 7, 'سابع': 7,
+    'الثامن': 8, 'ثامن': 8,
+    'التاسع': 9, 'تاسع': 9,
+    'العاشر': 10, 'عاشر': 10,
+    'الحادي عشر': 11, '11': 11,
+    'الثاني عشر': 12, '12': 12,
+    'الثالث عشر': 13, '13': 13,
+    'الرابع عشر': 14, '14': 14,
+    'الخامس عشر': 15, '15': 15
+  };
+  
+  for (let key in arabicNums) {
+    if (t.includes(key)) return arabicNums[key];
+  }
+  
   return null;
-}
-
-function updateTimestamp() {
-  var now = new Date();
-  document.getElementById('updateTime').textContent = now.toLocaleString('ar-SA', {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
 }
 
 document.getElementById('pinInput').addEventListener('keypress', function(e) {
