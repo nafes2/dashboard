@@ -215,7 +215,7 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxEQ2wDJN2lWDxTu3Pk-e8KRn1SoB7f0J-s4-u3VhVhR5F4fYqpTPjaCuiwYy2ZvschFg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwbxDlC2hc-pCYlmYSLwJHqONl7oLtDipcW7p6Z6Ctwhm-ZKMfBTXI0vDR3pJFBJL4IjA/exec";
 
 let appData = {
   currentManager: null,
@@ -329,12 +329,6 @@ function renderSupervisors() {
     const weekText = row[0] ? row[0].toString() : '';
     const weekNum = extractWeekNumber(weekText);
     const supervisorName = row[1] ? row[1].toString().trim() : '';
-    
-    // للتشخيص
-    if (weekNum === appData.currentWeek) {
-      console.log('Checking:', weekText, weekNum, supervisorName, 'Included:', appData.supervisors.includes(supervisorName));
-    }
-    
     return weekNum === appData.currentWeek && appData.supervisors.includes(supervisorName);
   });
   
@@ -394,12 +388,9 @@ function renderSupervisors() {
 
 function extractWeekNumber(text) {
   if (!text) return null;
-  
-  // البحث عن رقم في النص
   const match = text.toString().match(/(\d+)/);
   if (match) return parseInt(match[1]);
   
-  // تحويل الأرقام العربية
   const arabicWeeks = {
     'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
     'الثاني': 2, 'ثاني': 2,
