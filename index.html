@@ -290,7 +290,7 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyOKRGIlMyMjFf8c3Scha6qnI1bPMaZIwhzC4YD5mlCxRNjr-lC_IhZ-T9rRbqQ_MuKCw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwfSAruucL401395Dyh8jNlgf0zx0SwNWaV5TBw3gUMfd29FSrBN5qBMGOWQTpZD_vnqQ/exec";
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
@@ -407,24 +407,6 @@ function renderWeeksInitial() {
   });
 }
 
-// دالة مقارنة مرنة للأسماء
-function isSameSupervisor(name1, name2) {
-  const n1 = normalizeName(name1);
-  const n2 = normalizeName(name2);
-  
-  // مطابقة تامة
-  if (n1 === n2) return true;
-  
-  // أحدهما يحتوي على الآخر
-  if (n1.includes(n2) || n2.includes(n1)) return true;
-  
-  // مطابقة الكلمات المهمة (أكثر من 3 أحرف)
-  const words1 = n1.split(' ').filter(w => w.length > 3);
-  const words2 = n2.split(' ').filter(w => w.length > 3);
-  
-  return words1.some(w1 => words2.some(w2 => w1 === w2));
-}
-
 function normalizeName(name) {
   if (!name) return '';
   return name.toString()
@@ -432,6 +414,19 @@ function normalizeName(name) {
     .replace(/\s+/g, ' ')
     .replace(/[\u064B-\u065F\u0670]/g, '')
     .toLowerCase();
+}
+
+function isSameSupervisor(name1, name2) {
+  const n1 = normalizeName(name1);
+  const n2 = normalizeName(name2);
+  
+  if (n1 === n2) return true;
+  if (n1.includes(n2) || n2.includes(n1)) return true;
+  
+  const words1 = n1.split(' ').filter(w => w.length > 3);
+  const words2 = n2.split(' ').filter(w => w.length > 3);
+  
+  return words1.some(w1 => words2.some(w2 => w1 === w2));
 }
 
 async function loadDashboardData() {
@@ -450,13 +445,11 @@ async function loadDashboardData() {
         rows.push(row);
       }
       
-      // فلترة البيانات: فقط مشرفين هذا المدير
       appData.dashboardData = rows.filter(row => {
         const supervisorName = row['اسم المشرف'] || '';
         return appData.mySupervisors.some(mySup => isSameSupervisor(supervisorName, mySup));
       });
       
-      // تحديد الأسابيع المتوفرة
       const availableWeeks = new Set();
       
       appData.dashboardData.forEach(row => {
@@ -600,7 +593,6 @@ function renderSupervisors() {
 }
 
 function sendWhatsApp(supervisorName) {
-  // البحث عن الرقم بشكل مرن
   let phone = null;
   for (let [name, num] of Object.entries(appData.supervisorPhones)) {
     if (isSameSupervisor(name, supervisorName)) {
