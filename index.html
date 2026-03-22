@@ -346,9 +346,7 @@ let appData = {
   supervisorPhones: {},
   dashboardData: [],
   currentWeek: 1,
-  availableWeeks: [],
-  // قاموس: اسم المشرف -> المدير
-  supervisorToManager: {}
+  availableWeeks: []
 };
 
 async function login() {
@@ -369,12 +367,6 @@ async function login() {
       appData.currentPin = pin;
       appData.mySupervisors = result.supervisors;
       appData.supervisorPhones = result.phones;
-      
-      // بناء قاموس: مشرف -> مدير
-      appData.supervisorToManager = {};
-      result.supervisors.forEach(sup => {
-        appData.supervisorToManager[sup] = result.manager;
-      });
       
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('dashboardPage').style.display = 'block';
@@ -403,7 +395,6 @@ function logout() {
   appData.currentPin = null;
   appData.mySupervisors = [];
   appData.supervisorPhones = {};
-  appData.supervisorToManager = {};
   appData.availableWeeks = [];
   document.getElementById('pinInput').value = '';
   document.getElementById('loginPage').style.display = 'flex';
@@ -670,28 +661,31 @@ function sendWhatsApp(supervisorName) {
   window.open(whatsappUrl, '_blank');
 }
 
+// التعامل مع "الأسبوع الأول" و"الأسبوع الثاني"...
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
   
+  // إذا كان رقم مباشر
   const num = parseInt(t);
   if (!isNaN(num) && num >= 1 && num <= 15) return num;
   
-  if (t.includes("خامس عشر") || t.includes("15")) return 15;
-  if (t.includes("رابع عشر") || t.includes("14")) return 14;
-  if (t.includes("ثالث عشر") || t.includes("13")) return 13;
-  if (t.includes("ثاني عشر") || t.includes("12")) return 12;
-  if (t.includes("حادي عشر") || t.includes("11")) return 11;
-  if (t.includes("عاشر") || t.includes("10")) return 10;
-  if (t.includes("تاسع") || t.includes("9")) return 9;
-  if (t.includes("ثامن") || t.includes("8")) return 8;
-  if (t.includes("سابع") || t.includes("7")) return 7;
-  if (t.includes("سادس") || t.includes("6")) return 6;
-  if (t.includes("خامس") || t.includes("5")) return 5;
-  if (t.includes("رابع") || t.includes("4")) return 4;
-  if (t.includes("ثالث") || t.includes("3")) return 3;
-  if (t.includes("ثاني") || t.includes("2")) return 2;
-  if (t.includes("أول") || t.includes("1")) return 1;
+  // البحث عن "الأسبوع" + الرقم بالكامل
+  if (t.includes("الخامس عشر") || t.includes("15")) return 15;
+  if (t.includes("الرابع عشر") || t.includes("14")) return 14;
+  if (t.includes("الثالث عشر") || t.includes("13")) return 13;
+  if (t.includes("الثاني عشر") || t.includes("12")) return 12;
+  if (t.includes("الحادي عشر") || t.includes("11")) return 11;
+  if (t.includes("العاشر") || t.includes("10")) return 10;
+  if (t.includes("التاسع") || t.includes("9")) return 9;
+  if (t.includes("الثامن") || t.includes("8")) return 8;
+  if (t.includes("السابع") || t.includes("7")) return 7;
+  if (t.includes("السادس") || t.includes("6")) return 6;
+  if (t.includes("الخامس") || t.includes("5")) return 5;
+  if (t.includes("الرابع") || t.includes("4")) return 4;
+  if (t.includes("الثالث") || t.includes("3")) return 3;
+  if (t.includes("الثاني") || t.includes("2")) return 2;
+  if (t.includes("الأول") || t.includes("1")) return 1;
   
   return null;
 }
