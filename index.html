@@ -1,1 +1,476 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة المشرفين</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+.login-box {
+  background: rgba(255,255,255,0.1);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+.login-box h2 { margin-bottom: 30px; font-size: 1.8em; }
+.pin-input {
+  width: 200px;
+  padding: 15px;
+  font-size: 24px;
+  text-align: center;
+  border: none;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.9);
+  color: #333;
+  margin-bottom: 20px;
+  letter-spacing: 10px;
+}
+.login-btn {
+  background: #ffd700;
+  color: #1e3c72;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.error-msg { color: #ff6b6b; margin-top: 15px; display: none; }
+.debug-info {
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 10px;
+  margin: 20px 0;
+  font-size: 12px;
+  text-align: right;
+  direction: rtl;
+}
+header { text-align: center; padding: 20px 0; }
+header h1 { font-size: 2em; margin-bottom: 10px; }
+.manager-badge {
+  background: #ffd700;
+  color: #1e3c72;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 10px;
+}
+.logout-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.weeks-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 25px 0;
+}
+.week-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.week-btn.active {
+  background: #ffd700;
+  color: #1e3c72;
+  border-color: #ffd700;
+}
+.supervisors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+.supervisor-card {
+  background: #fff;
+  color: #333;
+  border-radius: 25px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.card-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+.card-header h3 { color: #1e3c72; font-size: 1.5em; }
+.week-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+.stat-box { text-align: center; padding: 15px 10px; border-radius: 15px; background: #f8f9fa; }
+.stat-box.total { background: #e3f2fd; color: #1565c0; }
+.stat-box.pending { background: #fff3e0; color: #ef6c00; }
+.stat-box.done { background: #e8f5e9; color: #2e7d32; }
+.stat-number { font-size: 2em; font-weight: bold; display: block; }
+.notes-section {
+  background: #f0f4ff;
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 15px;
+}
+.notes-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.whatsapp-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: rgba(255,255,255,0.8);
+}
+.spinner {
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid #ffd700;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="loginPage" class="login-page">
+    <div class="login-box">
+      <h2>🔐 تسجيل الدخول</h2>
+      <p style="margin-bottom: 20px; opacity: 0.9;">أدخل رقمك السري</p>
+      <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="••••">
+      <br>
+      <button onclick="login()" class="login-btn">دخول</button>
+      <p id="loginError" class="error-msg">رقم سري غير صحيح</p>
+    </div>
+  </div>
 
+  <div id="dashboardPage" style="display: none;">
+    <header>
+      <h1>📊 لوحة متابعة المشرفين</h1>
+      <div class="manager-badge" id="managerName"></div>
+      <br>
+      <button onclick="logout()" class="logout-btn">🚪 تسجيل خروج</button>
+    </header>
+
+    <div class="weeks-container" id="weeksContainer"></div>
+    
+    <div id="debugInfo" class="debug-info" style="display: none;"></div>
+    
+    <div id="loadingDiv" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>جاري تحميل البيانات...</p>
+    </div>
+    
+    <div class="supervisors-grid" id="supervisorsGrid"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbz9IXZF-FPMnRnLg8JDmevctSuBGUmJp0AWqYmPUKDk22ae5otk3DwubMiHjijZFIUIGw/exec";
+
+let appData = {
+  currentManager: null,
+  supervisors: [],
+  phones: {},
+  dashboardData: [],
+  currentWeek: 1
+};
+
+const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+function jsonpRequest(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const callbackId = 'cb_' + Date.now();
+    window[callbackId] = function(data) {
+      resolve(data);
+      delete window[callbackId];
+      if (script.parentNode) document.head.removeChild(script);
+    };
+    script.src = url + (url.indexOf('?') > -1 ? '&' : '?') + 'callback=' + callbackId;
+    script.onerror = () => reject(new Error('فشل الاتصال'));
+    document.head.appendChild(script);
+    setTimeout(() => {
+      if (window[callbackId]) {
+        reject(new Error('انتهى الوقت'));
+        delete window[callbackId];
+        if (script.parentNode) document.head.removeChild(script);
+      }
+    }, 20000);
+  });
+}
+
+async function login() {
+  const pin = document.getElementById('pinInput').value;
+  if (pin.length !== 4) {
+    showError('الرجاء إدخال 4 أرقام');
+    return;
+  }
+  
+  document.getElementById('loginError').style.display = 'none';
+  
+  try {
+    const result = await jsonpRequest(API_URL + "?action=verifyPin&pin=" + pin);
+    
+    if (result.success) {
+      appData.currentManager = result.manager;
+      appData.supervisors = result.supervisors || [];
+      appData.phones = result.phones || {};
+      
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboardPage').style.display = 'block';
+      document.getElementById('managerName').textContent = '👤 ' + result.manager;
+      
+      // عرض معلومات التشخيص
+      const debugDiv = document.getElementById('debugInfo');
+      debugDiv.style.display = 'block';
+      debugDiv.innerHTML = `
+        <strong>معلومات التشخيص:</strong><br>
+        المدير: ${result.manager}<br>
+        المشرفون المسموح لهم: ${appData.supervisors.join('، ')}<br>
+        عددهم: ${appData.supervisors.length}
+      `;
+      
+      renderWeeks();
+      loadDashboard();
+    } else {
+      showError(result.error || 'رقم سري غير صحيح');
+    }
+  } catch (err) {
+    showError('فشل الاتصال: ' + err.message);
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function logout() {
+  location.reload();
+}
+
+function renderWeeks() {
+  const container = document.getElementById('weeksContainer');
+  container.innerHTML = '';
+  
+  ALL_WEEKS.forEach(week => {
+    const btn = document.createElement('button');
+    btn.className = 'week-btn' + (week === appData.currentWeek ? ' active' : '');
+    btn.textContent = week;
+    btn.onclick = () => {
+      appData.currentWeek = week;
+      renderWeeks();
+      renderSupervisors();
+    };
+    container.appendChild(btn);
+  });
+}
+
+async function loadDashboard() {
+  document.getElementById('loadingDiv').style.display = 'block';
+  
+  try {
+    const data = await jsonpRequest(API_URL + "?action=dashboard");
+    appData.dashboardData = data || [];
+    
+    // تحديث معلومات التشخيص
+    const debugDiv = document.getElementById('debugInfo');
+    const sampleData = appData.dashboardData.slice(0, 3).map(row => 
+      `صف: [${row.join(' | ')}]`
+    ).join('<br>');
+    
+    debugDiv.innerHTML += `<br><br><strong>عينة من Dashboard (أول 3 صفوف):</strong><br>${sampleData}<br>إجمالي الصفوف: ${appData.dashboardData.length}`;
+    
+    renderSupervisors();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('debugInfo').innerHTML += `<br><br><strong>خطأ:</strong> ${err.message}`;
+  } finally {
+    document.getElementById('loadingDiv').style.display = 'none';
+  }
+}
+
+function renderSupervisors() {
+  const container = document.getElementById('supervisorsGrid');
+  container.innerHTML = '';
+  
+  // تصفية البيانات
+  const weekData = appData.dashboardData.filter(row => {
+    const weekText = row[0] ? row[0].toString() : '';
+    const weekNum = extractWeekNumber(weekText);
+    const supervisorName = row[1] ? row[1].toString().trim() : '';
+    
+    const isMatch = weekNum === appData.currentWeek && appData.supervisors.includes(supervisorName);
+    
+    // للتشخيص
+    if (weekNum === appData.currentWeek) {
+      console.log('فحص:', {weekText, weekNum, supervisorName, isIncluded: appData.supervisors.includes(supervisorName), isMatch});
+    }
+    
+    return isMatch;
+  });
+  
+  // تحديث التشخيص
+  const debugDiv = document.getElementById('debugInfo');
+  debugDiv.innerHTML += `<br><br><strong>الأسبوع المحدد:</strong> ${appData.currentWeek}<br><strong>البيانات المطابقة:</strong> ${weekData.length} صف`;
+  
+  if (weekData.length === 0) {
+    container.innerHTML = '<div class="loading" style="grid-column: 1/-1;">لا توجد بيانات لهذا الأسبوع</div>';
+    return;
+  }
+  
+  weekData.forEach((row, idx) => {
+    const supervisor = row[1];
+    const total = parseInt(row[2]) || 0;
+    const done = parseInt(row[3]) || 0;
+    const pending = total - done;
+    const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
+    const phone = appData.phones[supervisor] || '';
+    
+    const card = document.createElement('div');
+    card.className = 'supervisor-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <h3>👤 ${supervisor}</h3>
+        <span class="week-badge">الأسبوع ${appData.currentWeek}</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box total">
+          <span class="stat-number">${total}</span>
+          <div class="stat-label">📊 الكل</div>
+        </div>
+        <div class="stat-box pending">
+          <span class="stat-number">${pending}</span>
+          <div class="stat-label">⏳ جاري</div>
+        </div>
+        <div class="stat-box done">
+          <span class="stat-number">${done}</span>
+          <div class="stat-label">✅ تم</div>
+        </div>
+      </div>
+      <div style="margin: 15px 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span>نسبة الإنجاز</span>
+          <span>${percentage}%</span>
+        </div>
+        <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+          <div style="background: ${percentage >= 70 ? '#4caf50' : percentage >= 40 ? '#ff9800' : '#f44336'}; 
+                      height: 100%; width: ${percentage}%; border-radius: 10px;"></div>
+        </div>
+      </div>
+      <div class="notes-section">
+        <div style="font-weight: bold; color: #1e3c72; margin-bottom: 10px;">📝 ملاحظات</div>
+        <textarea class="notes-textarea" id="note-${idx}" placeholder="اكتب ملاحظتك هنا..."></textarea>
+        ${phone ? `<button class="whatsapp-btn" onclick="sendWhatsApp('${supervisor}', '${phone}', ${idx})">📱 إرسال عبر واتساب</button>` : '<p style="color: #999; text-align: center;">لا يوجد رقم جوال</p>'}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function extractWeekNumber(text) {
+  if (!text) return null;
+  const match = text.toString().match(/(\d+)/);
+  if (match) return parseInt(match[1]);
+  
+  const arabicWeeks = {
+    'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
+    'الثاني': 2, 'ثاني': 2,
+    'الثالث': 3, 'ثالث': 3,
+    'الرابع': 4, 'رابع': 4,
+    'الخامس': 5, 'خامس': 5,
+    'السادس': 6, 'سادس': 6,
+    'السابع': 7, 'سابع': 7,
+    'الثامن': 8, 'ثامن': 8,
+    'التاسع': 9, 'تاسع': 9,
+    'العاشر': 10, 'عاشر': 10,
+    'الحادي عشر': 11, 'الثاني عشر': 12, 'الثالث عشر': 13,
+    'الرابع عشر': 14, 'الخامس عشر': 15
+  };
+  
+  for (let key in arabicWeeks) {
+    if (text.includes(key)) return arabicWeeks[key];
+  }
+  return null;
+}
+
+function sendWhatsApp(supervisor, phone, noteIdx) {
+  const note = document.getElementById(`note-${noteIdx}`).value;
+  if (!note.trim()) {
+    alert('الرجاء كتابة ملاحظة أولاً');
+    return;
+  }
+  
+  const message = `مرحباً ${supervisor}،\n\nملاحظة من ${appData.currentManager}:\n${note}\n\n📊 لوحة متابعة المشرفين`;
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+document.getElementById('pinInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>
