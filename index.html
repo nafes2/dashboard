@@ -14,7 +14,6 @@ body {
   padding: 20px;
 }
 .container { max-width: 1200px; margin: 0 auto; }
-
 .login-page {
   display: flex;
   flex-direction: column;
@@ -55,12 +54,7 @@ body {
   transition: all 0.3s;
 }
 .login-btn:hover { transform: scale(1.05); }
-.error-msg {
-  color: #ff6b6b;
-  margin-top: 15px;
-  display: none;
-}
-
+.error-msg { color: #ff6b6b; margin-top: 15px; display: none; }
 header { text-align: center; padding: 20px 0; }
 header h1 { font-size: 2em; margin-bottom: 10px; }
 .manager-badge {
@@ -82,7 +76,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   margin-top: 10px;
   font-size: 14px;
 }
-
 .weeks-container {
   display: flex;
   gap: 10px;
@@ -102,10 +95,7 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   cursor: pointer;
   transition: all 0.3s;
 }
-.week-btn:hover { 
-  background: rgba(255,255,255,0.3); 
-  transform: scale(1.05);
-}
+.week-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
 .week-btn.active {
   background: #ffd700;
   color: #1e3c72;
@@ -113,16 +103,8 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   transform: scale(1.1);
   box-shadow: 0 0 20px rgba(255,215,0,0.5);
 }
-.week-btn.empty { 
-  opacity: 0.3; 
-  cursor: default;
-  background: rgba(255,255,255,0.05);
-}
-.week-btn.empty:hover {
-  transform: none;
-  background: rgba(255,255,255,0.05);
-}
-
+.week-btn.empty { opacity: 0.3; cursor: default; background: rgba(255,255,255,0.05); }
+.week-btn.empty:hover { transform: none; background: rgba(255,255,255,0.05); }
 .supervisors-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -149,11 +131,7 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   padding-bottom: 15px;
   border-bottom: 2px solid #f0f0f0;
 }
-.card-header h3 { 
-  color: #1e3c72; 
-  font-size: 1.5em; 
-  margin-bottom: 10px;
-}
+.card-header h3 { color: #1e3c72; font-size: 1.5em; margin-bottom: 10px; }
 .week-badge {
   display: inline-block;
   background: #e3f2fd;
@@ -163,25 +141,18 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   font-size: 0.9em;
   font-weight: 600;
 }
-
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin: 20px 0;
 }
-.stat-box { 
-  text-align: center; 
-  padding: 15px 10px; 
-  border-radius: 15px;
-  background: #f8f9fa;
-}
+.stat-box { text-align: center; padding: 15px 10px; border-radius: 15px; background: #f8f9fa; }
 .stat-box.total { background: #e3f2fd; color: #1565c0; }
 .stat-box.pending { background: #fff3e0; color: #ef6c00; }
 .stat-box.done { background: #e8f5e9; color: #2e7d32; }
 .stat-number { font-size: 2em; font-weight: bold; display: block; }
 .stat-label { font-size: 0.85em; margin-top: 5px; font-weight: 600; }
-
 .progress-section {
   margin: 20px 0;
   padding: 15px;
@@ -216,7 +187,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 .progress-fill.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
 .progress-fill.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
 .progress-fill.low { background: linear-gradient(90deg, #f44336, #ef5350); }
-
 .notes-section {
   background: #f0f4ff;
   border-radius: 12px;
@@ -258,7 +228,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   justify-content: center;
   gap: 10px;
 }
-
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -281,7 +250,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   cursor: pointer;
   margin-right: 10px;
 }
-
 @media (max-width: 768px) {
   header h1 { font-size: 1.5em; }
   .supervisors-grid { grid-template-columns: 1fr; }
@@ -291,7 +259,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 </head>
 <body>
 <div class="container">
-  
   <div id="loginPage" class="login-page">
     <div class="login-box">
       <h2>🔐 تسجيل الدخول</h2>
@@ -313,7 +280,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
     </header>
 
     <div class="weeks-container" id="weeksContainer"></div>
-
     <div class="supervisors-grid" id="supervisorsGrid"></div>
 
     <div class="last-update" id="footer" style="display:none;">
@@ -321,7 +287,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
       <button class="refresh-btn" onclick="loadDashboardData()">🔄 تحديث</button>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -345,7 +310,6 @@ let appData = {
   availableWeeks: []
 };
 
-// دالة JSONP للاتصال بالسكربت
 function jsonpRequest(url) {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -402,7 +366,6 @@ async function login() {
     } else {
       showLoginError(result.error || 'رقم سري غير صحيح');
     }
-    
   } catch (err) {
     showLoginError('فشل الاتصال بالخادم');
     console.error(err);
@@ -444,32 +407,60 @@ function renderWeeksInitial() {
   });
 }
 
+// دالة مقارنة مرنة للأسماء
+function isSameSupervisor(name1, name2) {
+  const n1 = normalizeName(name1);
+  const n2 = normalizeName(name2);
+  
+  // مطابقة تامة
+  if (n1 === n2) return true;
+  
+  // أحدهما يحتوي على الآخر
+  if (n1.includes(n2) || n2.includes(n1)) return true;
+  
+  // مطابقة الكلمات المهمة (أكثر من 3 أحرف)
+  const words1 = n1.split(' ').filter(w => w.length > 3);
+  const words2 = n2.split(' ').filter(w => w.length > 3);
+  
+  return words1.some(w1 => words2.some(w2 => w1 === w2));
+}
+
+function normalizeName(name) {
+  if (!name) return '';
+  return name.toString()
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .toLowerCase();
+}
+
 async function loadDashboardData() {
   try {
-    // إرسال اسم المدير للحصول على بياناته فقط
-    const data = await jsonpRequest(API_URL + "?action=dashboard&manager=" + encodeURIComponent(appData.currentManager) + "&t=" + Date.now());
+    const data = await jsonpRequest(API_URL + "?action=dashboard&t=" + Date.now());
     
-    if (data && data.length > 0) {
-      // data[0] = العناوين (الصف 2 من Sheets)
-      // data[1+] = البيانات (من الصف 3)
+    if (data && data.length > 1) {
       const headers = data[0];
       const rows = [];
       
       for (let i = 1; i < data.length; i++) {
         let row = {};
         for (let j = 0; j < headers.length; j++) {
-          row[headers[j]] = data[i][j] ? data[i][j].toString() : "";
+          row[headers[j]] = data[i][j] !== undefined ? data[i][j].toString() : "";
         }
         rows.push(row);
       }
       
-      appData.dashboardData = rows;
+      // فلترة البيانات: فقط مشرفين هذا المدير
+      appData.dashboardData = rows.filter(row => {
+        const supervisorName = row['اسم المشرف'] || '';
+        return appData.mySupervisors.some(mySup => isSameSupervisor(supervisorName, mySup));
+      });
       
       // تحديد الأسابيع المتوفرة
       const availableWeeks = new Set();
       
-      rows.forEach(row => {
-        const weekText = row['الأسابيع'] || row['الأسبوع'] || '';
+      appData.dashboardData.forEach(row => {
+        const weekText = row['الأسابيع'] || '';
         const weekNum = weekTextToNumber(weekText);
         if (weekNum) availableWeeks.add(weekNum);
       });
@@ -521,16 +512,16 @@ function renderSupervisors() {
   if (appData.dashboardData.length === 0) {
     container.innerHTML = `
       <div class="empty-state" style="grid-column: 1/-1;">
-        <div style="font-size: 4em; margin-bottom: 20px;">⏳</div>
-        <h3>جاري تحميل البيانات...</h3>
+        <div style="font-size: 4em; margin-bottom: 20px;">📭</div>
+        <h3>لا توجد بيانات</h3>
+        <p>المشرفين: ${appData.mySupervisors.join('، ')}</p>
       </div>
     `;
     return;
   }
   
-  // فلترة البيانات حسب الأسبوع المحدد
   const filteredData = appData.dashboardData.filter(row => {
-    const weekText = row['الأسابيع'] || row['الأسبوع'] || '';
+    const weekText = row['الأسابيع'] || '';
     const rowWeek = weekTextToNumber(weekText);
     return rowWeek === appData.currentWeek;
   });
@@ -548,7 +539,7 @@ function renderSupervisors() {
   
   filteredData.forEach((row, index) => {
     const supervisor = row['اسم المشرف'] || 'غير معروف';
-    const weekDisplay = row['الأسابيع'] || row['الأسبوع'] || '';
+    const weekDisplay = row['الأسابيع'] || '';
     const totalCount = parseInt(row['عدد المؤشرات']) || 0;
     const doneCount = parseInt(row['تم التنفيذ']) || 0;
     const pendingCount = parseInt(row['جار التنفيذ']) || 0;
@@ -589,7 +580,7 @@ function renderSupervisors() {
           <span>${percentage.toFixed(1)}%</span>
         </div>
         <div class="progress-bar">
-          <div class="progress-fill ${progressClass}" style="width: ${percentage}%">
+          <div class="progress-fill ${progressClass}" style="width: ${Math.max(percentage, 3)}%">
             ${percentage > 0 ? percentage.toFixed(0) + '%' : ''}
           </div>
         </div>
@@ -609,7 +600,14 @@ function renderSupervisors() {
 }
 
 function sendWhatsApp(supervisorName) {
-  const phone = appData.supervisorPhones[supervisorName];
+  // البحث عن الرقم بشكل مرن
+  let phone = null;
+  for (let [name, num] of Object.entries(appData.supervisorPhones)) {
+    if (isSameSupervisor(name, supervisorName)) {
+      phone = num;
+      break;
+    }
+  }
   
   if (!phone) {
     alert('رقم الجوال غير متوفر لهذا المشرف');
