@@ -329,7 +329,7 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwfPCzvRaCqDsAWS6Lv4vQ5kEi8tfTui68Un35rA94sj0Wq7DDi3-EISD8nMItKmWfUkw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbws5LWuTKwue6IRCf2n16TBzsCCpaO1y21K8c8ybZwg3jBLc4LXcdbLzgTtf7EMLChVXw/exec";
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
@@ -349,6 +349,37 @@ let appData = {
   availableWeeks: []
 };
 
+// دالة JSONP للاتصال بالسكربت
+function jsonpRequest(url, callbackName) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const callbackId = 'callback_' + Date.now();
+    
+    window[callbackId] = function(data) {
+      resolve(data);
+      delete window[callbackId];
+      document.head.removeChild(script);
+    };
+    
+    script.src = url + '&callback=' + callbackId;
+    script.onerror = () => {
+      reject(new Error('فشل تحميل السكربت'));
+      delete window[callbackId];
+    };
+    
+    document.head.appendChild(script);
+    
+    // timeout بعد 10 ثواني
+    setTimeout(() => {
+      if (window[callbackId]) {
+        reject(new Error('انتهى الوقت'));
+        delete window[callbackId];
+        document.head.removeChild(script);
+      }
+    }, 10000);
+  });
+}
+
 async function login() {
   const pin = document.getElementById('pinInput').value;
   if (pin.length !== 4) {
@@ -359,8 +390,7 @@ async function login() {
   document.getElementById('loginError').style.display = 'none';
   
   try {
-    const response = await fetch(API_URL + "?action=verifyPin&pin=" + pin + "&t=" + Date.now());
-    const result = await response.json();
+    const result = await jsonpRequest(API_URL + "?action=verifyPin&pin=" + pin + "&t=" + Date.now());
     
     if (result.success) {
       appData.currentManager = result.manager;
@@ -421,8 +451,7 @@ function renderWeeksInitial() {
 
 async function loadDashboardData() {
   try {
-    const response = await fetch(API_URL + "?action=dashboard&t=" + Date.now());
-    const data = await response.json();
+    const data = await jsonpRequest(API_URL + "?action=dashboard&t=" + Date.now());
     
     if (data && data.length > 0) {
       const headers = data[0];
