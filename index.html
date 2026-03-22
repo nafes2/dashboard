@@ -250,29 +250,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   cursor: pointer;
   margin-right: 10px;
 }
-.debug-info {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 10px;
-  padding: 15px;
-  margin: 20px 0;
-  font-size: 0.9em;
-  text-align: right;
-  direction: rtl;
-}
-.debug-info h4 {
-  color: #ffd700;
-  margin-bottom: 10px;
-}
-.debug-info pre {
-  background: rgba(0,0,0,0.3);
-  padding: 10px;
-  border-radius: 5px;
-  overflow-x: auto;
-  font-size: 0.8em;
-  text-align: left;
-  direction: ltr;
-}
 @media (max-width: 768px) {
   header h1 { font-size: 1.5em; }
   .supervisors-grid { grid-template-columns: 1fr; }
@@ -303,13 +280,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
     </header>
 
     <div class="weeks-container" id="weeksContainer"></div>
-    
-    <!-- معلومات التتبع للأخطاء -->
-    <div id="debugInfo" class="debug-info" style="display: none;">
-      <h4>🔍 معلومات التتبع:</h4>
-      <div id="debugContent"></div>
-    </div>
-    
     <div class="supervisors-grid" id="supervisorsGrid"></div>
 
     <div class="last-update" id="footer" style="display:none;">
@@ -407,7 +377,7 @@ async function login() {
       showLoginError(result.error || 'رقم سري غير صحيح');
     }
   } catch (err) {
-    showLoginError('فشل الاتصال بالخادم');
+    showLoginError('فشل الاتصال بالخادم: ' + err.message);
   }
 }
 
@@ -434,7 +404,6 @@ function logout() {
   document.getElementById('supervisorsGrid').innerHTML = '';
   document.getElementById('weeksContainer').innerHTML = '';
   document.getElementById('footer').style.display = 'none';
-  document.getElementById('debugInfo').style.display = 'none';
 }
 
 function renderWeeksInitial() {
@@ -467,7 +436,6 @@ function extractSupervisorId(fullName) {
   if (!fullName) return '';
   const cleanName = fullName.toString().trim();
   const match = cleanName.match(/#(\d+)/);
-  console.log('Extracting ID from:', cleanName, 'Result:', match ? match[1] : 'none');
   return match ? match[1] : '';
 }
 
@@ -495,7 +463,7 @@ async function loadDashboardData() {
       console.log('All rows:', rows);
       
       const managerIds = appData.myIdList.map(id => id.toString());
-      console.log('Manager IDs (as strings):', managerIds);
+      console.log('Manager IDs:', managerIds);
       
       appData.dashboardData = rows.filter(row => {
         const supervisorName = getColumnValue(row, ['اسم المشرف', 'اسم_المشرف', 'المشرف']);
@@ -507,21 +475,11 @@ async function loadDashboardData() {
       
       console.log('Filtered data:', appData.dashboardData);
       
-      // عرض معلومات التتبع
-      showDebugInfo({
-        'عدد الصفوف الكلي': rows.length,
-        'عدد الصفوف المفلترة': appData.dashboardData.length,
-        'معرفات المدير': appData.myIdList.join(', '),
-        'المشرفون المسجلة': appData.mySupervisors.join(', '),
-        'العناوين': headers.join(', ')
-      });
-      
       const availableWeeks = new Set();
       
       appData.dashboardData.forEach(row => {
         const weekText = getColumnValue(row, ['الأسابيع', 'الاسابيع', 'أسابيع', 'الاسبوع', 'أسبوع']);
         const weekNum = weekTextToNumber(weekText);
-        console.log('Week text:', weekText, 'Number:', weekNum);
         if (weekNum) availableWeeks.add(weekNum);
       });
       
@@ -536,32 +494,11 @@ async function loadDashboardData() {
       renderSupervisors();
       updateTimestamp();
       document.getElementById('footer').style.display = 'block';
-    } else {
-      showDebugInfo({
-        'خطأ': 'لا توجد بيانات كافية',
-        'عدد الصفوف': data ? data.length : 0
-      });
     }
   } catch (err) {
     console.error('Error:', err);
-    showDebugInfo({
-      'خطأ': err.message,
-      'تفاصيل': 'فشل في تحميل البيانات من الخادم'
-    });
+    alert('فشل تحميل البيانات: ' + err.message);
   }
-}
-
-function showDebugInfo(info) {
-  const debugDiv = document.getElementById('debugInfo');
-  const contentDiv = document.getElementById('debugContent');
-  
-  let html = '';
-  for (let [key, value] of Object.entries(info)) {
-    html += `<div style="margin-bottom: 10px;"><strong>${key}:</strong> ${value}</div>`;
-  }
-  
-  contentDiv.innerHTML = html;
-  debugDiv.style.display = 'block';
 }
 
 function renderWeeks() {
@@ -602,9 +539,6 @@ function renderSupervisors() {
         <h3>لا توجد بيانات</h3>
         <p>المعرفات: ${appData.myIdList.join('، ')}</p>
         <p>المشرفون: ${appData.mySupervisors.join('، ')}</p>
-        <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.8;">
-          تأكد من أن أسماء المشرفين في ورقة Dashboard تحتوي على المعرف الصحيح (مثال: عبدالعزيز#1)
-        </p>
       </div>
     `;
     return;
