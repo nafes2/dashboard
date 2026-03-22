@@ -153,10 +153,6 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
   color: #1e3c72; 
   font-size: 1.5em; 
   margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 .week-badge {
   display: inline-block;
@@ -329,7 +325,7 @@ header h1 { font-size: 2em; margin-bottom: 10px; }
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbws5LWuTKwue6IRCf2n16TBzsCCpaO1y21K8c8ybZwg3jBLc4LXcdbLzgTtf7EMLChVXw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyOKRGIlMyMjFf8c3Scha6qnI1bPMaZIwhzC4YD5mlCxRNjr-lC_IhZ-T9rRbqQ_MuKCw/exec";
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
@@ -350,7 +346,7 @@ let appData = {
 };
 
 // دالة JSONP للاتصال بالسكربت
-function jsonpRequest(url, callbackName) {
+function jsonpRequest(url) {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     const callbackId = 'callback_' + Date.now();
@@ -358,7 +354,7 @@ function jsonpRequest(url, callbackName) {
     window[callbackId] = function(data) {
       resolve(data);
       delete window[callbackId];
-      document.head.removeChild(script);
+      if (script.parentNode) document.head.removeChild(script);
     };
     
     script.src = url + '&callback=' + callbackId;
@@ -369,12 +365,11 @@ function jsonpRequest(url, callbackName) {
     
     document.head.appendChild(script);
     
-    // timeout بعد 10 ثواني
     setTimeout(() => {
       if (window[callbackId]) {
         reject(new Error('انتهى الوقت'));
         delete window[callbackId];
-        document.head.removeChild(script);
+        if (script.parentNode) document.head.removeChild(script);
       }
     }, 10000);
   });
@@ -451,9 +446,12 @@ function renderWeeksInitial() {
 
 async function loadDashboardData() {
   try {
-    const data = await jsonpRequest(API_URL + "?action=dashboard&t=" + Date.now());
+    // إرسال اسم المدير للحصول على بياناته فقط
+    const data = await jsonpRequest(API_URL + "?action=dashboard&manager=" + encodeURIComponent(appData.currentManager) + "&t=" + Date.now());
     
     if (data && data.length > 0) {
+      // data[0] = العناوين (الصف 2 من Sheets)
+      // data[1+] = البيانات (من الصف 3)
       const headers = data[0];
       const rows = [];
       
@@ -467,17 +465,13 @@ async function loadDashboardData() {
       
       appData.dashboardData = rows;
       
-      // تحديد الأسابيع المتوفرة للمدير الحالي فقط
+      // تحديد الأسابيع المتوفرة
       const availableWeeks = new Set();
       
       rows.forEach(row => {
-        const supervisorName = row['اسم المشرف'] || '';
-        // التحقق مما إذا كان هذا المشرف تابعاً للمدير الحالي
-        if (isMySupervisor(supervisorName)) {
-          const weekText = row['الأسبوع'] || '';
-          const weekNum = weekTextToNumber(weekText);
-          if (weekNum) availableWeeks.add(weekNum);
-        }
+        const weekText = row['الأسابيع'] || row['الأسبوع'] || '';
+        const weekNum = weekTextToNumber(weekText);
+        if (weekNum) availableWeeks.add(weekNum);
       });
       
       appData.availableWeeks = Array.from(availableWeeks).sort((a,b) => a-b);
@@ -494,36 +488,6 @@ async function loadDashboardData() {
   } catch (err) {
     console.error('Error:', err);
   }
-}
-
-// التحقق مما إذا كان المشرف تابعاً للمدير الحالي
-function isMySupervisor(supervisorName) {
-  // مقارنة مرنة: هل الاسم يتطابق مع أي من مشرفيني؟
-  return appData.mySupervisors.some(mySup => {
-    const s1 = normalizeName(supervisorName);
-    const s2 = normalizeName(mySup);
-    
-    // مطابقة تامة
-    if (s1 === s2) return true;
-    
-    // أحدهما يحتوي على الآخر
-    if (s1.includes(s2) || s2.includes(s1)) return true;
-    
-    // مطابقة الكلمات الطويلة (> 3 أحرف)
-    const words1 = s1.split(' ').filter(w => w.length > 3);
-    const words2 = s2.split(' ').filter(w => w.length > 3);
-    
-    return words1.some(w1 => words2.some(w2 => w1 === w2));
-  });
-}
-
-function normalizeName(name) {
-  if (!name) return '';
-  return name.toString()
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[\u064B-\u065F\u0670]/g, '') // إزالة التشكيل
-    .toLowerCase();
 }
 
 function renderWeeks() {
@@ -554,7 +518,7 @@ function renderSupervisors() {
   const container = document.getElementById('supervisorsGrid');
   container.innerHTML = '';
   
-  if (!appData.dashboardData.length) {
+  if (appData.dashboardData.length === 0) {
     container.innerHTML = `
       <div class="empty-state" style="grid-column: 1/-1;">
         <div style="font-size: 4em; margin-bottom: 20px;">⏳</div>
@@ -564,17 +528,10 @@ function renderSupervisors() {
     return;
   }
   
-  // فلترة البيانات: فقط مشرفين المدير الحالي + الأسبوع المحدد
+  // فلترة البيانات حسب الأسبوع المحدد
   const filteredData = appData.dashboardData.filter(row => {
-    const supervisorName = row['اسم المشرف'] || '';
-    
-    // التحقق من أن المشرف تابع للمدير الحالي
-    if (!isMySupervisor(supervisorName)) return false;
-    
-    // التحقق من الأسبوع
-    const weekText = row['الأسبوع'] || '';
+    const weekText = row['الأسابيع'] || row['الأسبوع'] || '';
     const rowWeek = weekTextToNumber(weekText);
-    
     return rowWeek === appData.currentWeek;
   });
   
@@ -584,9 +541,6 @@ function renderSupervisors() {
         <div style="font-size: 4em; margin-bottom: 20px;">📭</div>
         <h3>لا توجد بيانات لهذا الأسبوع</h3>
         <p>لم يتم إدخال بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</p>
-        <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">
-          المشرفين التابعين لك: ${appData.mySupervisors.join('، ')}
-        </p>
       </div>
     `;
     return;
@@ -594,12 +548,12 @@ function renderSupervisors() {
   
   filteredData.forEach((row, index) => {
     const supervisor = row['اسم المشرف'] || 'غير معروف';
-    const weekDisplay = row['الأسبوع'] || '';
+    const weekDisplay = row['الأسابيع'] || row['الأسبوع'] || '';
     const totalCount = parseInt(row['عدد المؤشرات']) || 0;
     const doneCount = parseInt(row['تم التنفيذ']) || 0;
     const pendingCount = parseInt(row['جار التنفيذ']) || 0;
     const percentageText = row['نسبة الإنجاز الأسبوعي'] || '0%';
-    const percentage = parseFloat(percentageText) || 0;
+    const percentage = parseFloat(percentageText.toString().replace('%', '')) || 0;
     
     let progressClass = 'low';
     if (percentage >= 70) progressClass = 'high';
@@ -655,14 +609,7 @@ function renderSupervisors() {
 }
 
 function sendWhatsApp(supervisorName) {
-  let phone = null;
-  
-  for (let [name, num] of Object.entries(appData.supervisorPhones)) {
-    if (isMySupervisor(name) && isMySupervisor(supervisorName)) {
-      phone = num;
-      break;
-    }
-  }
+  const phone = appData.supervisorPhones[supervisorName];
   
   if (!phone) {
     alert('رقم الجوال غير متوفر لهذا المشرف');
@@ -690,31 +637,28 @@ function sendWhatsApp(supervisorName) {
   window.open(whatsappUrl, '_blank');
 }
 
-// التعامل مع "الأسبوع الأول" و"الأسبوع الثاني"...
 function weekTextToNumber(text) {
   if (!text) return null;
   const t = text.toString().trim();
   
-  // إذا كان رقم مباشر
   const num = parseInt(t);
   if (!isNaN(num) && num >= 1 && num <= 15) return num;
   
-  // البحث عن "الأسبوع" + الرقم بالكامل
-  if (t.includes("الخامس عشر") || t.includes("15")) return 15;
-  if (t.includes("الرابع عشر") || t.includes("14")) return 14;
-  if (t.includes("الثالث عشر") || t.includes("13")) return 13;
-  if (t.includes("الثاني عشر") || t.includes("12")) return 12;
-  if (t.includes("الحادي عشر") || t.includes("11")) return 11;
-  if (t.includes("العاشر") || t.includes("10")) return 10;
-  if (t.includes("التاسع") || t.includes("9")) return 9;
-  if (t.includes("الثامن") || t.includes("8")) return 8;
-  if (t.includes("السابع") || t.includes("7")) return 7;
-  if (t.includes("السادس") || t.includes("6")) return 6;
-  if (t.includes("الخامس") || t.includes("5")) return 5;
-  if (t.includes("الرابع") || t.includes("4")) return 4;
-  if (t.includes("الثالث") || t.includes("3")) return 3;
-  if (t.includes("الثاني") || t.includes("2")) return 2;
-  if (t.includes("الأول") || t.includes("1")) return 1;
+  if (t.includes("خامس عشر") || t.includes("15")) return 15;
+  if (t.includes("رابع عشر") || t.includes("14")) return 14;
+  if (t.includes("ثالث عشر") || t.includes("13")) return 13;
+  if (t.includes("ثاني عشر") || t.includes("12")) return 12;
+  if (t.includes("حادي عشر") || t.includes("11")) return 11;
+  if (t.includes("عاشر") || t.includes("10")) return 10;
+  if (t.includes("تاسع") || t.includes("9")) return 9;
+  if (t.includes("ثامن") || t.includes("8")) return 8;
+  if (t.includes("سابع") || t.includes("7")) return 7;
+  if (t.includes("سادس") || t.includes("6")) return 6;
+  if (t.includes("خامس") || t.includes("5")) return 5;
+  if (t.includes("رابع") || t.includes("4")) return 4;
+  if (t.includes("ثالث") || t.includes("3")) return 3;
+  if (t.includes("ثاني") || t.includes("2")) return 2;
+  if (t.includes("أول") || t.includes("1")) return 1;
   
   return null;
 }
