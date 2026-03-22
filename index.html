@@ -329,6 +329,12 @@ function renderSupervisors() {
     const weekText = row[0] ? row[0].toString() : '';
     const weekNum = extractWeekNumber(weekText);
     const supervisorName = row[1] ? row[1].toString().trim() : '';
+    
+    // للتشخيص
+    if (weekNum === appData.currentWeek) {
+      console.log('Checking:', weekText, weekNum, supervisorName, 'Included:', appData.supervisors.includes(supervisorName));
+    }
+    
     return weekNum === appData.currentWeek && appData.supervisors.includes(supervisorName);
   });
   
@@ -388,9 +394,12 @@ function renderSupervisors() {
 
 function extractWeekNumber(text) {
   if (!text) return null;
+  
+  // البحث عن رقم في النص
   const match = text.toString().match(/(\d+)/);
   if (match) return parseInt(match[1]);
   
+  // تحويل الأرقام العربية
   const arabicWeeks = {
     'الأول': 1, 'الاول': 1, 'أول': 1, 'اول': 1,
     'الثاني': 2, 'ثاني': 2,
