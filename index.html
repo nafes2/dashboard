@@ -346,7 +346,9 @@ let appData = {
   supervisorPhones: {},
   dashboardData: [],
   currentWeek: 1,
-  availableWeeks: []
+  availableWeeks: [],
+  // قاموس: اسم المشرف -> المدير
+  supervisorToManager: {}
 };
 
 async function login() {
@@ -367,6 +369,12 @@ async function login() {
       appData.currentPin = pin;
       appData.mySupervisors = result.supervisors;
       appData.supervisorPhones = result.phones;
+      
+      // بناء قاموس: مشرف -> مدير
+      appData.supervisorToManager = {};
+      result.supervisors.forEach(sup => {
+        appData.supervisorToManager[sup] = result.manager;
+      });
       
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('dashboardPage').style.display = 'block';
@@ -395,6 +403,7 @@ function logout() {
   appData.currentPin = null;
   appData.mySupervisors = [];
   appData.supervisorPhones = {};
+  appData.supervisorToManager = {};
   appData.availableWeeks = [];
   document.getElementById('pinInput').value = '';
   document.getElementById('loginPage').style.display = 'flex';
@@ -442,8 +451,9 @@ async function loadDashboardData() {
       const availableWeeks = new Set();
       
       rows.forEach(row => {
-        // التحقق من أن هذا الصف يخص المدير الحالي
-        if (row['المدير'] === appData.currentManager) {
+        const supervisorName = row['اسم المشرف'] || '';
+        // التحقق مما إذا كان هذا المشرف تابعاً للمدير الحالي
+        if (isMySupervisor(supervisorName)) {
           const weekText = row['الأسبوع'] || '';
           const weekNum = weekTextToNumber(weekText);
           if (weekNum) availableWeeks.add(weekNum);
@@ -464,6 +474,36 @@ async function loadDashboardData() {
   } catch (err) {
     console.error('Error:', err);
   }
+}
+
+// التحقق مما إذا كان المشرف تابعاً للمدير الحالي
+function isMySupervisor(supervisorName) {
+  // مقارنة مرنة: هل الاسم يتطابق مع أي من مشرفيني؟
+  return appData.mySupervisors.some(mySup => {
+    const s1 = normalizeName(supervisorName);
+    const s2 = normalizeName(mySup);
+    
+    // مطابقة تامة
+    if (s1 === s2) return true;
+    
+    // أحدهما يحتوي على الآخر
+    if (s1.includes(s2) || s2.includes(s1)) return true;
+    
+    // مطابقة الكلمات الطويلة (> 3 أحرف)
+    const words1 = s1.split(' ').filter(w => w.length > 3);
+    const words2 = s2.split(' ').filter(w => w.length > 3);
+    
+    return words1.some(w1 => words2.some(w2 => w1 === w2));
+  });
+}
+
+function normalizeName(name) {
+  if (!name) return '';
+  return name.toString()
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[\u064B-\u065F\u0670]/g, '') // إزالة التشكيل
+    .toLowerCase();
 }
 
 function renderWeeks() {
@@ -504,10 +544,12 @@ function renderSupervisors() {
     return;
   }
   
-  // فلترة البيانات: فقط صفوف المدير الحالي + الأسبوع المحدد
+  // فلترة البيانات: فقط مشرفين المدير الحالي + الأسبوع المحدد
   const filteredData = appData.dashboardData.filter(row => {
-    // التحقق من المدير (العمود الجديد)
-    if (row['المدير'] !== appData.currentManager) return false;
+    const supervisorName = row['اسم المشرف'] || '';
+    
+    // التحقق من أن المشرف تابع للمدير الحالي
+    if (!isMySupervisor(supervisorName)) return false;
     
     // التحقق من الأسبوع
     const weekText = row['الأسبوع'] || '';
@@ -596,7 +638,7 @@ function sendWhatsApp(supervisorName) {
   let phone = null;
   
   for (let [name, num] of Object.entries(appData.supervisorPhones)) {
-    if (namesMatch(name, supervisorName)) {
+    if (isMySupervisor(name) && isMySupervisor(supervisorName)) {
       phone = num;
       break;
     }
@@ -626,35 +668,6 @@ function sendWhatsApp(supervisorName) {
   const message = `مرحباً ${supervisorName}،\n\nملاحظة من ${appData.currentManager}:\n${note}\n\n📊 لوحة متابعة المشرفين`;
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   window.open(whatsappUrl, '_blank');
-}
-
-function namesMatch(name1, name2) {
-  const n1 = normalizeName(name1);
-  const n2 = normalizeName(name2);
-  
-  if (n1 === n2) return true;
-  if (n1.includes(n2) || n2.includes(n1)) return true;
-  
-  const parts1 = n1.split(' ').filter(p => p.length > 2);
-  const parts2 = n2.split(' ').filter(p => p.length > 2);
-  
-  for (let p1 of parts1) {
-    for (let p2 of parts2) {
-      if (p1 === p2 && p1.length > 3) return true;
-      if (p1.includes(p2) || p2.includes(p1)) return true;
-    }
-  }
-  
-  return false;
-}
-
-function normalizeName(name) {
-  if (!name) return '';
-  return name.toString()
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[\u064B-\u065F\u0670]/g, '')
-    .toLowerCase();
 }
 
 function weekTextToNumber(text) {
