@@ -6,32 +6,27 @@
 <title>لوحة متابعة المشرفين</title>
 <style>
 * { box-sizing: border-box; margin:0; padding:0; }
-body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color:#fff; min-height:100vh; padding:20px; }
+body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; min-height:100vh; padding:20px; }
 .container { max-width:1200px; margin:0 auto; }
 header { text-align:center; padding:20px 0; }
 header h1 { font-size:2em; margin-bottom:10px; text-shadow:2px 2px 4px rgba(0,0,0,0.3); }
 header p { opacity:0.9; font-size:1.1em; }
 
-/* Login Section */
 .login-section {
   max-width:400px;
   margin:50px auto;
-  background:rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.15);
   padding:40px;
   border-radius:20px;
   backdrop-filter:blur(10px);
   text-align:center;
-  border:2px solid rgba(255,255,255,0.2);
+  border:1px solid rgba(255,255,255,0.3);
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);
 }
 .login-section h2 {
   margin-bottom:30px;
   font-size:1.8em;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
 }
-.lock-icon { font-size:1.5em; }
 .pin-input {
   width:100%;
   padding:15px;
@@ -49,7 +44,7 @@ header p { opacity:0.9; font-size:1.1em; }
   width:100%;
   padding:15px;
   background:#ffd700;
-  color:#1e3c72;
+  color:#333;
   border:none;
   border-radius:10px;
   font-size:18px;
@@ -60,16 +55,12 @@ header p { opacity:0.9; font-size:1.1em; }
 .login-btn:hover { transform:scale(1.02); box-shadow:0 4px 15px rgba(255,215,0,0.4); }
 .login-btn:disabled { opacity:0.7; cursor:not-allowed; }
 .error-message {
-  color:#ff5252;
+  color:#ff6b6b;
   margin-top:15px;
   font-weight:bold;
   display:none;
-  padding:10px;
-  background:rgba(255,82,82,0.1);
-  border-radius:8px;
 }
 
-/* Loading */
 .loading { text-align:center; padding:60px 20px; }
 .spinner {
   width:50px; height:50px;
@@ -81,7 +72,6 @@ header p { opacity:0.9; font-size:1.1em; }
 }
 @keyframes spin { to { transform:rotate(360deg); } }
 
-/* Dashboard */
 .dashboard { display:none; }
 .manager-bar {
   background:rgba(255,255,255,0.1);
@@ -91,201 +81,73 @@ header p { opacity:0.9; font-size:1.1em; }
   display:flex;
   justify-content:space-between;
   align-items:center;
-  flex-wrap:wrap;
 }
 .manager-name { font-size:1.5em; font-weight:bold; }
 .logout-btn {
-  background:#ff5252; color:#fff; border:none;
+  background:#ff6b6b; color:#fff; border:none;
   padding:10px 25px; border-radius:20px;
-  cursor:pointer; font-weight:bold; transition:all 0.3s;
+  cursor:pointer; font-weight:bold;
 }
-.logout-btn:hover { background:#ff1744; transform:scale(1.02); }
 
-/* Cards */
 .grid {
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns:repeat(auto-fill, minmax(350px, 1fr));
   gap:20px;
-  padding:10px;
 }
 .card {
   background:#fff; color:#333;
-  border-radius:20px;
-  padding:25px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.3);
-  transition:transform 0.3s ease, box-shadow 0.3s ease;
-  position:relative;
-  overflow:hidden;
+  border-radius:15px;
+  padding:20px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.2);
 }
-.card::before {
-  content:'';
-  position:absolute; top:0; left:0; right:0; height:5px;
-  background:linear-gradient(90deg, #4caf50, #8bc34a);
-}
-.card:hover { transform:translateY(-5px); box-shadow:0 15px 40px rgba(0,0,0,0.4); }
-
 .card-header {
   text-align:center;
-  margin-bottom:20px;
+  margin-bottom:15px;
   padding-bottom:15px;
-  border-bottom:2px solid #f0f0f0;
+  border-bottom:2px solid #eee;
 }
-.card-header h3 { color:#1e3c72; font-size:1.4em; margin-bottom:8px; }
+.card-header h3 { color:#667eea; font-size:1.3em; margin-bottom:5px; }
 .phone-badge {
   display:inline-block;
   background:#e3f2fd; color:#1976d2;
-  padding:6px 15px; border-radius:20px;
-  font-size:0.9em; font-weight:600;
+  padding:5px 12px; border-radius:15px;
+  font-size:0.85em;
   direction:ltr;
 }
 
-/* Stats Grid */
 .stats-grid {
   display:grid;
   grid-template-columns:repeat(3, 1fr);
   gap:10px;
-  margin:20px 0;
+  margin:15px 0;
 }
-.stat-box { text-align:center; padding:12px 8px; border-radius:12px; }
-.stat-box.done { background:#e8f5e9; color:#2e7d32; }
-.stat-box.pending { background:#fff3e0; color:#ef6c00; }
-.stat-box.not-done { background:#ffebee; color:#c62828; }
-.stat-number { font-size:1.6em; font-weight:bold; display:block; }
-.stat-label { font-size:0.8em; margin-top:5px; font-weight:600; }
+.stat-box { text-align:center; padding:10px; border-radius:10px; font-size:0.9em; }
+.stat-box.done { background:#d4edda; color:#155724; }
+.stat-box.pending { background:#fff3cd; color:#856404; }
+.stat-box.not-done { background:#f8d7da; color:#721c24; }
+.stat-number { font-size:1.5em; font-weight:bold; display:block; }
 
-/* Progress */
-.progress-section {
-  margin:20px 0;
-  padding:15px;
-  background:#f8f9fa;
-  border-radius:12px;
-}
-.progress-label {
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:6px;
-  font-weight:600; color:#555; font-size:0.95em;
-}
-.progress {
-  background:#e0e0e0;
-  height:28px;
-  border-radius:14px;
-  overflow:hidden;
-}
-.bar {
-  height:100%;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-weight:bold;
-  font-size:13px;
-  transition:width 1s ease;
-}
-.bar.high { background:linear-gradient(90deg, #4caf50, #66bb6a); }
-.bar.medium { background:linear-gradient(90deg, #ff9800, #ffb74d); }
-.bar.low { background:linear-gradient(90deg, #f44336, #ef5350); }
+.progress-section { margin:15px 0; }
+.progress-label { display:flex; justify-content:space-between; margin-bottom:5px; font-weight:600; }
+.progress { background:#e0e0e0; height:25px; border-radius:12px; overflow:hidden; }
+.bar { height:100%; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:12px; }
+.bar.high { background:linear-gradient(90deg, #28a745, #34ce57); }
+.bar.medium { background:linear-gradient(90deg, #ffc107, #ffdb58); }
+.bar.low { background:linear-gradient(90deg, #dc3545, #e74c3c); }
 
-/* Form Link Section */
-.form-section {
-  margin:20px 0;
-  padding:15px;
-  background:#f0f7ff;
-  border-radius:12px;
-  text-align:center;
-}
-.form-link-btn {
-  display:inline-block;
-  background:#2196f3;
-  color:#fff;
-  padding:12px 30px;
-  border-radius:25px;
-  text-decoration:none;
-  font-weight:600;
-  transition:all 0.3s;
-}
-.form-link-btn:hover {
-  background:#1976d2;
-  transform:scale(1.02);
-  box-shadow:0 4px 15px rgba(33,150,243,0.4);
-}
-.form-link-disabled {
-  display:inline-block;
-  background:#ccc;
-  color:#666;
-  padding:12px 30px;
-  border-radius:25px;
-  font-weight:600;
-  cursor:not-allowed;
-}
+.form-section { margin:15px 0; padding:15px; background:#f8f9fa; border-radius:10px; text-align:center; }
+.form-link-btn { display:inline-block; background:#007bff; color:#fff; padding:10px 25px; border-radius:20px; text-decoration:none; font-weight:600; }
+.form-link-disabled { display:inline-block; background:#ccc; color:#666; padding:10px 25px; border-radius:20px; }
 
-/* Notes Section */
-.notes-section {
-  margin:20px 0;
-  padding:15px;
-  background:#fff8e1;
-  border-radius:12px;
-}
-.notes-title {
-  font-weight:bold;
-  color:#f57c00;
-  margin-bottom:10px;
-  display:flex;
-  align-items:center;
-  gap:5px;
-}
-.notes-input {
-  width:100%;
-  padding:12px;
-  border:2px solid #ffe0b2;
-  border-radius:10px;
-  font-size:14px;
-  resize:vertical;
-  min-height:80px;
-  font-family:inherit;
-}
-.notes-input:focus {
-  outline:none;
-  border-color:#ff9800;
-}
-.send-btn {
-  width:100%;
-  margin-top:10px;
-  padding:12px;
-  background:#25d366;
-  color:#fff;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  font-weight:600;
-  cursor:pointer;
-  transition:all 0.3s;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-}
-.send-btn:hover {
-  background:#128c7e;
-  transform:scale(1.02);
-}
-.send-btn:disabled {
-  background:#ccc;
-  cursor:not-allowed;
-  transform:none;
-}
+.notes-section { margin:15px 0; padding:15px; background:#fff3cd; border-radius:10px; }
+.notes-title { font-weight:bold; color:#856404; margin-bottom:10px; }
+.notes-input { width:100%; padding:10px; border:1px solid #ffeaa7; border-radius:8px; min-height:60px; resize:vertical; }
+.send-btn { width:100%; margin-top:10px; padding:10px; background:#25d366; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
 
-/* Empty State */
-.empty-state {
-  text-align:center;
-  padding:60px 20px;
-  color:rgba(255,255,255,0.8);
-}
+.empty-state { text-align:center; padding:60px 20px; }
 .empty-state-icon { font-size:4em; margin-bottom:20px; }
 
 @media (max-width:768px) {
-  header h1 { font-size:1.5em; }
   .grid { grid-template-columns:1fr; }
   .login-section { padding:30px 20px; }
 }
@@ -298,9 +160,8 @@ header p { opacity:0.9; font-size:1.1em; }
     <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
   </header>
 
-  <!-- Login Section -->
   <div id="loginSection" class="login-section">
-    <h2><span class="lock-icon">🔐</span> تسجيل الدخول</h2>
+    <h2>🔐 تسجيل الدخول</h2>
     <input type="password" id="pinInput" class="pin-input" placeholder="أدخل الرقم السري" maxlength="10">
     <button onclick="login()" class="login-btn" id="loginBtn">دخول</button>
     <div id="loading" class="loading" style="display:none;">
@@ -310,7 +171,6 @@ header p { opacity:0.9; font-size:1.1em; }
     <p id="errorMessage" class="error-message"></p>
   </div>
 
-  <!-- Dashboard -->
   <div id="dashboard" class="dashboard">
     <div class="manager-bar">
       <div class="manager-name">👤 المدير: <span id="managerName"></span></div>
@@ -321,7 +181,7 @@ header p { opacity:0.9; font-size:1.1em; }
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxUb1ranq32n1WQUpczyvgqAvzk_gobfByRUzEFbgmNjJ28N9RFKoeWh6qzjNOIKWRssw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwB5qla_rDpo4oqhMW4n-7IJ49NZNS8Q-Xy8hnFsgMiw1B48XinMc-SRmvXge6oQhhCYQ/exec';
 
 function login() {
   var pin = document.getElementById('pinInput').value.trim();
@@ -427,9 +287,9 @@ function showDashboard(data) {
     html += '</div>';
 
     html += '<div class="stats-grid">';
-    html += '<div class="stat-box done"><span class="stat-number">' + done + '</span><div class="stat-label">✅ تم</div></div>';
-    html += '<div class="stat-box pending"><span class="stat-number">' + pending + '</span><div class="stat-label">⏳ جاري</div></div>';
-    html += '<div class="stat-box not-done"><span class="stat-number">' + notDone + '</span><div class="stat-label">❌ لم ينفذ</div></div>';
+    html += '<div class="stat-box done"><span class="stat-number">' + done + '</span><div>✅ تم</div></div>';
+    html += '<div class="stat-box pending"><span class="stat-number">' + pending + '</span><div>⏳ جاري</div></div>';
+    html += '<div class="stat-box not-done"><span class="stat-number">' + notDone + '</span><div>❌ لم ينفذ</div></div>';
     html += '</div>';
 
     html += '<div class="progress-section">';
@@ -437,7 +297,6 @@ function showDashboard(data) {
     html += '<div class="progress"><div class="bar ' + barClass + '" style="width:' + Math.max(percent, 3) + '%">' + percent + '%</div></div>';
     html += '</div>';
 
-    // Form Link Section
     html += '<div class="form-section">';
     if (done > 0 && formLink) {
       html += '<a href="' + formLink + '" target="_blank" class="form-link-btn">🔗 فتح الاستمارة</a>';
@@ -446,12 +305,11 @@ function showDashboard(data) {
     }
     html += '</div>';
 
-    // Notes Section
     if (cleanPhone) {
       html += '<div class="notes-section">';
-      html += '<div class="notes-title">💬 ملاحظات المدير (اختياري):</div>';
-      html += '<textarea class="notes-input" id="note_' + i + '" placeholder="اكتب ملاحظتك للمشرف هنا..."></textarea>';
-      html += '<button class="send-btn" onclick="sendWhatsApp(' + i + ', \'' + cleanPhone + \', \'' + name + \')">📤 إرسال ملاحظة عبر واتساب</button>';
+      html += '<div class="notes-title">💬 ملاحظات المدير:</div>';
+      html += '<textarea class="notes-input" id="note_' + i + '" placeholder="اكتب ملاحظتك هنا..."></textarea>';
+      html += '<button class="send-btn" onclick="sendWhatsApp(' + i + ', \'' + cleanPhone + \', \'' + name + \')">📤 إرسال عبر واتساب</button>';
       html += '</div>';
     }
 
