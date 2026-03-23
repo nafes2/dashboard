@@ -199,53 +199,41 @@ function login() {
   btn.style.display = 'none';
   loading.style.display = 'block';
 
+  // إنشاء script tag للـ JSONP
+  var script = document.createElement('script');
   var callbackName = 'cb_' + Date.now();
-
-  window[callbackName] = function(response) {
-    loading.style.display = 'none';
-    btn.style.display = 'block';
-
-    if (response && response.success) {
-      showDashboard(response);
+  
+  window[callbackName] = function(data) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'block';
+    
+    if (data.success) {
+      showDashboard(data);
     } else {
-      errorMsg.innerHTML = (response && response.error) ? response.error : 'رقم سري غير صحيح';
+      errorMsg.innerHTML = data.error || 'رقم سري غير صحيح';
       errorMsg.style.display = 'block';
     }
-    cleanup(callbackName);
+    
+    // حذف الـ script بعد الاستخدام
+    if (script.parentNode) {
+      document.head.removeChild(script);
+    }
+    delete window[callbackName];
   };
 
-  var script = document.createElement('script');
   script.src = SCRIPT_URL + '?action=verifyPin&pin=' + encodeURIComponent(pin) + '&callback=' + callbackName;
-
+  
   script.onerror = function() {
-    loading.style.display = 'none';
-    btn.style.display = 'block';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'block';
     errorMsg.innerHTML = '❌ خطأ في الاتصال بالخادم';
     errorMsg.style.display = 'block';
-    cleanup(callbackName);
+    if (script.parentNode) {
+      document.head.removeChild(script);
+    }
   };
-
-  setTimeout(function() {
-    if (window[callbackName]) {
-      loading.style.display = 'none';
-      btn.style.display = 'block';
-      errorMsg.innerHTML = '⏰ انتهى الوقت<br>السكربت لا يستجيب';
-      errorMsg.style.display = 'block';
-      cleanup(callbackName);
-    }
-  }, 15000);
-
+  
   document.head.appendChild(script);
-}
-
-function cleanup(name) {
-  delete window[name];
-  var scripts = document.getElementsByTagName('script');
-  for (var i = scripts.length - 1; i >= 0; i--) {
-    if (scripts[i].src && scripts[i].src.indexOf('callback=' + name) > -1) {
-      scripts[i].parentNode.removeChild(scripts[i]);
-    }
-  }
 }
 
 function showDashboard(data) {
@@ -293,56 +281,4 @@ function showDashboard(data) {
     html += '</div>';
 
     html += '<div class="progress-section">';
-    html += '<div class="progress-label"><span>نسبة الإنجاز</span><span>' + percent + '%</span></div>';
-    html += '<div class="progress"><div class="bar ' + barClass + '" style="width:' + Math.max(percent, 3) + '%">' + percent + '%</div></div>';
-    html += '</div>';
-
-    html += '<div class="form-section">';
-    if (done > 0 && formLink) {
-      html += '<a href="' + formLink + '" target="_blank" class="form-link-btn">🔗 فتح الاستمارة</a>';
-    } else {
-      html += '<span class="form-link-disabled">⏳ الاستمارة غير متاحة</span>';
-    }
-    html += '</div>';
-
-    if (cleanPhone) {
-      html += '<div class="notes-section">';
-      html += '<div class="notes-title">💬 ملاحظات المدير:</div>';
-      html += '<textarea class="notes-input" id="note_' + i + '" placeholder="اكتب ملاحظتك هنا..."></textarea>';
-      html += '<button class="send-btn" onclick="sendWhatsApp(' + i + ', \'' + cleanPhone + \', \'' + name + \')">📤 إرسال عبر واتساب</button>';
-      html += '</div>';
-    }
-
-    html += '</div>';
-  }
-
-  container.innerHTML = html;
-}
-
-function sendWhatsApp(index, phone, supervisorName) {
-  var noteText = document.getElementById('note_' + index).value.trim();
-  if (!noteText) {
-    alert('الرجاء كتابة ملاحظة قبل الإرسال');
-    return;
-  }
-
-  var managerName = document.getElementById('managerName').textContent;
-  var message = 'السلام عليكم ' + supervisorName + '\n\nملاحظة من المدير (' + managerName + '):\n' + noteText;
-  var whatsappUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
-  window.open(whatsappUrl, '_blank');
-}
-
-function logout() {
-  document.getElementById('pinInput').value = '';
-  document.getElementById('loginSection').style.display = 'block';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginBtn').style.display = 'block';
-}
-
-document.getElementById('pinInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') login();
-});
-</script>
-
-</body>
-</html>
+    html += '<div class="progress-label"><span>
