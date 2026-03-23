@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار API</title>
+<style>
+body { font-family: Arial; padding: 20px; direction: rtl; background: #1e3c72; color: white; }
+button { background: #ffd700; color: #1e3c72; padding: 15px 30px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin: 20px 0; }
+#result { background: rgba(0,0,0,0.5); padding: 15px; margin-top: 20px; border-radius: 10px; white-space: pre-wrap; font-family: monospace; font-size: 14px; max-height: 400px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<h2>🔧 اختبار الاتصال بالـ API</h2>
+<button onclick="testAPI()">▶️ اختبار الرابط</button>
+<div id="result">في انتظار الاختبار...</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyP4vivCGo_WZx_sHZA0n2_MuBcgFgvI96YM3pn_PcYR8mW_wmXv_fAc4y-4pJkxKyFRw/exec";
+
+function jsonpRequest(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const callbackId = 'cb_' + Date.now();
+    
+    window[callbackId] = function(data) {
+      resolve(data);
+      delete window[callbackId];
+      if (script.parentNode) document.head.removeChild(script);
+    };
+    
+    script.src = url + (url.indexOf('?') > -1 ? '&' : '?') + 'callback=' + callbackId;
+    script.onerror = () => reject(new Error('فشل التحميل'));
+    
+    document.head.appendChild(script);
+    
+    setTimeout(() => {
+      if (window[callbackId]) {
+        reject(new Error('انتهى الوقت'));
+        delete window[callbackId];
+        if (script.parentNode) document.head.removeChild(script);
+      }
+    }, 10000);
+  });
+}
+
+async function testAPI() {
+  document.getElementById('result').textContent = '⏳ جاري الاختبار...';
+  try {
+    const result = await jsonpRequest(API_URL + "?action=verifyPin&pin=1234&t=" + Date.now());
+    document.getElementById('result').textContent = '✅ النتيجة:\n\n' + JSON.stringify(result, null, 2);
+  } catch (err) {
+    document.getElementById('result').textContent = '❌ خطأ: ' + err.message;
+  }
+}
+</script>
+</body>
+</html>
