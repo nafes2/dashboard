@@ -3,14 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام متابعة المشرفين - تسجيل الدخول</title>
+    <title>نظام متابعة المشرفين</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -20,7 +15,6 @@
             align-items: center;
             padding: 20px;
         }
-
         .container {
             background: white;
             border-radius: 20px;
@@ -30,25 +24,9 @@
             max-width: 900px;
             direction: rtl;
         }
-
-        .login-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #eee;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
-
+        .login-section { text-align: center; margin-bottom: 30px; }
+        h1 { color: #333; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
         .pin-input {
             padding: 15px 20px;
             font-size: 18px;
@@ -57,14 +35,7 @@
             width: 250px;
             text-align: center;
             margin-bottom: 15px;
-            transition: border-color 0.3s;
         }
-
-        .pin-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -73,41 +44,23 @@
             font-size: 18px;
             border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
         .error-message {
             color: #e74c3c;
             margin-top: 10px;
             display: none;
         }
-
-        .dashboard {
-            display: none;
-        }
-
+        .dashboard { display: none; }
         .manager-info {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
-            border-right: 4px solid #667eea;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .manager-name {
-            font-size: 24px;
-            color: #333;
-            font-weight: bold;
-        }
-
+        .manager-name { font-size: 24px; color: #333; font-weight: bold; }
         .logout-btn {
             background: #e74c3c;
             color: white;
@@ -115,40 +68,23 @@
             padding: 10px 25px;
             border-radius: 20px;
             cursor: pointer;
-            transition: background 0.2s;
         }
-
-        .logout-btn:hover {
-            background: #c0392b;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
         }
-
         th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 15px;
             text-align: right;
-            font-weight: bold;
         }
-
         td {
             padding: 15px;
             text-align: right;
             border-bottom: 1px solid #eee;
         }
-
-        tr:hover {
-            background: #f8f9fa;
-        }
-
         .whatsapp-btn {
             display: inline-flex;
             align-items: center;
@@ -159,67 +95,26 @@
             padding: 8px 15px;
             border-radius: 20px;
             font-size: 14px;
-            transition: background 0.2s;
         }
-
-        .whatsapp-btn:hover {
-            background: #128c7e;
-        }
-
         .loading {
             display: none;
             text-align: center;
             color: #667eea;
             margin: 20px 0;
-            font-size: 18px;
-        }
-
-        .no-supervisors {
-            text-align: center;
-            color: #666;
-            padding: 40px;
-            font-size: 16px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .supervisor-card {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 15px;
-            border-right: 4px solid #667eea;
-        }
-
-        .supervisor-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .supervisor-phone {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- قسم تسجيل الدخول -->
         <div id="loginSection" class="login-section">
             <h1>🔐 نظام متابعة المشرفين</h1>
             <p class="subtitle">الرجاء إدخال الرقم السري للمدير</p>
             <input type="password" id="pinInput" class="pin-input" placeholder="أدخل الرقم السري" maxlength="10">
             <br>
             <button onclick="login()" class="btn">دخول</button>
-            <p id="errorMessage" class="error-message">رقم سري غير صحيح</p>
+            <p id="errorMessage" class="error-message">خطأ في الاتصال بالخادم</p>
         </div>
 
-        <!-- لوحة التحكم -->
         <div id="dashboard" class="dashboard">
             <div class="manager-info">
                 <div class="manager-name">👤 المدير: <span id="managerName"></span></div>
@@ -227,28 +122,20 @@
             </div>
 
             <h2 style="margin-bottom: 20px; color: #333;">📋 المشرفون التابعون</h2>
-
-            <div id="loading" class="loading">⏳ جاري تحميل البيانات...</div>
-
-            <div id="supervisorsContainer">
-                <!-- هنا ستظهر بيانات المشرفين -->
-            </div>
+            <div id="loading" class="loading">⏳ جاري التحميل...</div>
+            <div id="supervisorsContainer"></div>
         </div>
     </div>
 
     <script>
         // ============================================
-        // إعدادات الاتصال - عدل هذا الرابط فقط
+        // ضع رابط السكربت هنا
         // ============================================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtvnADs0q9HDZpq6X6Gv6yrDr62ASIrS5LkUIyxfqR20V0oNuwnVU2YzR12iy-T58Mag/exec'; // <-- ضع رابط السكربت هنا
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyisku0sGE.../exec';
 
-        let currentCallback = null;
-
-        // دالة تسجيل الدخول باستخدام JSONP
         function login() {
             const pin = document.getElementById('pinInput').value.trim();
             const errorMsg = document.getElementById('errorMessage');
-            const loading = document.getElementById('loading');
 
             if (!pin) {
                 errorMsg.textContent = 'الرجاء إدخال الرقم السري';
@@ -256,48 +143,59 @@
                 return;
             }
 
-            loading.style.display = 'block';
             errorMsg.style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
 
-            // إنشاء اسم دالة عشوائية للـ JSONP
-            const callbackName = 'callback_' + Date.now();
+            // إنشاء callback فريد
+            const callbackName = 'jsonpCallback_' + Date.now();
 
-            // تخزين الدالة للاستخدام لاحقاً
-            window[callbackName] = function(data) {
-                console.log('JSONP Response:', data);
+            // تعريف الدالة العامة
+            window[callbackName] = function(response) {
+                console.log('Response:', response);
 
-                if (data.success) {
-                    showDashboard(data);
+                if (response.success) {
+                    showDashboard(response);
                 } else {
-                    errorMsg.textContent = data.error || 'رقم سري غير صحيح';
+                    errorMsg.textContent = response.error || 'رقم سري غير صحيح';
                     errorMsg.style.display = 'block';
                 }
 
-                loading.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
 
                 // تنظيف
-                delete window[callbackName];
-                const script = document.getElementById('jsonp_' + callbackName);
-                if (script) script.remove();
+                cleanup(callbackName);
             };
 
-            // إنشاء عنصر script للـ JSONP
+            // إنشاء script tag
             const script = document.createElement('script');
-            script.id = 'jsonp_' + callbackName;
-            script.src = `${SCRIPT_URL}?action=verifyPin&pin=${encodeURIComponent(pin)}&callback=${callbackName}`;
+            script.src = SCRIPT_URL + '?action=verifyPin&pin=' + encodeURIComponent(pin) + '&callback=' + callbackName;
 
             script.onerror = function() {
-                errorMsg.textContent = 'خطأ في الاتصال بالخادم';
+                errorMsg.textContent = 'خطأ في الاتصال بالخادم. تأكد من الرابط.';
                 errorMsg.style.display = 'block';
-                loading.style.display = 'none';
-                delete window[callbackName];
-                script.remove();
+                document.getElementById('loading').style.display = 'none';
+                cleanup(callbackName);
             };
+
+            // timeout للأمان
+            setTimeout(function() {
+                if (window[callbackName]) {
+                    errorMsg.textContent = 'انتهى الوقت. حاول مرة أخرى.';
+                    errorMsg.style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                    cleanup(callbackName);
+                }
+            }, 10000);
 
             document.head.appendChild(script);
         }
 
-        // عرض لوحة التحكم
+        function cleanup(callbackName) {
+            delete window[callbackName];
+            const scripts = document.querySelectorAll('script[src*="callback=' + callbackName + '"]');
+            scripts.forEach(s => s.remove());
+        }
+
         function showDashboard(data) {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
@@ -306,54 +204,39 @@
             renderSupervisors(data);
         }
 
-        // عرض المشرفين
         function renderSupervisors(data) {
             const container = document.getElementById('supervisorsContainer');
-
             const supervisors = data.supervisors || [];
             const phones = data.phones || {};
 
-            console.log('Supervisors:', supervisors);
-            console.log('Phones:', phones);
-
             if (supervisors.length === 0) {
-                container.innerHTML = '<div class="no-supervisors">⚠️ لا يوجد مشرفون مسجلون لهذا المدير</div>';
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">لا يوجد مشرفون</div>';
                 return;
             }
 
-            // إنشاء الجدول
-            let html = '<table>';
-            html += '<thead><tr><th>#</th><th>اسم المشرف</th><th>رقم الجوال</th><th>تواصل واتساب</th></tr></thead>';
-            html += '<tbody>';
+            let html = '<table><thead><tr><th>#</th><th>اسم المشرف</th><th>رقم الجوال</th><th>واتساب</th></tr></thead><tbody>';
 
-            supervisors.forEach((supervisor, index) => {
-                const phone = phones[supervisor] || '';
-                const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
-                const phoneDisplay = phone || 'غير متوفر';
+            supervisors.forEach((name, index) => {
+                const phone = phones[name] || '';
+                const cleanPhone = phone.replace(/\D/g, '');
 
                 html += '<tr>';
-                html += `<td>${index + 1}</td>`;
-                html += `<td><strong>${supervisor}</strong></td>`;
-                html += `<td dir="ltr" style="text-align: right;">${phoneDisplay}</td>`;
-                html += `<td>`;
+                html += '<td>' + (index + 1) + '</td>';
+                html += '<td><strong>' + name + '</strong></td>';
+                html += '<td dir="ltr">' + (phone || '-') + '</td>';
+                html += '<td>';
                 if (cleanPhone) {
-                    html += `<a href="https://wa.me/${cleanPhone}" target="_blank" class="whatsapp-btn">📱 إرسال رسالة</a>`;
-                } else {
-                    html += '<span style="color: #999;">-</span>';
+                    html += '<a href="https://wa.me/' + cleanPhone + '" target="_blank" class="whatsapp-btn">📱 رسالة</a>';
                 }
-                html += `</td>`;
-                html += '</tr>';
+                html += '</td></tr>';
             });
 
             html += '</tbody></table>';
-
-            // إضافة عدد المشرفين
-            html += `<div style="margin-top: 20px; text-align: center; color: #666;">📊 إجمالي المشرفين: <strong>${supervisors.length}</strong></div>`;
+            html += '<div style="margin-top:20px;text-align:center;color:#666;">📊 الإجمالي: ' + supervisors.length + '</div>';
 
             container.innerHTML = html;
         }
 
-        // تسجيل الخروج
         function logout() {
             document.getElementById('pinInput').value = '';
             document.getElementById('loginSection').style.display = 'block';
@@ -361,7 +244,6 @@
             document.getElementById('supervisorsContainer').innerHTML = '';
         }
 
-        // Enter key support
         document.getElementById('pinInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') login();
         });
