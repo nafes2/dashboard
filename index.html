@@ -1,1 +1,546 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة متابعة المشرفين</title>
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+header {
+  text-align: center;
+  padding: 20px 0;
+}
+header h1 {
+  font-size: 2em;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+header p {
+  opacity: 0.9;
+  font-size: 1.1em;
+}
 
+/* Login Section */
+.login-section {
+  max-width: 400px;
+  margin: 50px auto;
+  background: rgba(255,255,255,0.1);
+  padding: 40px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+.login-section h2 {
+  margin-bottom: 30px;
+  font-size: 1.8em;
+}
+.pin-input {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+  outline: none;
+}
+.pin-input::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+.pin-input:focus {
+  border-color: #ffd700;
+}
+.login-btn {
+  width: 100%;
+  padding: 15px;
+  background: #ffd700;
+  color: #1e3c72;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.login-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+}
+.error-message {
+  color: #ff5252;
+  margin-top: 15px;
+  font-weight: bold;
+  display: none;
+  padding: 10px;
+  background: rgba(255,82,82,0.1);
+  border-radius: 8px;
+}
+
+/* Dashboard */
+.dashboard {
+  display: none;
+}
+.manager-bar {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.manager-name {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+.logout-btn {
+  background: #ff5252;
+  color: #fff;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+.logout-btn:hover {
+  background: #ff1744;
+  transform: scale(1.02);
+}
+
+/* Cards Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+  padding: 10px;
+}
+.card {
+  background: #fff;
+  color: #333;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+.card-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+.card-header h3 {
+  color: #1e3c72;
+  font-size: 1.4em;
+  margin-bottom: 8px;
+}
+.week-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+.stat-box {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 12px;
+}
+.stat-box.done {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.stat-box.pending {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.stat-box.not-done {
+  background: #ffebee;
+  color: #c62828;
+}
+.stat-number {
+  font-size: 1.6em;
+  font-weight: bold;
+  display: block;
+}
+.stat-label {
+  font-size: 0.8em;
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+/* Progress Section */
+.progress-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+.progress-item {
+  margin-bottom: 15px;
+}
+.progress-item:last-child {
+  margin-bottom: 0;
+}
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.95em;
+}
+.progress {
+  background: #e0e0e0;
+  height: 28px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.bar {
+  height: 100%;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+  transition: width 1s ease;
+}
+.bar.high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
+.bar.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
+.bar.low { background: linear-gradient(90deg, #f44336, #ef5350); }
+
+/* Link Button */
+.link-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 15px;
+  background: #2a5298;
+  color: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+.link-btn:hover {
+  background: #1e3c72;
+  transform: scale(1.02);
+}
+.link-btn.disabled {
+  background: #ccc;
+  color: #888;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* WhatsApp Button */
+.whatsapp-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  background: #25d366;
+  color: #fff;
+  padding: 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.whatsapp-btn:hover {
+  background: #128c7e;
+  transform: scale(1.02);
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top-color: #ffd700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255,255,255,0.8);
+}
+@media (max-width: 768px) {
+  header h1 { font-size: 1.5em; }
+  .grid { grid-template-columns: 1fr; }
+  .login-section { padding: 30px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📊 لوحة متابعة المشرفين</h1>
+    <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
+  </header>
+
+  <!-- Login Section -->
+  <div id="loginSection" class="login-section">
+    <h2>🔐 تسجيل الدخول</h2>
+    <input type="password" id="pinInput" class="pin-input" placeholder="أدخل الرقم السري" maxlength="10">
+    <button onclick="login()" class="login-btn">دخول</button>
+    <p id="errorMessage" class="error-message"></p>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="dashboard">
+    <div class="manager-bar">
+      <div class="manager-name">👤 المدير: <span id="managerName"></span></div>
+      <button onclick="logout()" class="logout-btn">خروج</button>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <p>جاري تحميل البيانات...</p>
+    </div>
+
+    <div class="grid" id="cards"></div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// ضع رابط السكربت هنا
+// ============================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyisku0sGE.../exec';
+
+let isLoading = false;
+
+function login() {
+  if (isLoading) return;
+
+  const pin = document.getElementById('pinInput').value.trim();
+  const errorMsg = document.getElementById('errorMessage');
+  const btn = document.querySelector('.login-btn');
+
+  if (!pin) {
+    errorMsg.textContent = 'الرجاء إدخال الرقم السري';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  isLoading = true;
+  errorMsg.style.display = 'none';
+  btn.textContent = 'جاري الدخول...';
+  btn.disabled = true;
+
+  const callbackName = 'cb_' + Date.now();
+  let timeoutId;
+
+  window[callbackName] = function(response) {
+    clearTimeout(timeoutId);
+    console.log('Response:', response);
+
+    if (response.success) {
+      showDashboard(response);
+    } else {
+      errorMsg.textContent = response.error || 'رقم سري غير صحيح';
+      errorMsg.style.display = 'block';
+    }
+
+    resetButton();
+    cleanup(callbackName);
+  };
+
+  const script = document.createElement('script');
+  script.src = SCRIPT_URL + '?action=verifyPin&pin=' + encodeURIComponent(pin) + '&callback=' + callbackName;
+
+  script.onerror = function() {
+    clearTimeout(timeoutId);
+    errorMsg.textContent = '⚠️ خطأ في الاتصال بالخادم. تأكد من:' +
+      '
+1. رابط السكربت صحيح' +
+      '
+2. السكربت منشور بـ "Anyone"' +
+      '
+3. أسماء الورقات صحيحة (Managers, Supervisors, Dashboard)';
+    errorMsg.style.display = 'block';
+    resetButton();
+    cleanup(callbackName);
+  };
+
+  timeoutId = setTimeout(function() {
+    errorMsg.textContent = '⏰ انتهى الوقت. السبب المحتمل:
+السكربت لا يستجيب. تأكد من النشر.';
+    errorMsg.style.display = 'block';
+    resetButton();
+    cleanup(callbackName);
+  }, 15000);
+
+  document.head.appendChild(script);
+}
+
+function resetButton() {
+  isLoading = false;
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'دخول';
+  btn.disabled = false;
+}
+
+function cleanup(callbackName) {
+  delete window[callbackName];
+  const scripts = document.querySelectorAll('script[src*="callback=' + callbackName + '"]');
+  scripts.forEach(s => s.remove());
+}
+
+function showDashboard(data) {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('managerName').textContent = data.manager;
+
+  renderSupervisors(data);
+}
+
+function renderSupervisors(data) {
+  const container = document.getElementById('cards');
+  const supervisors = data.supervisors || [];
+  const phones = data.phones || {};
+  const dashboardData = data.dashboardData || {};
+
+  if (supervisors.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div style="font-size:4em;margin-bottom:20px;">📭</div>
+        <h3>لا يوجد مشرفون مسجلون</h3>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+
+  supervisors.forEach((name, index) => {
+    const phone = phones[name] || '';
+    const cleanPhone = phone.replace(/\D/g, '');
+    const dashData = dashboardData[name] || {};
+
+    const total = dashData.total || 0;
+    const done = dashData.done || 0;
+    const pending = dashData.pending || 0;
+    const notDone = dashData.notDone || 0;
+    const percent = dashData.percent || 0;
+    const link = dashData.link || '';
+    const week = dashData.week || '';
+
+    const barClass = percent >= 70 ? 'high' : (percent >= 40 ? 'medium' : 'low');
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <h3>${name}</h3>
+        ${week ? `<span class="week-badge">${week}</span>` : ''}
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box done">
+          <span class="stat-number">${done}</span>
+          <div class="stat-label">✅ تم</div>
+        </div>
+        <div class="stat-box pending">
+          <span class="stat-number">${pending}</span>
+          <div class="stat-label">⏳ جاري</div>
+        </div>
+        <div class="stat-box not-done">
+          <span class="stat-number">${notDone}</span>
+          <div class="stat-label">❌ لم ينفذ</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-item">
+          <div class="progress-label">
+            <span>نسبة الإنجاز</span>
+            <span>${percent}%</span>
+          </div>
+          <div class="progress">
+            <div class="bar ${barClass}" style="width: ${Math.max(percent, 3)}%">
+              ${percent}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${link ? `<a href="${link}" target="_blank" class="link-btn">🔗 فتح الاستمارة</a>` : ''}
+      ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="whatsapp-btn">💬 واتساب</a>` : ''}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function logout() {
+  document.getElementById('pinInput').value = '';
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('cards').innerHTML = '';
+}
+
+document.getElementById('pinInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>
