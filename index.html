@@ -1,1 +1,14 @@
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=1526100112&single=true&output=csv";
 
+fetch(SHEET_URL + "&t=" + Date.now())
+  .then(res => res.text())
+  .then(text => {
+    document.body.innerHTML = "<pre style='white-space:pre-wrap;direction:ltr;padding:20px;background:#fff;color:#000'>" 
+      + text.replace(/</g, "&lt;") + 
+      "</pre>";
+  })
+  .catch(err => {
+    document.body.innerHTML = "<h2 style='color:red;padding:20px'>خطأ: " + err.message + "</h2>";
+  });
+</script>
