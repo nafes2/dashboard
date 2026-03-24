@@ -3,338 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام متابعة المشرفين</title>
+    <title>لوحة متابعة المشرفين</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh; padding: 20px;
         }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header {
+            text-align: center; color: white; padding: 30px 20px;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 10px; }
+        .weeks-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 10px; padding: 20px;
+        }
+        .week-btn {
+            aspect-ratio: 1; border-radius: 50%;
+            background: rgba(255,255,255,0.1); color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            font-size: 18px; font-weight: bold; cursor: pointer;
+        }
+        .week-btn.active {
+            background: #ffd700; color: #1e3c72;
+        }
+        .supervisor-card {
+            background: white; border-radius: 20px; padding: 25px;
+            margin: 20px 0;
+        }
+        .supervisor-name {
+            text-align: center; font-size: 22px;
+            color: #1e3c72; margin-bottom: 15px;
+        }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin: 15px 0;
+        }
+        .stat-box {
+            text-align: center; padding: 15px; border-radius: 12px;
+        }
+        .stat-box.done { background: #e8f5e9; color: #2e7d32; }
+        .stat-box.pending { background: #fff3e0; color: #ef6c00; }
+        .stat-box.not-done { background: #ffebee; color: #c62828; }
+        .form-link {
+            display: block; text-align: center; padding: 15px;
+            border-radius: 12px; margin: 15px 0;
+            text-decoration: none; font-weight: bold;
+        }
+        .form-link.active { background: #1976d2; color: white; }
+        .form-link.disabled { background: #e0e0e0; color: #999; pointer-events: none; }
+        .note-box {
+            width: 100%; padding: 12px; border: 2px solid #ddd;
+            border-radius: 10px; margin-top: 10px;
+        }
+        .whatsapp-btn {
+            width: 100%; background: #25d366; color: white;
+            border: none; padding: 12px; border-radius: 10px;
+            margin-top: 10px; cursor: pointer;
+        }
         .login-box {
             background: white; padding: 40px; border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center; max-width: 400px; margin: 100px auto;
         }
-        .login-box h1 { color: #333; margin-bottom: 30px; font-size: 28px; }
         .pin-input {
             width: 100%; padding: 15px; font-size: 24px;
             text-align: center; border: 2px solid #ddd;
-            border-radius: 10px; margin-bottom: 20px;
-            letter-spacing: 10px;
+            border-radius: 10px; margin: 20px 0;
         }
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; padding: 15px 50px;
-            font-size: 18px; border-radius: 10px; cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn:hover { transform: scale(1.05); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-form {
-            background: #4285f4; color: white; border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer;
-            font-size: 14px; margin: 5px; text-decoration: none; display: inline-block;
-        }
-        .dashboard {
-            display: none; background: white; border-radius: 20px;
-            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; padding: 30px; position: relative;
-        }
-        .logout-btn {
-            position: absolute; top: 20px; left: 20px;
-            background: rgba(255,255,255,0.2); color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 10px 25px; border-radius: 25px; cursor: pointer;
-        }
-        .weeks-nav {
-            background: #f8f9fa; padding: 20px;
-            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-        }
-        .week-btn {
-            width: 50px; height: 50px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 10px;
-            cursor: pointer; font-size: 18px; font-weight: bold;
-        }
-        .week-btn:hover, .week-btn.active {
-            background: #667eea; color: white;
-        }
-        .content { padding: 30px; }
-        .supervisor-card {
-            background: #f8f9fa; border-radius: 15px; padding: 25px;
-            margin-bottom: 20px; border-right: 5px solid #667eea;
-        }
-        .supervisor-name {
-            font-size: 22px; font-weight: bold; color: #333; margin-bottom: 15px;
-        }
-        .stat-box {
-            background: white; padding: 20px; border-radius: 12px;
-            text-align: center; display: inline-block; min-width: 120px;
-            margin: 5px;
-        }
-        .stat-number { font-size: 28px; font-weight: bold; color: #667eea; }
-        .note-box {
-            width: 100%; padding: 12px; margin: 15px 0;
-            border: 2px solid #ddd; border-radius: 8px;
-            font-family: inherit; font-size: 14px; resize: vertical;
-        }
-        .btn-whatsapp {
-            background: #25d366; color: white; border: none;
-            padding: 12px 25px; border-radius: 8px; cursor: pointer;
-            font-size: 16px; margin-top: 10px;
-        }
-        .week-title {
-            text-align: center; font-size: 24px; color: #667eea;
-            margin-bottom: 20px; padding: 15px; background: #f0f0f0;
-            border-radius: 10px;
-        }
-        .no-data { text-align: center; padding: 40px; color: #666; background: #f9f9f9; border-radius: 10px; }
-        .loading { text-align: center; padding: 40px; color: #667eea; }
-        .error { 
-            color: #e74c3c; margin-top: 15px; padding: 15px; 
-            background: #fee; border-radius: 5px; border: 1px solid #fcc;
-        }
-        .success { 
-            color: #27ae60; margin-top: 15px; padding: 15px; 
-            background: #efe; border-radius: 5px; border: 1px solid #cfc;
-        }
-        .form-link {
-            background: #e3f2fd; padding: 10px; border-radius: 8px;
-            margin: 10px 0; display: inline-block;
+        .login-btn {
+            width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 15px;
+            border-radius: 10px; font-size: 18px; cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="login-box" id="loginBox">
-            <h1>🔐 نظام متابعة المشرفين</h1>
+            <h2>🔐 تسجيل الدخول</h2>
+            <p id="managerDisplay" style="color:#666;margin:10px 0;"></p>
             <input type="password" class="pin-input" id="pinInput" placeholder="••••" maxlength="4">
-            <br>
-            <button class="btn" id="loginBtn" onclick="login()">دخول</button>
-            <div id="messageBox"></div>
+            <button class="login-btn" onclick="login()">دخول</button>
+            <div id="errorMsg" style="color:#c62828;margin-top:10px;"></div>
         </div>
         
-        <div class="dashboard" id="dashboard">
+        <div id="dashboard" style="display:none;">
             <div class="header">
-                <button class="logout-btn" onclick="logout()">🚪 خروج</button>
-                <h2 id="managerName">مرحباً</h2>
-                <p>اختر الأسبوع لعرض المشرفين</p>
+                <h1>📊 لوحة متابعة المشرفين</h1>
+                <p id="managerName"></p>
             </div>
-            
-            <div class="weeks-nav" id="weeksNav"></div>
-            <div class="content" id="supervisorsList">
-                <div class="loading">جاري تحميل البيانات...</div>
-            </div>
+            <div class="weeks-grid" id="weeksGrid"></div>
+            <div id="supervisorContent"></div>
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxInh3-bCh03P9hAZXF5TiCTwO-llAqBP-vc_IUq6nNvn0fIz-TECeGJd_-FDXA6mg6A/exec';
         
-        // ✅ رابط الاستمارة (يمكن تغييره)
-        const FORM_URL = 'https://forms.google.com'; // ضع رابط الاستمارة هنا
+        // ✅ قراءة اسم المدير من الرابط: /ali أو /fahd
+        const path = window.location.pathname;
+        const managerName = path.split('/').pop() || 'ali'; // افتراضي: ali
         
-        const weekNames = [
-            'الأسبوع الأول', 'الأسبوع الثاني', 'الأسبوع الثالث', 'الأسبوع الرابع',
-            'الأسبوع الخامس', 'الأسبوع السادس', 'الأسبوع السابع', 'الأسبوع الثامن',
-            'الأسبوع التاسع', 'الأسبوع العاشر', 'الأسبوع الحادي عشر', 'الأسبوع الثاني عشر',
-            'الأسبوع الثالث عشر', 'الأسبوع الرابع عشر', 'الأسبوع الخامس عشر'
-        ];
+        document.getElementById('managerDisplay').textContent = 'مدير: ' + managerName;
+        
+        const weekNames = ['الأسبوع الأول', 'الأسبوع الثاني', 'الأسبوع الثالث', 'الأسبوع الرابع', 'الأسبوع الخامس', 'الأسبوع السادس', 'الأسبوع السابع', 'الأسبوع الثامن', 'الأسبوع التاسع', 'الأسبوع العاشر', 'الأسبوع الحادي عشر', 'الأسبوع الثاني عشر', 'الأسبوع الثالث عشر', 'الأسبوع الرابع عشر', 'الأسبوع الخامس عشر'];
         
         let currentData = null;
-        let currentWeek = null;
-
-        function showMessage(msg, type = 'error') {
-            const box = document.getElementById('messageBox');
-            box.className = type;
-            box.innerHTML = msg;
-        }
 
         async function login() {
             const pin = document.getElementById('pinInput').value;
-            const btn = document.getElementById('loginBtn');
-            
             if (pin.length !== 4) {
-                showMessage('⚠️ الرجاء إدخال 4 أرقام');
+                document.getElementById('errorMsg').textContent = 'أدخل 4 أرقام';
                 return;
             }
-            
-            btn.disabled = true;
-            btn.textContent = 'جاري التحقق...';
-            showMessage('⏳ جاري الاتصال...', 'loading');
             
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=verifyPin&pin=${pin}`, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: { 'Accept': 'application/json' }
-                });
+                const res = await fetch(`${SCRIPT_URL}?action=verifyPin&pin=${pin}`);
+                const data = await res.json();
                 
-                const data = await response.json();
-                console.log('✅ البيانات:', data);
-                
-                handleLoginResponse(data);
-                
-            } catch (error) {
-                console.error('❌ خطأ:', error);
-                showMessage(`❌ خطأ في الاتصال: ${error.message}`);
-                btn.disabled = false;
-                btn.textContent = 'دخول';
-            }
-        }
-
-        function handleLoginResponse(data) {
-            const btn = document.getElementById('loginBtn');
-            
-            if (!data || !data.success) {
-                showMessage(data?.error || '❌ رقم سري غير صحيح');
-                btn.disabled = false;
-                btn.textContent = 'دخول';
-                return;
-            }
-            
-            currentData = data;
-            
-            showMessage('✅ تم تسجيل الدخول', 'success');
-            
-            setTimeout(() => {
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('managerName').textContent = 'مرحباً ' + (data.manager || 'مدير');
-                
-                createWeekButtons();
-                
-                if (data.supervisorsData && data.supervisorsData.length > 0) {
-                    const weeks = [...new Set(data.supervisorsData.map(d => d.week))];
-                    const firstWeek = weekNames.indexOf(weeks[0]) + 1;
-                    selectWeek(firstWeek > 0 ? firstWeek : 1);
-                } else {
+                if (data.success && data.manager === managerName) {
+                    currentData = data;
+                    document.getElementById('loginBox').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('managerName').textContent = 'مدير: ' + data.manager;
+                    createWeekButtons();
                     selectWeek(1);
+                } else if (data.success && data.manager !== managerName) {
+                    document.getElementById('errorMsg').textContent = '❌ هذا الرابط خاص بمدير آخر';
+                } else {
+                    document.getElementById('errorMsg').textContent = data.error || 'رقم خاطئ';
                 }
-            }, 500);
+            } catch (err) {
+                document.getElementById('errorMsg').textContent = 'خطأ في الاتصال';
+            }
         }
 
         function createWeekButtons() {
-            const nav = document.getElementById('weeksNav');
-            nav.innerHTML = '';
+            const grid = document.getElementById('weeksGrid');
             for (let i = 1; i <= 15; i++) {
                 const btn = document.createElement('button');
                 btn.className = 'week-btn';
                 btn.textContent = i;
                 btn.onclick = () => selectWeek(i);
-                btn.id = 'week-' + i;
-                nav.appendChild(btn);
+                btn.id = `week-${i}`;
+                grid.appendChild(btn);
             }
         }
 
         function selectWeek(weekNum) {
-            currentWeek = weekNum;
-            document.querySelectorAll('.week-btn').forEach(btn => btn.classList.remove('active'));
-            const btn = document.getElementById('week-' + weekNum);
-            if (btn) btn.classList.add('active');
-
+            document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`week-${weekNum}`).classList.add('active');
+            
             const weekName = weekNames[weekNum - 1];
-            const container = document.getElementById('supervisorsList');
+            const container = document.getElementById('supervisorContent');
+            let html = '';
             
-            let html = `<div class="week-title">📅 ${weekName}</div>`;
-            
-            if (!currentData || !currentData.supervisors || currentData.supervisors.length === 0) {
-                container.innerHTML = html + '<div class="no-data">لا يوجد مشرفون مرتبطون بهذا المدير</div>';
-                return;
-            }
-
-            let hasAnyData = false;
-
-            currentData.supervisors.forEach((supName, index) => {
-                const supData = currentData.supervisorsData ? currentData.supervisorsData.find(d => 
+            currentData.supervisors.forEach((supName, idx) => {
+                const supData = currentData.supervisorsData.find(d => 
                     d.supervisor === supName && d.week === weekName
-                ) : null;
+                );
+                if (!supData) return;
                 
-                const phone = currentData.phones && currentData.phones[supName] ? currentData.phones[supName] : '';
-                
-                // ✅ عرض المشرف فقط إذا كان له بيانات في هذا الأسبوع
-                if (!supData || supData.count === 0) return;
-                
-                hasAnyData = true;
-                
+                const phone = currentData.phones[supName] || '';
                 const count = supData.count;
-                const percentage = supData.percentage;
-                const noteId = `note-${index}`;
+                const done = count;
+                const pending = 0;
+                const notDone = 44 - count;
+                const isDone = count >= 44;
                 
                 html += `
                     <div class="supervisor-card">
-                        <div class="supervisor-name">👤 ${supName}</div>
-                        
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                            <div class="stat-box">
-                                <div class="stat-number">${count}</div>
-                                <div>المؤشرات</div>
+                        <div class="supervisor-name">${supName}</div>
+                        <div class="stats-grid">
+                            <div class="stat-box not-done">
+                                <div style="font-size:24px;font-weight:bold;">${notDone}</div>
+                                <div>❌ لم ينفذ</div>
                             </div>
-                            <div class="stat-box">
-                                <div class="stat-number">${percentage}</div>
-                                <div>النسبة</div>
+                            <div class="stat-box pending">
+                                <div style="font-size:24px;font-weight:bold;">${pending}</div>
+                                <div>⏳ جاري</div>
+                            </div>
+                            <div class="stat-box done">
+                                <div style="font-size:24px;font-weight:bold;">${done}</div>
+                                <div>✅ تم</div>
                             </div>
                         </div>
-                        
-                        <div class="form-link">
-                            📋 <a href="${FORM_URL}" target="_blank" class="btn-form">فتح الاستمارة</a>
-                        </div>
-                        
-                        <textarea 
-                            id="${noteId}" 
-                            class="note-box" 
-                            placeholder="✍️ اكتب ملاحظتك للمشرف هنا..." 
-                            rows="3"
-                        ></textarea>
-                        
+                        ${isDone ? `
+                            <a href="https://forms.google.com" target="_blank" class="form-link active">
+                                🔗 فتح الاستمارة
+                            </a>
+                        ` : `
+                            <div class="form-link disabled">
+                                🔗 غير متاح
+                            </div>
+                        `}
+                        <textarea id="note-${idx}" class="note-box" rows="2" placeholder="✍️ ملاحظة..."></textarea>
                         ${phone ? `
-                            <button class="btn-whatsapp" onclick="sendWhatsAppWithNote('${phone}', '${supName}', '${weekName}', ${count}, '${noteId}')">
-                                📱 إرسال ملاحظة عبر واتساب
+                            <button class="whatsapp-btn" onclick="sendWhatsApp('${phone}', '${supName}', '${weekName}', ${count}, ${idx})">
+                                📱 إرسال عبر واتساب
                             </button>
-                        ` : '<p style="color:#999;margin-top:10px;">لا يوجد رقم هاتف</p>'}
+                        ` : ''}
                     </div>
                 `;
             });
-
-            if (!hasAnyData) {
-                html += '<div class="no-data">لا يوجد مشرفون سجلوا بيانات في هذا الأسبوع</div>';
-            }
             
-            container.innerHTML = html;
+            container.innerHTML = html || '<div class="supervisor-card" style="text-align:center;">لا يوجد بيانات</div>';
         }
 
-        function logout() {
-            currentData = null;
-            currentWeek = null;
-            location.reload();
+        function sendWhatsApp(phone, name, week, count, idx) {
+            const note = document.getElementById(`note-${idx}`).value;
+            let msg = `السلام عليكم ${name}،\n\n${week}: ${count} مؤشرات\n`;
+            if (note) msg += `\nملاحظة: ${note}`;
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
         }
-
-        function sendWhatsAppWithNote(phone, name, week, count, noteId) {
-            const note = document.getElementById(noteId).value.trim();
-            const cleanPhone = phone.toString().replace(/\D/g, '');
-            
-            let message = `السلام عليكم ${name}،\n\n`;
-            message += `📊 ${week}:\n`;
-            message += `✅ ${count} مؤشرات مسجلة\n`;
-            message += `📈 ${Math.round((count/86)*100)}% نسبة الإنجاز\n\n`;
-            
-            if (note) {
-                message += `📝 ملاحظة من المدير:\n${note}\n\n`;
-            }
-            
-            message += `بالتوفيق! 🌟`;
-            
-            const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-            window.open(url, '_blank');
-        }
-
-        document.getElementById('pinInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') login();
-        });
     </script>
 </body>
 </html>
