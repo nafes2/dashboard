@@ -20,6 +20,26 @@ header p{opacity:.9;font-size:1.1em}
   border:2px solid rgba(255,255,255,.25);color:#ffd700;padding:8px 18px;
   border-radius:999px;font-size:.95em;font-weight:700;backdrop-filter:blur(10px)
 }
+.page-meta{
+  margin-top:14px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+}
+.page-meta-line{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+  padding:8px 14px;
+  border-radius:14px;
+  font-size:.95em;
+  font-weight:600;
+  text-align:right;
+  max-width:100%;
+  word-break:break-word;
+  backdrop-filter:blur(8px);
+}
 .nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:25px 0;padding:0 10px}
 .btn{
   background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);color:#fff;
@@ -54,22 +74,27 @@ header p{opacity:.9;font-size:1.1em}
 .indicators-toggle:hover{transform:scale(1.02);box-shadow:0 4px 15px rgba(102,126,234,.4)}
 .indicators-list{
   display:none;background:#f8f9fa;border-radius:12px;padding:12px;margin:10px 0;
-  max-height:220px;overflow-y:auto;border:1px solid #e0e0e0
+  max-height:260px;overflow-y:auto;border:1px solid #e0e0e0
 }
 .indicators-list.show{display:block;animation:slideDown .3s ease}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 .indicator-item{
-  display:flex;justify-content:space-between;align-items:center;padding:10px 8px;
-  border-bottom:1px solid #e0e0e0;font-size:.9em;transition:background .2s
+  display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  padding:12px 10px;border-bottom:1px solid #e0e0e0;font-size:.92em;transition:background .2s
 }
 .indicator-item:hover{background:#fff;border-radius:6px}
 .indicator-item:last-child{border-bottom:none}
-.indicator-number{
-  background:#1976d2;color:#fff;padding:3px 10px;border-radius:15px;
-  font-size:.85em;font-weight:bold;margin-left:8px
+.indicator-text-wrap{
+  flex:1;
+  text-align:right;
+  line-height:1.9;
 }
-.indicator-name{color:#555;flex:1;text-align:right}
-.indicator-status{font-size:.85em;font-weight:600}
+.indicator-line{
+  color:#444;
+  font-weight:700;
+  word-break:break-word;
+}
+.indicator-status{font-size:.88em;font-weight:700;min-width:78px;text-align:center}
 .status-done{color:#4caf50}.status-pending{color:#ff9800}.status-not-done{color:#f44336}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
 .stat-box{text-align:center;padding:12px 8px;border-radius:12px}
@@ -95,7 +120,7 @@ header p{opacity:.9;font-size:1.1em}
   background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px;
   border-radius:12px;margin:15px 0;text-align:center
 }
-.summary-box h4{font-size:.9em;margin-bottom:8px;opacity:.9}
+.summary-box h4{font-size:.9em;margin-bottom:8px;opacity:.95}
 .summary-box .big-number{font-size:2.2em;font-weight:bold}
 .summary-box .small-text{font-size:.85em;opacity:.9}
 .link-btn{
@@ -146,6 +171,21 @@ header p{opacity:.9;font-size:1.1em}
   header h1{font-size:1.5em}
   .grid{grid-template-columns:1fr}
   .btn{padding:10px 16px;font-size:14px}
+  .page-meta{align-items:center}
+  .page-meta-line{
+    width:100%;
+    text-align:center;
+    font-size:.9em;
+    line-height:1.7;
+  }
+  .indicator-item{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .indicator-status{
+    min-width:auto;
+    text-align:right;
+  }
 }
 </style>
 </head>
@@ -155,6 +195,11 @@ header p{opacity:.9;font-size:1.1em}
     <h1>📊 لوحة متابعة المشرفين</h1>
     <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
     <div id="managerBadgeWrap"></div>
+
+    <div id="pageMeta" class="page-meta" style="display:none;">
+      <div id="centerLine" class="page-meta-line"></div>
+      <div id="teamLine" class="page-meta-line"></div>
+    </div>
   </header>
 
   <div class="nav" id="weeks">
@@ -174,6 +219,7 @@ header p{opacity:.9;font-size:1.1em}
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=338445358&single=true&output=csv";
+const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=1042788651&single=true&output=csv";
 
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
@@ -227,6 +273,25 @@ async function fetchData() {
   return parseCSV(text);
 }
 
+async function fetchSettings() {
+  const response = await fetch(SETTINGS_URL + "&t=" + Date.now());
+  if (!response.ok) throw new Error("Settings HTTP " + response.status);
+
+  const text = await response.text();
+  if (text.includes("<!DOCTYPE")) throw new Error("Settings HTML instead of CSV");
+
+  const rows = parseCSVRows(text);
+  const settings = {};
+
+  rows.forEach(row => {
+    const key = (row[0] || "").trim();
+    const value = (row[1] || "").trim();
+    if (key) settings[key] = value;
+  });
+
+  return settings;
+}
+
 async function loadData() {
   document.getElementById("weeks").innerHTML = `
     <div class="loading">
@@ -236,7 +301,13 @@ async function loadData() {
   `;
 
   try {
-    const data = await fetchData();
+    const [data, settings] = await Promise.all([
+      fetchData(),
+      fetchSettings().catch(() => ({}))
+    ]);
+
+    renderSettings(settings);
+
     if (!data.length) {
       showError("لا توجد بيانات");
       return;
@@ -256,6 +327,26 @@ async function loadData() {
   } catch (err) {
     console.error(err);
     showError("فشل الاتصال: " + err.message);
+  }
+}
+
+function renderSettings(settings) {
+  const wrap = document.getElementById("pageMeta");
+  const centerLine = document.getElementById("centerLine");
+  const teamLine = document.getElementById("teamLine");
+
+  const centerText = settings.center_line || settings.center || "";
+  const teamText = settings.team_line || "";
+
+  centerLine.textContent = centerText;
+  teamLine.textContent = teamText;
+
+  if (centerText || teamText) {
+    wrap.style.display = "flex";
+    centerLine.style.display = centerText ? "block" : "block";
+    teamLine.style.display = teamText ? "block" : "none";
+  } else {
+    wrap.style.display = "none";
   }
 }
 
@@ -343,7 +434,8 @@ function normalizeHeaderMap(row) {
     managerKey: getByCandidates(["manager_key","manager key","manager"]),
     managerName: getByCandidates(["manager_name","manager name","اسم المدير","المدير"]),
     phone: getByCandidates(["phone","رقم الجوال","الجوال","phone_number","رقم"]),
-    link: getByCandidates(["file responses","ملف","رابط","link","evidence"])
+    link: getByCandidates(["file responses","ملف","رابط","link","evidence"]),
+    indicator: getByCandidates(["رقم المؤشر","المؤشر","اسم المؤشر","المؤشرات"])
   };
 }
 
@@ -358,6 +450,7 @@ function normalizeRow(row) {
     __managerKey: map.managerKey ? String(row[map.managerKey] || "").trim().toLowerCase() : "",
     __managerName: map.managerName ? String(row[map.managerName] || "").trim() : "",
     __phone: map.phone ? normalizePhone(row[map.phone] || "") : "",
+    __indicatorText: map.indicator ? String(row[map.indicator] || "").trim() : "",
     __link: ""
   };
 
@@ -458,6 +551,31 @@ function toggleIndicators(index, status) {
   }
 }
 
+function splitIndicators(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return [];
+
+  return raw
+    .split(/\s*,\s*|\n+/)
+    .map(item => item.trim())
+    .filter(Boolean)
+    .map(item => {
+      const match = item.match(/^([0-9]+(?:-[0-9]+)+)\s+(.*)$/);
+      if (match) {
+        return {
+          code: match[1].trim(),
+          name: match[2].trim(),
+          full: `${match[1].trim()} | ${match[2].trim()}`
+        };
+      }
+      return {
+        code: "",
+        name: item,
+        full: item
+      };
+    });
+}
+
 function renderCards() {
   const container = document.getElementById("cards");
   container.innerHTML = "";
@@ -522,28 +640,40 @@ function renderCards() {
       };
     }
 
-    supervisors[name].totalCount += 1;
-
     const status = row.__status || "";
+    const split = splitIndicators(row.__indicatorText);
+    const countToAdd = split.length || 1;
+
+    supervisors[name].totalCount += countToAdd;
+
     if (status.includes("تم التنفيذ")) {
-      supervisors[name].doneCount += 1;
+      supervisors[name].doneCount += countToAdd;
       supervisors[name].status = "تم التنفيذ";
     } else if (status.includes("جار")) {
-      supervisors[name].pendingCount += 1;
+      supervisors[name].pendingCount += countToAdd;
       if (supervisors[name].status !== "تم التنفيذ") {
         supervisors[name].status = "جار التنفيذ";
       }
     } else {
-      supervisors[name].notDoneCount += 1;
+      supervisors[name].notDoneCount += countToAdd;
       if (!supervisors[name].status || supervisors[name].status === "لم ينفذ") {
         supervisors[name].status = "لم ينفذ";
       }
     }
 
-    supervisors[name].indicators.push({
-      number: supervisors[name].indicators.length + 1,
-      status: status || "لم ينفذ"
-    });
+    if (split.length) {
+      split.forEach(item => {
+        supervisors[name].indicators.push({
+          text: item.full,
+          status: status || "لم ينفذ"
+        });
+      });
+    } else {
+      supervisors[name].indicators.push({
+        text: "بدون اسم مؤشر",
+        status: status || "لم ينفذ"
+      });
+    }
 
     if (row.__link && !supervisors[name].link) {
       supervisors[name].link = row.__link;
@@ -578,12 +708,11 @@ function renderCards() {
         iconClass = "status-pending";
       }
 
-      const indicatorsHtml = sup.indicators.map(ind => `
+      const indicatorsHtml = sup.indicators.map((ind) => `
         <div class="indicator-item">
-          <span>
-            <span class="indicator-number">${escapeHtml(ind.number)}</span>
-            <span class="indicator-name">مؤشر ${escapeHtml(ind.number)}</span>
-          </span>
+          <div class="indicator-text-wrap">
+            <div class="indicator-line">${escapeHtml(ind.text)}</div>
+          </div>
           <span class="indicator-status ${iconClass}">
             ${icon} ${escapeHtml(ind.status)}
           </span>
@@ -604,7 +733,7 @@ function renderCards() {
         </button>
 
         <div class="indicators-list" id="indicators-${index}" data-count="${sup.totalCount}">
-          ${indicatorsHtml || '<div class="indicator-item">لا توجد مؤشرات</div>'}
+          ${indicatorsHtml || '<div class="indicator-item"><div class="indicator-text-wrap"><div class="indicator-line">لا توجد مؤشرات</div></div></div>'}
         </div>
 
         <div class="stats-grid">
