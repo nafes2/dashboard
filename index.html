@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>لوحة متابعة المشرفين</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -183,7 +183,7 @@ const WEEK_NAMES = {
 };
 
 const urlParams = new URLSearchParams(window.location.search);
-const selectedManager = (urlParams.get("manager") || "").trim();
+const selectedManager = (urlParams.get("manager") || "").trim().toLowerCase();
 
 let appData = { allData: [], currentWeek: 1 };
 
@@ -237,7 +237,8 @@ async function loadData() {
 
     const filtered = getManagerData();
     const sample = filtered[0] || appData.allData[0];
-    const weekCol = findExactOrContains(sample, ["week","الأسبوع","الأسابيع","الاسبوع"], ["الأسابيع","الأسبوع","الاسبوع","أسابيع","week"]);
+    const weekCol = getWeekCol(sample);
+
     const availableWeeks = weekCol
       ? [...new Set(filtered.map(row => weekTextToNumber(row[weekCol])))]
           .filter(Boolean)
@@ -276,7 +277,6 @@ function parseCSV(csvText) {
 
     if (Object.keys(row).length) data.push(row);
   }
-
   return data;
 }
 
@@ -316,33 +316,6 @@ function parseCSVRows(text) {
   return rows;
 }
 
-function fillDownWeek(data) {
-  if (!data.length) return data;
-
-  const sample = data[0];
-  const weekCol = findExactOrContains(
-    sample,
-    ["week","الأسبوع","الأسابيع","الاسبوع"],
-    ["الأسابيع","الأسبوع","الاسبوع","أسابيع","week"]
-  );
-
-  if (!weekCol) return data;
-
-  let lastWeek = "";
-  return data.map(row => {
-    const copy = { ...row };
-    const currentWeek = (copy[weekCol] || "").toString().trim();
-
-    if (currentWeek) {
-      lastWeek = currentWeek;
-    } else if (lastWeek) {
-      copy[weekCol] = lastWeek;
-    }
-
-    return copy;
-  });
-}
-
 function findCol(sample, names) {
   const keys = Object.keys(sample || {});
   for (const name of names) {
@@ -361,25 +334,46 @@ function findExactOrContains(sample, exactNames, fallbackNames) {
   return findCol(sample, fallbackNames || exactNames);
 }
 
-function findColByValue(sample, values) {
-  const keys = Object.keys(sample || {});
-  for (const key of keys) {
-    if (values.includes(sample[key])) return key;
-  }
-  return null;
+function getWeekCol(sample) {
+  return findExactOrContains(
+    sample,
+    ["week","الأسبوع","الأسابيع","الاسبوع"],
+    ["الأسابيع","الأسبوع","الاسبوع","أسابيع","week"]
+  );
+}
+
+function fillDownWeek(data) {
+  if (!data.length) return data;
+  const sample = data[0];
+  const weekCol = getWeekCol(sample);
+  if (!weekCol) return data;
+
+  let lastWeek = "";
+  return data.map(row => {
+    const copy = { ...row };
+    const currentWeek = (copy[weekCol] || "").toString().trim();
+
+    if (currentWeek) {
+      lastWeek = currentWeek;
+    } else if (lastWeek) {
+      copy[weekCol] = lastWeek;
+    }
+    return copy;
+  });
 }
 
 function getManagerData() {
   if (!appData.allData.length) return [];
+
   const sample = appData.allData[0];
-  const managerKeyCol = findExactOrContains(sample, ["manager_key","manager","مدير"], ["manager_key","manager","مدير"]);
+  const managerKeyCol = findExactOrContains(sample, ["manager_key"], ["manager_key"]);
 
   if (!managerKeyCol) return appData.allData;
   if (!selectedManager) return appData.allData;
 
   return appData.allData.filter(row => {
-    const value = (row[managerKeyCol] || "").toString().trim().toLowerCase();
-    return value === selectedManager.toLowerCase();
+    const value = String(row[managerKeyCol] || "").trim().toLowerCase();
+    return value === selectedManager;
   });
 }
 
@@ -402,7 +396,7 @@ function renderManagerBadge() {
 
   if (filtered.length > 0) {
     const sampleRow = filtered[0];
-    const managerNameCol = findExactOrContains(sampleRow, ["manager_name","اسم المدير"], ["manager_name","اسم المدير"]);
+    const managerNameCol = findExactOrContains(sampleRow, ["manager_name"], ["manager_name"]);
     if (managerNameCol && sampleRow[managerNameCol]) {
       managerName = sampleRow[managerNameCol].trim();
     }
@@ -422,7 +416,7 @@ function renderWeeks() {
   }
 
   const sample = filteredData[0];
-  const weekCol = findExactOrContains(sample, ["week","الأسبوع","الأسابيع","الاسبوع"], ["الأسابيع","الأسبوع","الاسبوع","أسابيع","week"]);
+  const weekCol = getWeekCol(sample);
   const availableWeeks = weekCol
     ? [...new Set(filteredData.map(row => weekTextToNumber(row[weekCol])))]
         .filter(Boolean)
@@ -431,6 +425,7 @@ function renderWeeks() {
   ALL_WEEKS.forEach(weekNum => {
     const btn = document.createElement("button");
     const hasData = availableWeeks.includes(weekNum);
+
     btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "") + (!hasData ? " empty" : "");
     btn.textContent = weekNum;
     btn.title = "الأسبوع " + WEEK_NAMES[weekNum] + (hasData ? "" : " (لا توجد بيانات)");
@@ -475,28 +470,29 @@ function renderCards() {
   }
 
   const sample = filteredData[0];
-  const nameCol = findExactOrContains(sample, ["supervisor","اسم المشرف","المشرف","الاسم"], ["اسم المشرف","المشرف","الاسم","supervisor"]);
-  const weekCol = findExactOrContains(sample, ["week","الأسبوع","الأسابيع","الاسبوع"], ["الأسابيع","الأسبوع","الاسبوع","أسابيع","week"]);
-  const statusCol = findExactOrContains(sample, ["status","الحالة","حالة"], ["الحالة","حالة","status"]);
-  const countCol = findExactOrContains(sample, ["count","عدد","العدد","مؤشرات"], ["عدد","count","العدد","مؤشرات"]) || findColByValue(sample, ["3","2","1"]);
-  const managerNameCol = findExactOrContains(sample, ["manager_name","اسم المدير"], ["manager_name","اسم المدير"]);
-  const phoneCol = findExactOrContains(sample, ["phone","الجوال","رقم الجوال","phone_number"], ["phone","الجوال","رقم الجوال","phone_number"]);
+  const keys = Object.keys(sample || {});
+
+  const weekCol = keys[0] || getWeekCol(sample); // A
+  const nameCol = keys[1]; // B
+  const countCol = keys[2]; // C
+  const doneCol = keys[3]; // D
+  const pendingCol = keys[4]; // E
+  const notDoneCol = keys[5]; // F
+
+  const managerKeyCol = findExactOrContains(sample, ["manager_key"], ["manager_key"]);
+  const managerNameCol = findExactOrContains(sample, ["manager_name"], ["manager_name"]);
+  const phoneCol = findExactOrContains(sample, ["phone"], ["phone"]);
 
   const supervisorTotals = {};
+
   filteredData.forEach(row => {
     const name = row[nameCol];
     if (!name) return;
+
     if (!supervisorTotals[name]) supervisorTotals[name] = { totalDoneAll: 0 };
 
-    const status = (row[statusCol] || "").trim();
-    if (status === "تم التنفيذ") {
-      let indicatorCount = 1;
-      if (countCol && row[countCol]) {
-        const val = parseInt(row[countCol], 10);
-        if (!isNaN(val) && val > 0) indicatorCount = val;
-      }
-      supervisorTotals[name].totalDoneAll += indicatorCount;
-    }
+    const doneCount = parseInt(row[doneCol], 10) || 0;
+    supervisorTotals[name].totalDoneAll += doneCount;
   });
 
   let weekData = filteredData;
@@ -512,6 +508,7 @@ function renderCards() {
   }
 
   const supervisors = {};
+
   weekData.forEach(row => {
     const name = row[nameCol];
     if (!name) return;
@@ -531,40 +528,33 @@ function renderCards() {
       };
     }
 
-    const status = (row[statusCol] || "").trim();
-    const indicatorCol = findExactOrContains(row, ["indicator","المؤشر","رقم المؤشر","المؤشرات"], ["رقم المؤشر","المؤشر","indicator","المؤشرات"]);
-    const indicatorsText = row[indicatorCol] || "";
+    const indicatorCount = parseInt(row[countCol], 10) || 0;
+    const doneCount = parseInt(row[doneCol], 10) || 0;
+    const pendingCount = parseInt(row[pendingCol], 10) || 0;
+    const notDoneCount = parseInt(row[notDoneCol], 10) || 0;
+
+    supervisors[name].totalCount += indicatorCount;
+    supervisors[name].doneCount += doneCount;
+    supervisors[name].pendingCount += pendingCount;
+    supervisors[name].notDoneCount += notDoneCount;
+
+    let status = "لم ينفذ";
+    if (doneCount > 0) status = "تم التنفيذ";
+    else if (pendingCount > 0) status = "جار التنفيذ";
+    else if (notDoneCount > 0) status = "لم ينفذ";
 
     supervisors[name].status = status;
 
-    let indicatorCount = 1;
-    if (countCol && row[countCol]) {
-      const val = parseInt(row[countCol], 10);
-      if (!isNaN(val) && val > 0) indicatorCount = val;
-    } else if (indicatorCol && row[indicatorCol]) {
-      const indicators = indicatorsText.toString().split(",").filter(x => x.trim());
-      indicatorCount = indicators.length || 1;
-    }
-
-    supervisors[name].totalCount += indicatorCount;
-
-    if (status === "تم التنفيذ") {
-      supervisors[name].doneCount += indicatorCount;
-    } else if (status.includes("جار")) {
-      supervisors[name].pendingCount += indicatorCount;
-    } else if (status === "لم ينفذ" || status === "لم يبدأ") {
-      supervisors[name].notDoneCount += indicatorCount;
-    }
-
-    if (indicatorsText) {
-      indicatorsText.toString().split(",").filter(x => x.trim()).forEach(num => {
-        supervisors[name].indicators.push({ number: num.trim(), status });
+    for (let i = 0; i < indicatorCount; i++) {
+      supervisors[name].indicators.push({
+        number: i + 1,
+        status: status
       });
     }
 
     if (!supervisors[name].link) {
       for (const val of Object.values(row)) {
-        if (val && val.toString().startsWith("http")) {
+        if (val && typeof val === "string" && val.startsWith("http")) {
           supervisors[name].link = val;
           break;
         }
