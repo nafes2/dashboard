@@ -653,9 +653,11 @@ function renderManagerBadge() {
   const filtered = getManagerData();
   const sampleRow = filtered[0];
   const managerNameCol = sampleRow ? findCol(sampleRow, ["manager_name", "اسم المدير"]) : null;
-  const managerName = managerNameCol && sampleRow && sampleRow[managerNameCol]
-    ? sampleRow[managerNameCol]
-    : selectedManager;
+  let managerName = selectedManager;
+
+if (managerNameCol !== null && filtered.length > 0) {
+  managerName = filtered[0][managerNameCol] || selectedManager;
+};
 
   wrap.innerHTML = `<div class="manager-badge">👋 أهلاً ${escapeHtml(managerName)}</div>`;
 }
