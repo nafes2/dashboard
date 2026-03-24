@@ -28,7 +28,6 @@ header p{opacity:.9;font-size:1.1em}
 }
 .btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
 .btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700;box-shadow:0 4px 15px rgba(255,215,0,.4)}
-.btn.empty{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:default}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:10px}
 .card{
   background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.3);
@@ -245,7 +244,7 @@ async function loadData() {
           .sort((a,b) => a-b)
       : [];
 
-    appData.currentWeek = availableWeeks[0] || 1;
+    appData.currentWeek = availableWeeks.includes(1) ? 1 : (availableWeeks[0] || 1);
     render();
     updateTimestamp();
   } catch (err) {
@@ -426,12 +425,11 @@ function renderWeeks() {
     const btn = document.createElement("button");
     const hasData = availableWeeks.includes(weekNum);
 
-    btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "") + (!hasData ? " empty" : "");
+    btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "");
     btn.textContent = weekNum;
     btn.title = "الأسبوع " + WEEK_NAMES[weekNum] + (hasData ? "" : " (لا توجد بيانات)");
 
     btn.onclick = () => {
-      if (!hasData) return;
       appData.currentWeek = weekNum;
       renderWeeks();
       renderCards();
@@ -479,7 +477,6 @@ function renderCards() {
   const pendingCol = keys[4]; // E
   const notDoneCol = keys[5]; // F
 
-  const managerKeyCol = findExactOrContains(sample, ["manager_key"], ["manager_key"]);
   const managerNameCol = findExactOrContains(sample, ["manager_name"], ["manager_name"]);
   const phoneCol = findExactOrContains(sample, ["phone"], ["phone"]);
 
@@ -490,7 +487,6 @@ function renderCards() {
     if (!name) return;
 
     if (!supervisorTotals[name]) supervisorTotals[name] = { totalDoneAll: 0 };
-
     const doneCount = parseInt(row[doneCol], 10) || 0;
     supervisorTotals[name].totalDoneAll += doneCount;
   });
@@ -563,7 +559,7 @@ function renderCards() {
   });
 
   if (!Object.keys(supervisors).length) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات متاحة</h3></div>`;
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📭</div><h3>لا توجد بيانات لهذا الأسبوع</h3></div>`;
     return;
   }
 
