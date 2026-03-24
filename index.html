@@ -548,16 +548,26 @@ async function loadData() {
   }
 }
 
-async function fetchData() {
-  const url = SHEET_URL + "&t=" + Date.now();
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("HTTP " + response.status);
+function getManagerData() {
+  if (!appData.allData.length) return [];
 
-  const text = await response.text();
-  if (text.includes("<!DOCTYPE")) throw new Error("HTML");
+  const sample = appData.allData[0];
+  const keys = Object.keys(sample || {});
+  const managerKeyCol =
+    keys.find(k => k === "manager_key") ||
+    keys.find(k => k === "manager") ||
+    keys.find(k => k === "مدير") ||
+    findCol(sample, ["manager_key","manager","مدير"]);
 
-  return parseCSV(text);
+  if (!managerKeyCol) return appData.allData;
+  if (!selectedManager) return appData.allData;
+
+  return appData.allData.filter(row => {
+    const value = (row[managerKeyCol] || "").toString().trim().toLowerCase();
+    return value === selectedManager.toLowerCase();
+  });
 }
+
 
 function parseCSV(csv) {
   const lines = csv.trim().split('\n');
