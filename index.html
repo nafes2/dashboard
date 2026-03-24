@@ -28,6 +28,7 @@ header p{opacity:.9;font-size:1.1em}
 }
 .btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
 .btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700;box-shadow:0 4px 15px rgba(255,215,0,.4)}
+.btn.empty{opacity:.7}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:10px}
 .card{
   background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.3);
@@ -188,9 +189,10 @@ let appData = { allData: [], currentWeek: 1 };
 
 function weekTextToNumber(text) {
   if (!text) return null;
-  const t = text.toString().trim();
+  const t = String(text).trim();
   const num = parseInt(t, 10);
   if (!isNaN(num)) return num;
+
   if (t.includes("خامس عشر")) return 15;
   if (t.includes("رابع عشر")) return 14;
   if (t.includes("ثالث عشر")) return 13;
@@ -206,14 +208,17 @@ function weekTextToNumber(text) {
   if (t.includes("ثالث")) return 3;
   if (t.includes("ثاني")) return 2;
   if (t.includes("أول")) return 1;
+
   return null;
 }
 
 async function fetchData() {
   const response = await fetch(SHEET_URL + "&t=" + Date.now());
   if (!response.ok) throw new Error("HTTP " + response.status);
+
   const text = await response.text();
   if (text.includes("<!DOCTYPE")) throw new Error("HTML");
+
   return parseCSV(text);
 }
 
@@ -235,16 +240,12 @@ async function loadData() {
     appData.allData = fillDownWeek(data);
 
     const filtered = getManagerData();
-    const sample = filtered[0] || appData.allData[0];
-    const weekCol = getWeekCol(sample);
-
-    const availableWeeks = weekCol
-      ? [...new Set(filtered.map(row => weekTextToNumber(row[weekCol])))]
-          .filter(Boolean)
-          .sort((a,b) => a-b)
-      : [];
+    const availableWeeks = [...new Set(
+      filtered.map(row => weekTextToNumber(row["الأسابيع"]))
+    )].filter(Boolean).sort((a,b) => a-b);
 
     appData.currentWeek = availableWeeks.includes(1) ? 1 : (availableWeeks[0] || 1);
+
     render();
     updateTimestamp();
   } catch (err) {
@@ -315,48 +316,18 @@ function parseCSVRows(text) {
   return rows;
 }
 
-function findCol(sample, names) {
-  const keys = Object.keys(sample || {});
-  for (const name of names) {
-    const found = keys.find(k => k.toLowerCase().includes(name.toLowerCase()));
-    if (found) return found;
-  }
-  return null;
-}
-
-function findExactOrContains(sample, exactNames, fallbackNames) {
-  const keys = Object.keys(sample || {});
-  for (const name of exactNames) {
-    const exact = keys.find(k => k.toLowerCase() === name.toLowerCase());
-    if (exact) return exact;
-  }
-  return findCol(sample, fallbackNames || exactNames);
-}
-
-function getWeekCol(sample) {
-  return findExactOrContains(
-    sample,
-    ["week","الأسبوع","الأسابيع","الاسبوع"],
-    ["الأسابيع","الأسبوع","الاسبوع","أسابيع","week"]
-  );
-}
-
 function fillDownWeek(data) {
-  if (!data.length) return data;
-  const sample = data[0];
-  const weekCol = getWeekCol(sample);
-  if (!weekCol) return data;
-
   let lastWeek = "";
   return data.map(row => {
     const copy = { ...row };
-    const currentWeek = (copy[weekCol] || "").toString().trim();
+    const currentWeek = String(copy["الأسابيع"] || "").trim();
 
     if (currentWeek) {
       lastWeek = currentWeek;
     } else if (lastWeek) {
-      copy[weekCol] = lastWeek;
+      copy["الأسابيع"] = lastWeek;
     }
+
     return copy;
   });
 }
@@ -365,9 +336,15 @@ function getManagerData() {
   if (!appData.allData.length) return [];
 
   const sample = appData.allData[0];
-  const managerKeyCol = findExactOrContains(sample, ["manager_key"], ["manager_key"]);
+  const keys = Object.keys(sample || {});
 
-  if (!managerKeyCol) return appData.allData;
+  const managerKeyCol =
+    keys.find(k => k.trim().toLowerCase() === "manager_key") ||
+    keys.find(k => k.toLowerCase().includes("manager_key")) ||
+    keys.find(k => k.trim().toLowerCase() === "manager") ||
+    keys.find(k => k.toLowerCase().includes("manager"));
+
+  if (!managerKeyCol) return [];
   if (!selectedManager) return appData.allData;
 
   return appData.allData.filter(row => {
@@ -395,7 +372,10 @@ function renderManagerBadge() {
 
   if (filtered.length > 0) {
     const sampleRow = filtered[0];
-    const managerNameCol = findExactOrContains(sampleRow, ["manager_name"], ["manager_name"]);
+    const managerNameCol =
+      Object.keys(sampleRow || {}).find(k => k.trim().toLowerCase() === "manager_name") ||
+      Object.keys(sampleRow || {}).find(k => k.toLowerCase().includes("manager_name"));
+
     if (managerNameCol && sampleRow[managerNameCol]) {
       managerName = sampleRow[managerNameCol].trim();
     }
@@ -414,18 +394,18 @@ function renderWeeks() {
     return;
   }
 
-  const sample = filteredData[0];
-  const weekCol = getWeekCol(sample);
-  const availableWeeks = weekCol
-    ? [...new Set(filteredData.map(row => weekTextToNumber(row[weekCol])))]
-        .filter(Boolean)
-    : [];
+  const availableWeeks = [...new Set(
+    filteredData.map(row => weekTextToNumber(row["الأسابيع"]))
+  )].filter(Boolean);
 
   ALL_WEEKS.forEach(weekNum => {
-    const btn = document.createElement("button");
     const hasData = availableWeeks.includes(weekNum);
+    const btn = document.createElement("button");
 
-    btn.className = "btn" + (weekNum === appData.currentWeek ? " active" : "");
+    btn.className = "btn" +
+      (weekNum === appData.currentWeek ? " active" : "") +
+      (!hasData ? " empty" : "");
+
     btn.textContent = weekNum;
     btn.title = "الأسبوع " + WEEK_NAMES[weekNum] + (hasData ? "" : " (لا توجد بيانات)");
 
@@ -470,43 +450,38 @@ function renderCards() {
   const sample = filteredData[0];
   const keys = Object.keys(sample || {});
 
-  const weekCol = keys[0] || getWeekCol(sample); // A
-  const nameCol = keys[1]; // B
-  const countCol = keys[2]; // C
-  const doneCol = keys[3]; // D
-  const pendingCol = keys[4]; // E
-  const notDoneCol = keys[5]; // F
+  const managerNameCol =
+    keys.find(k => k.trim().toLowerCase() === "manager_name") ||
+    keys.find(k => k.toLowerCase().includes("manager_name"));
 
-  const managerNameCol = findExactOrContains(sample, ["manager_name"], ["manager_name"]);
-  const phoneCol = findExactOrContains(sample, ["phone"], ["phone"]);
+  const phoneCol =
+    keys.find(k => k.trim().toLowerCase() === "phone") ||
+    keys.find(k => k.toLowerCase().includes("phone"));
 
   const supervisorTotals = {};
-
   filteredData.forEach(row => {
-    const name = row[nameCol];
+    const name = row["اسم المشرف"];
     if (!name) return;
 
     if (!supervisorTotals[name]) supervisorTotals[name] = { totalDoneAll: 0 };
-    const doneCount = parseInt(row[doneCol], 10) || 0;
+    const doneCount = parseInt(row["تم التنفيذ"], 10) || 0;
     supervisorTotals[name].totalDoneAll += doneCount;
   });
 
   let weekData = filteredData;
-  if (weekCol) {
-    const matchedWeekData = filteredData.filter(row => {
-      const rowWeekNum = weekTextToNumber(row[weekCol]);
-      return rowWeekNum === appData.currentWeek;
-    });
+  const matchedWeekData = filteredData.filter(row => {
+    const rowWeekNum = weekTextToNumber(row["الأسابيع"]);
+    return rowWeekNum === appData.currentWeek;
+  });
 
-    if (matchedWeekData.length > 0) {
-      weekData = matchedWeekData;
-    }
+  if (matchedWeekData.length > 0) {
+    weekData = matchedWeekData;
   }
 
   const supervisors = {};
 
   weekData.forEach(row => {
-    const name = row[nameCol];
+    const name = row["اسم المشرف"];
     if (!name) return;
 
     if (!supervisors[name]) {
@@ -524,10 +499,10 @@ function renderCards() {
       };
     }
 
-    const indicatorCount = parseInt(row[countCol], 10) || 0;
-    const doneCount = parseInt(row[doneCol], 10) || 0;
-    const pendingCount = parseInt(row[pendingCol], 10) || 0;
-    const notDoneCount = parseInt(row[notDoneCol], 10) || 0;
+    const indicatorCount = parseInt(row["عدظ المؤشرات"] || row["عدد المؤشرات"], 10) || 0;
+    const doneCount = parseInt(row["تم التنفيذ"], 10) || 0;
+    const pendingCount = parseInt(row["جار التنفيذ"], 10) || 0;
+    const notDoneCount = parseInt(row["لم ينفذ"], 10) || parseInt(row["لم يبدأ"], 10) || 0;
 
     supervisors[name].totalCount += indicatorCount;
     supervisors[name].doneCount += doneCount;
@@ -673,7 +648,7 @@ function renderCards() {
         }
 
         <div class="note-box">
-          <textarea id="note-${index}" class="note-textarea" placeholder="✍️ اكتب ملاحظتك حول الاستمارة هنا..."></textarea>
+          <textarea id="note-${index}" class="note-textarea" placeholder="✍️ اكتب الملاحظة هنا..."></textarea>
           <button class="whatsapp-btn" onclick="sendWhatsApp('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(sup.managerName)}',${index})">
             📲 إرسال الملاحظة عبر واتساب
           </button>
@@ -686,14 +661,17 @@ function renderCards() {
 function sendWhatsApp(phone, supervisorName, managerName, index) {
   const noteEl = document.getElementById(`note-${index}`);
   const note = noteEl ? noteEl.value.trim() : "";
+
   if (!phone) {
     alert("لا يوجد رقم جوال لهذا المشرف");
     return;
   }
+
   if (!note) {
     alert("اكتب الملاحظة أولاً");
     return;
   }
+
   const intro = managerName ? `مرحباً ${supervisorName}\n\nمعك ${managerName}` : `مرحباً ${supervisorName}`;
   const message = `${intro}\n\n📌 ملاحظة حول الاستمارة:\n${note}`;
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
