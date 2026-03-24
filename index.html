@@ -628,7 +628,7 @@ function getManagerData() {
   if (!appData.allData.length) return [];
 
   const sample = appData.allData[0];
-  const managerKeyCol = findCol(sample, ["manager_key", "مفتاح المدير"]);
+  const managerKeyCol = findCol(sample, ["manager_key", "manager", "مدير"]);
 
   if (!managerKeyCol) return appData.allData;
   if (!selectedManager) return appData.allData;
