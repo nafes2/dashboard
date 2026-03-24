@@ -649,12 +649,33 @@ function getManagerData() {
   });
 }
 
-function render() {
-  renderManagerBadge();
-  renderWeeks();
-  renderCards();
-  document.getElementById("footer").style.display = "block";
+function renderManagerBadge() {
+  const wrap = document.getElementById("managerBadgeWrap");
+
+  if (!selectedManager) {
+    wrap.innerHTML = "";
+    return;
+  }
+
+  const filtered = getManagerData();
+  let managerName = selectedManager;
+
+  if (filtered.length > 0) {
+    const sampleRow = filtered[0];
+    const keys = Object.keys(sampleRow || {});
+    const managerNameCol =
+      keys.find(k => k === "manager_name") ||
+      keys.find(k => k === "اسم المدير") ||
+      findCol(sampleRow, ["manager_name","اسم المدير"]);
+
+    if (managerNameCol && sampleRow[managerNameCol]) {
+      managerName = sampleRow[managerNameCol].trim();
+    }
+  }
+
+  wrap.innerHTML = `<div class="manager-badge">👋 أهلاً ${escapeHtml(managerName)}</div>`;
 }
+
 
 function renderManagerBadge() {
   const wrap = document.getElementById("managerBadgeWrap");
