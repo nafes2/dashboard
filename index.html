@@ -633,7 +633,10 @@ function getManagerData() {
   if (!managerKeyCol) return appData.allData;
   if (!selectedManager) return appData.allData;
 
-  return appData.allData.filter(row => (row[managerKeyCol] || "").trim() === selectedManager);
+  return appData.allData.filter(row => {
+    const value = (row[managerKeyCol] || "").toString().trim().toLowerCase();
+    return value === selectedManager.toLowerCase();
+  });
 }
 
 function render() {
@@ -645,19 +648,23 @@ function render() {
 
 function renderManagerBadge() {
   const wrap = document.getElementById("managerBadgeWrap");
+
   if (!selectedManager) {
     wrap.innerHTML = "";
     return;
   }
 
   const filtered = getManagerData();
-  const sampleRow = filtered[0];
-  const managerNameCol = sampleRow ? findCol(sampleRow, ["manager_name", "اسم المدير"]) : null;
   let managerName = selectedManager;
 
-if (managerNameCol !== null && filtered.length > 0) {
-  managerName = filtered[0][managerNameCol] || selectedManager;
-};
+  if (filtered.length > 0) {
+    const sampleRow = filtered[0];
+    const managerNameCol = findCol(sampleRow, ["manager_name", "اسم المدير"]);
+
+    if (managerNameCol && sampleRow[managerNameCol]) {
+      managerName = sampleRow[managerNameCol].trim();
+    }
+  }
 
   wrap.innerHTML = `<div class="manager-badge">👋 أهلاً ${escapeHtml(managerName)}</div>`;
 }
@@ -736,7 +743,7 @@ function renderCards() {
   }
 
   const sample = filteredData[0];
-  const nameCol = findCol(sample, ["اسم المشرف", "المشرف", "الاسم"]);
+  const nameCol = findCol(sample, ["اسم المشرف", "المشرف", "الاسم", "supervisor"]);
   const weekCol = findCol(sample, ["الأسابيع", "الأسبوع", "الاسبوع", "أسابيع", "week"]);
   const statusCol = findCol(sample, ["الحالة", "حالة", "status"]);
   const countCol = findCol(sample, ["عدد", "count", "العدد", "مؤشرات"]) || findColByValue(sample, ["3", "2", "1"]);
