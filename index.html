@@ -15,107 +15,131 @@ body{
 header{text-align:center;padding:20px 0}
 header h1{font-size:2em;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
 header p{opacity:.9;font-size:1.1em}
+
 .manager-badge{
-  display:inline-block;margin-top:12px;background:rgba(255,255,255,.15);
-  border:2px solid rgba(255,255,255,.25);color:#ffd700;padding:8px 18px;
-  border-radius:999px;font-size:.95em;font-weight:700;backdrop-filter:blur(10px)
-}
-.page-meta{
+  display:inline-block;
   margin-top:14px;
+  background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.10));
+  border:2px solid rgba(255,255,255,.24);
+  color:#ffd700;
+  padding:12px 16px;
+  border-radius:22px;
+  font-size:1rem;
+  font-weight:800;
+  backdrop-filter:blur(10px);
+  max-width:min(96%, 620px);
+  min-width:260px;
+  line-height:1.8;
+  text-align:center;
+  word-break:break-word;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  box-shadow:0 8px 20px rgba(0,0,0,.18)
+}
+
+.page-meta{
+  margin-top:16px;
   display:flex;
   flex-direction:column;
-  align-items:flex-end;
-  gap:6px;
+  align-items:center;
+  gap:10px;
 }
 .page-meta-line{
   background:rgba(255,255,255,.12);
   border:1px solid rgba(255,255,255,.18);
   color:#fff;
-  padding:8px 14px;
-  border-radius:14px;
-  font-size:.95em;
-  font-weight:600;
-  text-align:right;
-  max-width:100%;
+  padding:12px 16px;
+  border-radius:18px;
+  font-size:1rem;
+  font-weight:700;
+  text-align:center;
+  width:min(100%,620px);
   word-break:break-word;
   backdrop-filter:blur(8px);
+  box-shadow:0 6px 16px rgba(0,0,0,.12)
 }
-.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:25px 0;padding:0 10px}
+
+.nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:28px 0;padding:0 10px}
 .btn{
   background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);color:#fff;
-  padding:12px 20px;border-radius:25px;cursor:pointer;font-size:15px;font-weight:600;
-  transition:all .3s ease;backdrop-filter:blur(10px)
+  padding:12px 20px;border-radius:25px;cursor:pointer;font-size:15px;font-weight:700;
+  transition:all .25s ease;backdrop-filter:blur(10px)
 }
 .btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
 .btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700;box-shadow:0 4px 15px rgba(255,215,0,.4)}
-.btn.empty{opacity:.7}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:10px}
+.btn.empty{opacity:.6}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:20px;
+  padding:10px;
+  justify-content:center
+}
 .card{
-  background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.3);
-  transition:transform .3s ease,box-shadow .3s ease;position:relative;overflow:hidden
+  background:#fff;color:#333;border-radius:20px;padding:25px;box-shadow:0 10px 30px rgba(0,0,0,.28);
+  transition:transform .25s ease,box-shadow .25s ease;position:relative;overflow:hidden
 }
 .card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:5px;
   background:linear-gradient(90deg,#4caf50,#8bc34a)
 }
-.card:hover{transform:translateY(-5px);box-shadow:0 15px 40px rgba(0,0,0,.4)}
+.card:hover{transform:translateY(-4px);box-shadow:0 15px 40px rgba(0,0,0,.32)}
 .card-header{text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #f0f0f0}
 .card-header h3{color:#1e3c72;font-size:1.4em;margin-bottom:8px}
 .week-badge{
   display:inline-block;background:#e3f2fd;color:#1976d2;padding:4px 12px;
-  border-radius:15px;font-size:.85em;font-weight:600
+  border-radius:15px;font-size:.85em;font-weight:700
 }
 .card-manager-name{margin-top:10px;color:#5c6b7a;font-size:.92em;font-weight:700}
+
 .indicators-toggle{
   background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;padding:12px 15px;
-  border-radius:10px;cursor:pointer;margin:15px 0 10px;font-weight:600;color:#fff;width:100%;
-  transition:all .3s;font-size:.95em
+  border-radius:10px;cursor:pointer;margin:15px 0 10px;font-weight:700;color:#fff;width:100%;
+  transition:all .25s;font-size:.95em
 }
-.indicators-toggle:hover{transform:scale(1.02);box-shadow:0 4px 15px rgba(102,126,234,.4)}
+.indicators-toggle:hover{transform:scale(1.01);box-shadow:0 4px 15px rgba(102,126,234,.35)}
+
 .indicators-list{
   display:none;background:#f8f9fa;border-radius:12px;padding:12px;margin:10px 0;
   max-height:260px;overflow-y:auto;border:1px solid #e0e0e0
 }
-.indicators-list.show{display:block;animation:slideDown .3s ease}
-@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.indicators-list.show{display:block;animation:slideDown .25s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
 .indicator-item{
   display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
   padding:12px 10px;border-bottom:1px solid #e0e0e0;font-size:.92em;transition:background .2s
 }
 .indicator-item:hover{background:#fff;border-radius:6px}
 .indicator-item:last-child{border-bottom:none}
-.indicator-text-wrap{
-  flex:1;
-  text-align:right;
-  line-height:1.9;
-}
-.indicator-line{
-  color:#444;
-  font-weight:700;
-  word-break:break-word;
-}
+.indicator-text-wrap{flex:1;text-align:right;line-height:1.9}
+.indicator-line{color:#444;font-weight:700;word-break:break-word}
 .indicator-status{font-size:.88em;font-weight:700;min-width:78px;text-align:center}
 .status-done{color:#4caf50}.status-pending{color:#ff9800}.status-not-done{color:#f44336}
+
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
 .stat-box{text-align:center;padding:12px 8px;border-radius:12px}
 .stat-box.done{background:#e8f5e9;color:#2e7d32}
 .stat-box.pending{background:#fff3e0;color:#ef6c00}
 .stat-box.total{background:#e3f2fd;color:#1565c0}
 .stat-number{font-size:1.6em;font-weight:bold;display:block}
-.stat-label{font-size:.8em;margin-top:5px;font-weight:600}
+.stat-label{font-size:.8em;margin-top:5px;font-weight:700}
+
 .progress-section{margin:20px 0;padding:15px;background:#f8f9fa;border-radius:12px}
 .progress-item{margin-bottom:15px}
 .progress-item:last-child{margin-bottom:0}
-.progress-label{display:flex;justify-content:space-between;margin-bottom:6px;font-weight:600;color:#555;font-size:.95em}
+.progress-label{display:flex;justify-content:space-between;margin-bottom:6px;font-weight:700;color:#555;font-size:.95em}
 .progress{background:#e0e0e0;height:28px;border-radius:14px;overflow:hidden;position:relative}
 .bar{
   height:100%;border-radius:14px;display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:bold;font-size:13px;transition:width 1s ease
+  color:#fff;font-weight:bold;font-size:13px;transition:width .8s ease
 }
 .bar.high{background:linear-gradient(90deg,#4caf50,#66bb6a)}
 .bar.medium{background:linear-gradient(90deg,#ff9800,#ffb74d)}
 .bar.low{background:linear-gradient(90deg,#f44336,#ef5350)}
 .bar.purple{background:linear-gradient(90deg,#9c27b0,#ab47bc)}
+
 .summary-box{
   background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px;
   border-radius:12px;margin:15px 0;text-align:center
@@ -123,13 +147,15 @@ header p{opacity:.9;font-size:1.1em}
 .summary-box h4{font-size:.9em;margin-bottom:8px;opacity:.95}
 .summary-box .big-number{font-size:2.2em;font-weight:bold}
 .summary-box .small-text{font-size:.85em;opacity:.9}
+
 .link-btn{
   display:block;width:100%;text-align:center;margin-top:15px;background:#2a5298;color:#fff;
-  padding:14px;border-radius:12px;text-decoration:none;font-weight:600;transition:all .3s ease;
+  padding:14px;border-radius:12px;text-decoration:none;font-weight:700;transition:all .25s ease;
   border:none;cursor:pointer
 }
-.link-btn:hover{background:#1e3c72;transform:scale(1.02)}
+.link-btn:hover{background:#1e3c72;transform:scale(1.01)}
 .link-btn.disabled{background:#ccc;color:#888;cursor:not-allowed;pointer-events:none}
+
 .note-box{margin-top:12px}
 .note-textarea{
   width:100%;min-height:90px;padding:12px;border-radius:12px;border:1px solid #d8d8d8;
@@ -138,35 +164,51 @@ header p{opacity:.9;font-size:1.1em}
 .note-textarea:focus{border-color:#25D366;box-shadow:0 0 0 3px rgba(37,211,102,.15)}
 .whatsapp-btn{
   display:block;width:100%;text-align:center;margin-top:10px;background:#25D366;color:#fff;
-  padding:14px;border-radius:12px;text-decoration:none;font-weight:700;transition:all .3s ease;
+  padding:14px;border-radius:12px;text-decoration:none;font-weight:700;transition:all .25s ease;
   border:none;cursor:pointer
 }
-.whatsapp-btn:hover{transform:scale(1.02);background:#1fb959}
+.whatsapp-btn:hover{transform:scale(1.01);background:#1fb959}
+
 .loading{text-align:center;padding:60px 20px}
 .spinner{
   width:50px;height:50px;border:4px solid rgba(255,255,255,.3);border-top-color:#ffd700;
   border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
 .error-box{
-  background:#ff5252;color:#fff;padding:30px;border-radius:15px;text-align:center;
-  margin:20px auto;max-width:500px
+  background:linear-gradient(135deg,#ff5a5f,#ff4b4b);
+  color:#fff;
+  padding:30px;
+  border-radius:20px;
+  text-align:center;
+  margin:20px auto;
+  max-width:560px;
+  box-shadow:0 12px 28px rgba(0,0,0,.18)
 }
+.error-box h3{font-size:1.8em;margin-bottom:8px}
+.error-box p{font-size:1rem;opacity:.96;line-height:1.8}
+
 .retry-btn{
   background:#fff;color:#ff5252;border:none;padding:12px 30px;border-radius:25px;
   cursor:pointer;font-weight:bold;font-size:16px;margin-top:15px
 }
-.empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,.8)}
+
+.empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,.88)}
 .empty-state-icon{font-size:4em;margin-bottom:20px}
+.empty-state h3{font-size:1.8em;margin-bottom:8px}
+.empty-state p{font-size:1rem;opacity:.94;line-height:1.8}
+
 .last-update{
   text-align:center;margin-top:30px;padding:15px;background:rgba(255,255,255,.1);
   border-radius:10px;font-size:.9em
 }
 .refresh-btn{
   background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;
-  padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:10px;transition:all .3s
+  padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:10px;transition:all .25s
 }
 .refresh-btn:hover{background:rgba(255,255,255,.3)}
+
 @media (max-width:768px){
   header h1{font-size:1.5em}
   .grid{grid-template-columns:1fr}
@@ -175,8 +217,8 @@ header p{opacity:.9;font-size:1.1em}
   .page-meta-line{
     width:100%;
     text-align:center;
-    font-size:.9em;
-    line-height:1.7;
+    font-size:.95em;
+    line-height:1.8;
   }
   .indicator-item{
     flex-direction:column;
@@ -185,6 +227,14 @@ header p{opacity:.9;font-size:1.1em}
   .indicator-status{
     min-width:auto;
     text-align:right;
+  }
+  .manager-badge{
+    max-width:100%;
+    min-width:auto;
+    width:min(100%, 540px);
+    font-size:.96em;
+    padding:12px 14px;
+    line-height:1.9;
   }
 }
 </style>
@@ -233,10 +283,30 @@ const urlParams = new URLSearchParams(window.location.search);
 const selectedManager = (urlParams.get("manager") || "").trim().toLowerCase();
 const isAdmin = urlParams.get("admin") === "1";
 
+const MANAGER_NAMES = {
+  hussain: "د.حسين سليمان الجربوع",
+  dali: "د.علي ناصر الناصر",
+  fisl: "د.فيصل غنيم العوفي",
+  salh: "صالح محمد الراجحي",
+  klf: "خلف خليف المطيري",
+  mslm: "مسلم محمد المزيني",
+  ali: "علي محمد النوشان",
+  hnd: "هند محمد العمرو",
+  hsh: "حصة عبدالله النفيسة",
+  mna: "منى محمد السويلمي",
+  mon: "منيرة علي الفريح",
+  avn: "أفنان عبدالعزيز الشمالي",
+  hna: "هناء عبدالكريم اللحيدان"
+};
+
 let appData = {
   allData: [],
   currentWeek: 1
 };
+
+function isKnownManager(managerKey) {
+  return !!MANAGER_NAMES[managerKey];
+}
 
 function weekTextToNumber(text) {
   if (!text) return null;
@@ -265,7 +335,7 @@ function weekTextToNumber(text) {
 }
 
 async function fetchData() {
-  const response = await fetch(SHEET_URL + "&t=" + Date.now());
+  const response = await fetch(SHEET_URL + "&t=" + Date.now(), { cache: "no-store" });
   if (!response.ok) throw new Error("HTTP " + response.status);
 
   const text = await response.text();
@@ -275,7 +345,7 @@ async function fetchData() {
 }
 
 async function fetchSettings() {
-  const response = await fetch(SETTINGS_URL + "&t=" + Date.now());
+  const response = await fetch(SETTINGS_URL + "&t=" + Date.now(), { cache: "no-store" });
   if (!response.ok) throw new Error("Settings HTTP " + response.status);
 
   const text = await response.text();
@@ -309,12 +379,12 @@ async function loadData() {
 
     renderSettings(settings);
 
-    if (!data.length) {
+    if (!data.length && !selectedManager && !isAdmin) {
       showError("لا توجد بيانات");
       return;
     }
 
-    appData.allData = data;
+    appData.allData = data || [];
 
     const filtered = getVisibleData();
     const availableWeeks = [...new Set(
@@ -344,7 +414,7 @@ function renderSettings(settings) {
 
   if (centerText || teamText) {
     wrap.style.display = "flex";
-    centerLine.style.display = "block";
+    centerLine.style.display = centerText ? "block" : "none";
     teamLine.style.display = teamText ? "block" : "none";
   } else {
     wrap.style.display = "none";
@@ -502,8 +572,13 @@ function renderManagerBadge() {
     return;
   }
 
+  if (!isKnownManager(selectedManager)) {
+    wrap.innerHTML = `<div class="manager-badge">⚠️ رابط مدير غير صحيح</div>`;
+    return;
+  }
+
   const filtered = getVisibleData();
-  let managerName = selectedManager;
+  let managerName = MANAGER_NAMES[selectedManager] || selectedManager;
 
   if (filtered.length > 0 && filtered[0].__managerName) {
     managerName = filtered[0].__managerName;
@@ -521,14 +596,30 @@ function renderWeeks() {
   if (!isAdmin && !selectedManager) {
     container.innerHTML = `
       <div class="error-box">
-        <h3> هذا الرابط غير مخصص للعرض العام</h3>
+        <h3>هذا الرابط غير مخصص للعرض العام</h3>
+        <p>إذا كنت مسؤولًا فاطلب رابطًا خاصًا بك.</p>
+      </div>
+    `;
+    return;
+  }
+
+  if (!isAdmin && selectedManager && !isKnownManager(selectedManager)) {
+    container.innerHTML = `
+      <div class="error-box">
+        <h3>رابط المدير غير صحيح</h3>
+        <p>المدير غير موجود في قائمة المديرين.</p>
       </div>
     `;
     return;
   }
 
   if (!filteredData.length) {
-    container.innerHTML = `<div class="error-box"><h3>لا توجد بيانات لهذا العرض</h3></div>`;
+    container.innerHTML = `
+      <div class="error-box">
+        <h3>لا توجد بيانات لهذا العرض</h3>
+        <p>اسم المدير ظاهر بشكل صحيح، لكن لا توجد له مؤشرات مرتبطة حاليًا.</p>
+      </div>
+    `;
     return;
   }
 
@@ -601,7 +692,19 @@ function renderCards() {
     container.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
         <div class="empty-state-icon">🔒</div>
-        <h3> مسؤول اطلب رابط خاص 0555179649</h3>
+        <h3>هذا الرابط غير مخصص للعرض العام</h3>
+        <p>إذا كنت مسؤولًا فاطلب رابطًا خاصًا بك.</p>
+      </div>
+    `;
+    return;
+  }
+
+  if (!isAdmin && selectedManager && !isKnownManager(selectedManager)) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>رابط المدير غير صحيح</h3>
+        <p>المدير غير موجود في قائمة المديرين.</p>
       </div>
     `;
     return;
@@ -613,6 +716,7 @@ function renderCards() {
       <div class="empty-state" style="grid-column:1/-1">
         <div class="empty-state-icon">📭</div>
         <h3>لا توجد بيانات لهذا العرض</h3>
+        <p>لا توجد مؤشرات مرتبطة بهذا المدير حتى الآن.</p>
       </div>
     `;
     return;
@@ -627,6 +731,7 @@ function renderCards() {
       <div class="empty-state" style="grid-column:1/-1">
         <div class="empty-state-icon">📭</div>
         <h3>لا توجد بيانات للأسبوع ${WEEK_NAMES[appData.currentWeek]}</h3>
+        <p>جرّب اختيار أسبوع آخر من الأعلى.</p>
       </div>
     `;
     return;
@@ -642,7 +747,9 @@ function renderCards() {
     }
 
     if (row.__status.includes("تم التنفيذ")) {
-      supervisorTotals[name].totalDoneAll += 1;
+      const split = splitIndicators(row.__indicatorText);
+      const countToAdd = split.length || 1;
+      supervisorTotals[name].totalDoneAll += countToAdd;
     }
   });
 
@@ -858,6 +965,7 @@ function showError(msg) {
   document.getElementById("weeks").innerHTML = `
     <div class="error-box">
       <h3>⚠️ ${escapeHtml(msg)}</h3>
+      <p>تحقق من الرابط أو الاتصال ثم أعد المحاولة.</p>
       <button class="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button>
     </div>
   `;
