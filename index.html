@@ -16,6 +16,7 @@ header{text-align:center;padding:20px 0}
 header h1{font-size:2em;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
 header p{opacity:.9;font-size:1.1em}
 
+
 .manager-badge{
   display:inline-block;
   margin-top:14px;
@@ -36,6 +37,7 @@ header p{opacity:.9;font-size:1.1em}
   overflow-wrap:anywhere;
   box-shadow:0 8px 20px rgba(0,0,0,.18)
 }
+
 
 .page-meta{
   margin-top:16px;
@@ -59,6 +61,7 @@ header p{opacity:.9;font-size:1.1em}
   box-shadow:0 6px 16px rgba(0,0,0,.12)
 }
 
+
 .nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:28px 0;padding:0 10px}
 .btn{
   background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);color:#fff;
@@ -68,6 +71,7 @@ header p{opacity:.9;font-size:1.1em}
 .btn:hover{background:rgba(255,255,255,.25);transform:translateY(-2px)}
 .btn.active{background:#ffd700;color:#1e3c72;border-color:#ffd700;box-shadow:0 4px 15px rgba(255,215,0,.4)}
 .btn.empty{opacity:.6}
+
 
 .grid{
   display:grid;
@@ -93,6 +97,7 @@ header p{opacity:.9;font-size:1.1em}
 }
 .card-manager-name{margin-top:10px;color:#5c6b7a;font-size:.92em;font-weight:700}
 
+
 .indicators-toggle{
   background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;padding:12px 15px;
   border-radius:10px;cursor:pointer;margin:15px 0 10px;font-weight:700;color:#fff;width:100%;
@@ -100,12 +105,14 @@ header p{opacity:.9;font-size:1.1em}
 }
 .indicators-toggle:hover{transform:scale(1.01);box-shadow:0 4px 15px rgba(102,126,234,.35)}
 
+
 .indicators-list{
   display:none;background:#f8f9fa;border-radius:12px;padding:12px;margin:10px 0;
   max-height:260px;overflow-y:auto;border:1px solid #e0e0e0
 }
 .indicators-list.show{display:block;animation:slideDown .25s ease}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
 
 .indicator-item{
   display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
@@ -118,6 +125,7 @@ header p{opacity:.9;font-size:1.1em}
 .indicator-status{font-size:.88em;font-weight:700;min-width:78px;text-align:center}
 .status-done{color:#4caf50}.status-pending{color:#ff9800}.status-not-done{color:#f44336}
 
+
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
 .stat-box{text-align:center;padding:12px 8px;border-radius:12px}
 .stat-box.done{background:#e8f5e9;color:#2e7d32}
@@ -125,6 +133,7 @@ header p{opacity:.9;font-size:1.1em}
 .stat-box.total{background:#e3f2fd;color:#1565c0}
 .stat-number{font-size:1.6em;font-weight:bold;display:block}
 .stat-label{font-size:.8em;margin-top:5px;font-weight:700}
+
 
 .progress-section{margin:20px 0;padding:15px;background:#f8f9fa;border-radius:12px}
 .progress-item{margin-bottom:15px}
@@ -140,6 +149,7 @@ header p{opacity:.9;font-size:1.1em}
 .bar.low{background:linear-gradient(90deg,#f44336,#ef5350)}
 .bar.purple{background:linear-gradient(90deg,#9c27b0,#ab47bc)}
 
+
 .summary-box{
   background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px;
   border-radius:12px;margin:15px 0;text-align:center
@@ -148,6 +158,7 @@ header p{opacity:.9;font-size:1.1em}
 .summary-box .big-number{font-size:2.2em;font-weight:bold}
 .summary-box .small-text{font-size:.85em;opacity:.9}
 
+
 .link-btn{
   display:block;width:100%;text-align:center;margin-top:15px;background:#2a5298;color:#fff;
   padding:14px;border-radius:12px;text-decoration:none;font-weight:700;transition:all .25s ease;
@@ -155,6 +166,7 @@ header p{opacity:.9;font-size:1.1em}
 }
 .link-btn:hover{background:#1e3c72;transform:scale(1.01)}
 .link-btn.disabled{background:#ccc;color:#888;cursor:not-allowed;pointer-events:none}
+
 
 .note-box{margin-top:12px}
 .note-textarea{
@@ -169,12 +181,14 @@ header p{opacity:.9;font-size:1.1em}
 }
 .whatsapp-btn:hover{transform:scale(1.01);background:#1fb959}
 
+
 .loading{text-align:center;padding:60px 20px}
 .spinner{
   width:50px;height:50px;border:4px solid rgba(255,255,255,.3);border-top-color:#ffd700;
   border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
 
 .error-box{
   background:linear-gradient(135deg,#ff5a5f,#ff4b4b);
@@ -189,15 +203,18 @@ header p{opacity:.9;font-size:1.1em}
 .error-box h3{font-size:1.8em;margin-bottom:8px}
 .error-box p{font-size:1rem;opacity:.96;line-height:1.8}
 
+
 .retry-btn{
   background:#fff;color:#ff5252;border:none;padding:12px 30px;border-radius:25px;
   cursor:pointer;font-weight:bold;font-size:16px;margin-top:15px
 }
 
+
 .empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,.88)}
 .empty-state-icon{font-size:4em;margin-bottom:20px}
 .empty-state h3{font-size:1.8em;margin-bottom:8px}
 .empty-state p{font-size:1rem;opacity:.94;line-height:1.8}
+
 
 .last-update{
   text-align:center;margin-top:30px;padding:15px;background:rgba(255,255,255,.1);
@@ -208,6 +225,64 @@ header p{opacity:.9;font-size:1.1em}
   padding:8px 16px;border-radius:20px;cursor:pointer;margin-right:10px;transition:all .25s
 }
 .refresh-btn:hover{background:rgba(255,255,255,.3)}
+
+
+
+.login-overlay{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);z-index:99999;padding:20px
+}
+.login-overlay.show{display:flex}
+.login-box{
+  width:min(92vw,520px);
+  background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.08));
+  border:2px solid rgba(255,255,255,.18);
+  box-shadow:0 20px 60px rgba(0,0,0,.28);
+  backdrop-filter:blur(14px);
+  border-radius:28px;padding:34px 28px;text-align:center
+}
+.login-top-line,.login-bottom-line{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:18px;padding:12px 16px;margin:0 auto 12px;
+  width:min(100%,420px);font-weight:700;line-height:1.8
+}
+.login-title{
+  font-size:2.2rem;font-weight:900;line-height:1.5;margin:28px 0 14px;
+  text-shadow:2px 2px 8px rgba(0,0,0,.22)
+}
+.login-subtitle{
+  font-size:1.05rem;opacity:.95;line-height:2;margin-bottom:24px
+}
+.pin-wrap{margin:0 auto 16px;width:min(100%,420px)}
+.pin-input{
+  width:100%;height:96px;border:none;border-radius:24px;background:#fff;color:#1e3c72;
+  text-align:center;font-size:2rem;font-weight:800;letter-spacing:18px;outline:none;
+  box-shadow:inset 0 2px 0 rgba(0,0,0,.04)
+}
+.pin-input::placeholder{letter-spacing:12px;color:#8a8a8a}
+.login-btn{
+  display:block;width:min(100%,420px);margin:0 auto;background:linear-gradient(90deg,#11b8ea,#27c2f1);
+  color:#fff;border:none;border-radius:22px;padding:20px 16px;font-size:1.6rem;font-weight:800;cursor:pointer;
+  box-shadow:0 12px 24px rgba(17,184,234,.28);transition:transform .2s ease, filter .2s ease
+}
+.login-btn:hover{transform:translateY(-2px);filter:brightness(1.04)}
+.login-error{
+  display:none;margin:14px auto 0;width:min(100%,420px);background:rgba(255,82,82,.16);
+  border:1px solid rgba(255,120,120,.3);color:#ffd7d7;border-radius:16px;padding:12px 14px;font-weight:700
+}
+.logout-wrap{text-align:center;margin-top:10px}
+.logout-btn{
+  background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.18);color:#fff;
+  padding:12px 24px;border-radius:22px;cursor:pointer;font-size:1rem;font-weight:800
+}
+.logout-btn:hover{background:rgba(255,255,255,.22)}
+.welcome-toast{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:100000;
+  background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.1));
+  border:1px solid rgba(255,255,255,.2);color:#ffd700;padding:14px 20px;border-radius:22px;
+  backdrop-filter:blur(12px);font-weight:800;box-shadow:0 12px 24px rgba(0,0,0,.2);display:none;max-width:min(92vw,680px);text-align:center
+}
 
 @media (max-width:768px){
   header h1{font-size:1.5em}
@@ -236,21 +311,51 @@ header p{opacity:.9;font-size:1.1em}
     padding:12px 14px;
     line-height:1.9;
   }
+
+  .login-box{padding:28px 20px;border-radius:24px}
+  .login-title{font-size:1.9rem}
+  .login-subtitle{font-size:1rem;line-height:1.9}
+  .pin-input{height:82px;font-size:1.7rem;letter-spacing:14px}
+  .login-btn{font-size:1.45rem;padding:18px 14px}
+
 }
 </style>
 </head>
+
 <body>
+<div id="welcomeToast" class="welcome-toast"></div>
+
+<div id="loginOverlay" class="login-overlay" aria-hidden="true">
+  <div class="login-box">
+    <div id="loginTopLine" class="login-top-line" style="display:none;"></div>
+    <div id="loginBottomLine" class="login-bottom-line" style="display:none;"></div>
+
+    <div class="login-title">فضلاً أدخل الرمز الخاص بك</div>
+    <div class="login-subtitle">أدخل الرقم السري المكون من أربعة أرقام للدخول إلى لوحة المتابعة الخاصة بك</div>
+
+    <div class="pin-wrap">
+      <input id="pinInput" class="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
+    </div>
+
+    <button id="loginBtn" class="login-btn" type="button">دخول</button>
+    <div id="loginError" class="login-error">البيانات المدخلة غير صحيحة</div>
+  </div>
+</div>
+
 <div class="container">
   <header>
     <h1>📊 لوحة متابعة المشرفين</h1>
     <p>متابعة تنفيذ المؤشرات الأسبوعية</p>
     <div id="managerBadgeWrap"></div>
 
+
     <div id="pageMeta" class="page-meta" style="display:none;">
       <div id="centerLine" class="page-meta-line"></div>
       <div id="teamLine" class="page-meta-line"></div>
     </div>
+    <div class="logout-wrap" id="logoutWrap" style="display:none;"><button class="logout-btn" onclick="logoutManager()">تسجيل الخروج</button></div>
   </header>
+
 
   <div class="nav" id="weeks">
     <div class="loading">
@@ -259,7 +364,9 @@ header p{opacity:.9;font-size:1.1em}
     </div>
   </div>
 
+
   <div class="grid" id="cards"></div>
+
 
   <div class="last-update" id="footer" style="display:none;">
     <span>🕐 آخر تحديث: <span id="updateTime">--</span></span>
@@ -267,9 +374,12 @@ header p{opacity:.9;font-size:1.1em}
   </div>
 </div>
 
+
+
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=338445358&single=true&output=csv";
 const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=1042788651&single=true&output=csv";
+const MANAGERS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=719031885&single=true&output=csv";
 
 const TOTAL_INDICATORS = 44;
 const ALL_WEEKS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
@@ -280,32 +390,142 @@ const WEEK_NAMES = {
 };
 
 const urlParams = new URLSearchParams(window.location.search);
-const selectedManager = (urlParams.get("manager") || "").trim().toLowerCase();
+let selectedManager = (urlParams.get("manager") || "").trim().toLowerCase();
 const isAdmin = urlParams.get("admin") === "1";
 
-const MANAGER_NAMES = {
-  hussain: "د.حسين سليمان الجربوع",
-  dali: "د.علي ناصر الناصر",
-  fisl: "د.فيصل غنيم العوفي",
-  salh: "صالح محمد الراجحي",
-  klf: "خلف خليف المطيري",
-  mslm: "مسلم محمد المزيني",
-  ali: "علي محمد النوشان",
-  hnd: "هند محمد العمرو",
-  hsh: "حصة عبدالله النفيسة",
-  mna: "منى محمد السويلمي",
-  mon: "منيرة علي الفريح",
-  avn: "أفنان عبدالعزيز الشمالي",
-  hna: "هناء عبدالكريم اللحيدان"
-};
+let managerMap = {};
+let pinToManager = {};
+let settingsCache = {};
 
 let appData = {
   allData: [],
-  currentWeek: 1
+  currentWeek: 1,
+  dataLoaded: false
 };
 
+function getSavedManagerKey() {
+  return (localStorage.getItem("dashboard_manager_key") || "").trim().toLowerCase();
+}
+
+function getSavedManagerName() {
+  return (localStorage.getItem("dashboard_manager_name") || "").trim();
+}
+
+function saveManagerSession(key, name) {
+  localStorage.setItem("dashboard_manager_key", key || "");
+  localStorage.setItem("dashboard_manager_name", name || "");
+}
+
+function clearManagerSession() {
+  localStorage.removeItem("dashboard_manager_key");
+  localStorage.removeItem("dashboard_manager_name");
+}
+
 function isKnownManager(managerKey) {
-  return !!MANAGER_NAMES[managerKey];
+  return !!managerMap[(managerKey || "").trim().toLowerCase()];
+}
+
+function getManagerDisplayName(managerKey) {
+  const key = (managerKey || "").trim().toLowerCase();
+  if (managerMap[key] && managerMap[key].name) return managerMap[key].name;
+  return key;
+}
+
+function showLoginScreen() {
+  document.getElementById("loginOverlay").classList.add("show");
+  document.getElementById("loginOverlay").setAttribute("aria-hidden", "false");
+  document.getElementById("logoutWrap").style.display = "none";
+  document.getElementById("managerBadgeWrap").innerHTML = "";
+  document.getElementById("weeks").innerHTML = "";
+  document.getElementById("cards").innerHTML = "";
+  document.getElementById("footer").style.display = "none";
+  const pinInput = document.getElementById("pinInput");
+  pinInput.value = "";
+  document.getElementById("loginError").style.display = "none";
+  setTimeout(() => pinInput.focus(), 50);
+}
+
+function hideLoginScreen() {
+  document.getElementById("loginOverlay").classList.remove("show");
+  document.getElementById("loginOverlay").setAttribute("aria-hidden", "true");
+}
+
+function showToast(message) {
+  const toast = document.getElementById("welcomeToast");
+  if (!message) return;
+  toast.textContent = message;
+  toast.style.display = "block";
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => {
+    toast.style.display = "none";
+  }, 2500);
+}
+
+function updateLoginHeader(settings) {
+  const topEl = document.getElementById("loginTopLine");
+  const bottomEl = document.getElementById("loginBottomLine");
+  const centerText = settings.center_line || settings.center || "";
+  const teamText = settings.team_line || "";
+  topEl.textContent = centerText;
+  bottomEl.textContent = teamText;
+  topEl.style.display = centerText ? "block" : "none";
+  bottomEl.style.display = teamText ? "block" : "none";
+}
+
+function logoutManager() {
+  clearManagerSession();
+  selectedManager = "";
+  const params = new URLSearchParams(window.location.search);
+  params.delete("manager");
+  const q = params.toString();
+  history.replaceState({}, "", window.location.pathname + (q ? "?" + q : ""));
+  showLoginScreen();
+}
+
+function applyManagerSelection(managerKey, opts = {}) {
+  selectedManager = (managerKey || "").trim().toLowerCase();
+  const params = new URLSearchParams(window.location.search);
+  if (selectedManager) params.set("manager", selectedManager);
+  else params.delete("manager");
+  const q = params.toString();
+  history.replaceState({}, "", window.location.pathname + (q ? "?" + q : ""));
+  const managerName = getManagerDisplayName(selectedManager);
+  saveManagerSession(selectedManager, managerName);
+  hideLoginScreen();
+  document.getElementById("logoutWrap").style.display = isAdmin ? "none" : "block";
+  if (opts.toastMessage) showToast(opts.toastMessage);
+  if (appData.dataLoaded) {
+    render();
+  }
+}
+
+function attemptAutoLogin() {
+  if (isAdmin) return;
+  if (selectedManager && isKnownManager(selectedManager)) {
+    saveManagerSession(selectedManager, getManagerDisplayName(selectedManager));
+    hideLoginScreen();
+    document.getElementById("logoutWrap").style.display = "block";
+    return;
+  }
+  const savedKey = getSavedManagerKey();
+  if (savedKey && isKnownManager(savedKey)) {
+    applyManagerSelection(savedKey, { toastMessage: "مرحبًا بك مرة أخرى " + getManagerDisplayName(savedKey) });
+  } else {
+    clearManagerSession();
+    showLoginScreen();
+  }
+}
+
+function handleLogin() {
+  const pin = (document.getElementById("pinInput").value || "").trim();
+  const errorEl = document.getElementById("loginError");
+  if (!/^\d{4}$/.test(pin) || !pinToManager[pin]) {
+    errorEl.style.display = "block";
+    return;
+  }
+  const manager = pinToManager[pin];
+  errorEl.style.display = "none";
+  applyManagerSelection(manager.key, { toastMessage: "أهلًا " + manager.name });
 }
 
 function weekTextToNumber(text) {
@@ -334,33 +554,51 @@ function weekTextToNumber(text) {
   return null;
 }
 
-async function fetchData() {
-  const response = await fetch(SHEET_URL + "&t=" + Date.now(), { cache: "no-store" });
+async function fetchCsvText(url) {
+  const response = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" });
   if (!response.ok) throw new Error("HTTP " + response.status);
-
   const text = await response.text();
   if (text.includes("<!DOCTYPE")) throw new Error("HTML instead of CSV");
+  return text;
+}
 
-  return parseCSV(text);
+async function fetchData() {
+  return parseCSV(await fetchCsvText(SHEET_URL));
 }
 
 async function fetchSettings() {
-  const response = await fetch(SETTINGS_URL + "&t=" + Date.now(), { cache: "no-store" });
-  if (!response.ok) throw new Error("Settings HTTP " + response.status);
-
-  const text = await response.text();
-  if (text.includes("<!DOCTYPE")) throw new Error("Settings HTML instead of CSV");
-
-  const rows = parseCSVRows(text);
+  const rows = parseCSVRows(await fetchCsvText(SETTINGS_URL));
   const settings = {};
-
   rows.forEach(row => {
     const key = (row[0] || "").trim();
     const value = (row[1] || "").trim();
     if (key) settings[key] = value;
   });
-
   return settings;
+}
+
+async function fetchManagers() {
+  const rows = parseCSVRows(await fetchCsvText(MANAGERS_URL));
+  if (rows.length < 2) return { managerMap: {}, pinToManager: {} };
+
+  const headers = rows[0].map(v => (v || "").trim().toLowerCase());
+  const keyIndex = headers.indexOf("manager_key");
+  const pinIndex = headers.indexOf("pin");
+  const nameIndex = headers.indexOf("manager_name");
+
+  const mMap = {};
+  const pMap = {};
+
+  rows.slice(1).forEach(values => {
+    const key = String(values[keyIndex] || "").trim().toLowerCase();
+    const pin = String(values[pinIndex] || "").trim();
+    const name = String(values[nameIndex] || "").trim();
+    if (!key) return;
+    mMap[key] = { key, pin, name };
+    if (/^\d{4}$/.test(pin)) pMap[pin] = { key, pin, name };
+  });
+
+  return { managerMap: mMap, pinToManager: pMap };
 }
 
 async function loadData() {
@@ -372,19 +610,32 @@ async function loadData() {
   `;
 
   try {
-    const [data, settings] = await Promise.all([
+    const [data, settings, managers] = await Promise.all([
       fetchData(),
-      fetchSettings().catch(() => ({}))
+      fetchSettings().catch(() => ({})),
+      fetchManagers()
     ]);
 
-    renderSettings(settings);
+    settingsCache = settings || {};
+    managerMap = managers.managerMap || {};
+    pinToManager = managers.pinToManager || {};
 
-    if (!data.length && !selectedManager && !isAdmin) {
-      showError("لا توجد بيانات");
+    renderSettings(settingsCache);
+    updateLoginHeader(settingsCache);
+
+    appData.allData = data || [];
+    appData.dataLoaded = true;
+
+    attemptAutoLogin();
+
+    if (!selectedManager && !isAdmin) {
+      document.getElementById("weeks").innerHTML = "";
       return;
     }
 
-    appData.allData = data || [];
+    if (selectedManager && !isKnownManager(selectedManager)) {
+      clearManagerSession();
+    }
 
     const filtered = getVisibleData();
     const availableWeeks = [...new Set(
@@ -542,13 +793,8 @@ function normalizeRow(row) {
 
 function getVisibleData() {
   if (!appData.allData.length) return [];
-
   if (isAdmin) return appData.allData;
-
-  if (selectedManager) {
-    return appData.allData.filter(row => row.__managerKey === selectedManager);
-  }
-
+  if (selectedManager) return appData.allData.filter(row => row.__managerKey === selectedManager);
   return [];
 }
 
@@ -557,6 +803,7 @@ function render() {
   renderWeeks();
   renderCards();
   document.getElementById("footer").style.display = "block";
+  document.getElementById("logoutWrap").style.display = isAdmin ? "none" : (selectedManager ? "block" : "none");
 }
 
 function renderManagerBadge() {
@@ -578,7 +825,7 @@ function renderManagerBadge() {
   }
 
   const filtered = getVisibleData();
-  let managerName = MANAGER_NAMES[selectedManager] || selectedManager;
+  let managerName = getManagerDisplayName(selectedManager);
 
   if (filtered.length > 0 && filtered[0].__managerName) {
     managerName = filtered[0].__managerName;
@@ -593,15 +840,7 @@ function renderWeeks() {
 
   const filteredData = getVisibleData();
 
-  if (!isAdmin && !selectedManager) {
-    container.innerHTML = `
-      <div class="error-box">
-        <h3>هذا الرابط غير مخصص للعرض العام</h3>
-        <p>إذا كنت مسؤولًا فاطلب رابطًا خاصًا بك.</p>
-      </div>
-    `;
-    return;
-  }
+  if (!isAdmin && !selectedManager) return;
 
   if (!isAdmin && selectedManager && !isKnownManager(selectedManager)) {
     container.innerHTML = `
@@ -689,13 +928,7 @@ function renderCards() {
   container.innerHTML = "";
 
   if (!isAdmin && !selectedManager) {
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-state-icon">🔒</div>
-        <h3>هذا الرابط غير مخصص للعرض العام</h3>
-        <p>إذا كنت مسؤولًا فاطلب رابطًا خاصًا بك.</p>
-      </div>
-    `;
+    container.innerHTML = "";
     return;
   }
 
@@ -995,7 +1228,17 @@ function escapeJs(value) {
   return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+document.getElementById("loginBtn").addEventListener("click", handleLogin);
+document.getElementById("pinInput").addEventListener("input", (e) => {
+  e.target.value = e.target.value.replace(/[^\d]/g, "").slice(0, 4);
+  document.getElementById("loginError").style.display = "none";
+});
+document.getElementById("pinInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleLogin();
+});
+
 loadData();
 </script>
+
 </body>
 </html>
