@@ -291,6 +291,107 @@
       margin-bottom: 0;
     }
 
+    .domain-block {
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .domain-title {
+      font-size: .98rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.10);
+      text-align: center;
+    }
+
+    .indicator-main {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .indicator-code {
+      font-size: .82rem;
+      opacity: .9;
+      font-weight: 700;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .indicator-domain-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 700;
+      background: rgba(147,197,253,.18);
+      color: #e7f2ff;
+      border: 1px solid rgba(147,197,253,.18);
+      align-self: flex-start;
+    }
+
+    .domain-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .domain-mini {
+      text-align: center;
+      padding: 12px 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .domain-mini-name {
+      font-size: .9rem;
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }
+
+    .domain-mini-num {
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    .achievement-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 22px;
+      padding: 16px;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .achievement-title {
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+      line-height: 1.8;
+    }
+
+    .achievement-value {
+      font-size: 2.6rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .domain-mini-percent {
+      font-size: .82rem;
+      opacity: .95;
+      margin-top: 4px;
+    }
+
+
+
     .indicator-text {
       flex: 1;
       font-size: .95rem;
@@ -670,6 +771,185 @@
       "الرابع عشر": 14, "الخامس عشر": 15, "السادس عشر": 16
     };
 
+    const INDICATORS_MAP = {
+  "1-1-1-1": {
+    "text": "تضع المدرسة خطة تشغيلية مكتملة العناصر وفق أهداف تطويرية محددة",
+    "domain": "الإدارة المدرسية"
+  },
+  "2-1-1-1": {
+    "text": "تتابع المدرسة تنفيذ خطتها",
+    "domain": "الإدارة المدرسية"
+  },
+  "1-1-2-1": {
+    "text": "تعزز المدرسة القيم الإسلامية",
+    "domain": "الإدارة المدرسية"
+  },
+  "2-1-2-1": {
+    "text": "تلتزم المدرسة بقيم مهنة التعليم",
+    "domain": "الإدارة المدرسية"
+  },
+  "3-1-2-1": {
+    "text": "توفر المدرسة مناخاً آمناً",
+    "domain": "الإدارة المدرسية"
+  },
+  "4-1-2-1": {
+    "text": "تنشر المدرسة قواعد السلوك",
+    "domain": "الإدارة المدرسية"
+  },
+  "5-1-2-1": {
+    "text": "توفر المدرسة برامج وأنشطة تربوية",
+    "domain": "الإدارة المدرسية"
+  },
+  "6-1-2-1": {
+    "text": "توفر المدرسة برامج وأنشطة إثرائية",
+    "domain": "الإدارة المدرسية"
+  },
+  "1-1-3-1": {
+    "text": "تعزز المدرسة بناء العلاقات الإيجابية",
+    "domain": "الإدارة المدرسية"
+  },
+  "2-1-3-1": {
+    "text": "تعزز المدرسة مشاركة الأسرة",
+    "domain": "الإدارة المدرسية"
+  },
+  "3-1-3-1": {
+    "text": "تعزز المدرسة الشراكة المجتمعية",
+    "domain": "الإدارة المدرسية"
+  },
+  "1-1-4-1": {
+    "text": "تشجع المدرسة منسوبيها للحصول على الرخصة",
+    "domain": "الإدارة المدرسية"
+  },
+  "2-1-4-1": {
+    "text": "تدعم المدرسة التطوير المهني",
+    "domain": "الإدارة المدرسية"
+  },
+  "3-1-4-1": {
+    "text": "تطبق المدرسة التقويم الذاتي",
+    "domain": "الإدارة المدرسية"
+  },
+  "4-1-4-1": {
+    "text": "تنفذ المدرسة خطة للتحسين",
+    "domain": "الإدارة المدرسية"
+  },
+  "1-1-1-2": {
+    "text": "توفر المدرسة فرصاً متكافئة",
+    "domain": "التعليم والتعلم"
+  },
+  "2-1-1-2": {
+    "text": "تدعم المدرسة تنفيذ المناهج",
+    "domain": "التعليم والتعلم"
+  },
+  "3-1-1-2": {
+    "text": "تنوع المدرسة في استراتيجيات التدريس",
+    "domain": "التعليم والتعلم"
+  },
+  "4-1-1-2": {
+    "text": "تفعل المدرسة التعلم الإلكتروني",
+    "domain": "التعليم والتعلم"
+  },
+  "5-1-1-2": {
+    "text": "توفر المدرسة أنشطة تعلم تطبيقية",
+    "domain": "التعليم والتعلم"
+  },
+  "6-1-1-2": {
+    "text": "تنمي المدرسة المهارات القرائية",
+    "domain": "التعليم والتعلم"
+  },
+  "7-1-1-2": {
+    "text": "تنمي المدرسة مهارات التفكير العليا",
+    "domain": "التعليم والتعلم"
+  },
+  "8-1-1-2": {
+    "text": "تنمي المدرسة المهارات العاطفية",
+    "domain": "التعليم والتعلم"
+  },
+  "9-1-1-2": {
+    "text": "تنمي المدرسة المهارات الرقمية",
+    "domain": "التعليم والتعلم"
+  },
+  "10-1-1-2": {
+    "text": "تعزز المدرسة دافعية المتعلمين",
+    "domain": "التعليم والتعلم"
+  },
+  "1-1-2-2": {
+    "text": "تقوم المدرسة بتقويم أداء المتعلمين",
+    "domain": "التعليم والتعلم"
+  },
+  "2-1-2-2": {
+    "text": "تحلل المدرسة نتائج التقويم",
+    "domain": "التعليم والتعلم"
+  },
+  "3-1-2-2": {
+    "text": "تقدم المدرسة التغذية الراجعة",
+    "domain": "التعليم والتعلم"
+  },
+  "1-1-1-3": {
+    "text": "يحقق المتعلمون مستويات متقدمة في اللغة العربية",
+    "domain": "نواتج التعلم"
+  },
+  "2-1-1-3": {
+    "text": "يحقق المتعلمون مستويات متقدمة في الرياضيات",
+    "domain": "نواتج التعلم"
+  },
+  "3-1-1-3": {
+    "text": "يحقق المتعلمون مستويات متقدمة في العلوم",
+    "domain": "نواتج التعلم"
+  },
+  "1-1-2-3": {
+    "text": "يظهر المتعلمون الاعتزاز بالقيم",
+    "domain": "نواتج التعلم"
+  },
+  "2-1-2-3": {
+    "text": "يظهر المتعلمون اتجاهات إيجابية",
+    "domain": "نواتج التعلم"
+  },
+  "3-1-2-3": {
+    "text": "يظهر المتعلمون التزاماً بالممارسات الصحية",
+    "domain": "نواتج التعلم"
+  },
+  "4-1-2-3": {
+    "text": "يشارك المتعلمون في الأنشطة المجتمعية",
+    "domain": "نواتج التعلم"
+  },
+  "5-1-2-3": {
+    "text": "يلتزم المتعلمون بقواعد السلوك",
+    "domain": "نواتج التعلم"
+  },
+  "6-1-2-3": {
+    "text": "يحقق المتعلمون مستويات متقدمة في التحصيل",
+    "domain": "نواتج التعلم"
+  },
+  "7-1-2-3": {
+    "text": "يحقق المتعلمون مستويات متقدمة في مهارات التفكير",
+    "domain": "نواتج التعلم"
+  },
+  "1-1-1-4": {
+    "text": "تتوفر في المدرسة مرافق تعليمية",
+    "domain": "البيئة المدرسية"
+  },
+  "2-1-1-4": {
+    "text": "تتوفر في المدرسة خدمات صحية",
+    "domain": "البيئة المدرسية"
+  },
+  "3-1-1-4": {
+    "text": "تتوفر في المدرسة مرافق وخدمات مساندة",
+    "domain": "البيئة المدرسية"
+  },
+  "1-1-2-4": {
+    "text": "تتوفر في فصول المدرسة متطلبات الأمن",
+    "domain": "البيئة المدرسية"
+  },
+  "2-1-2-4": {
+    "text": "تعمل المدرسة على صيانة جميع المرافق",
+    "domain": "البيئة المدرسية"
+  },
+  "3-1-2-4": {
+    "text": "تعمل المدرسة على نظافة المبنى",
+    "domain": "البيئة المدرسية"
+  }
+};
+
     let selectedManager = "";
     let managerMap = {};
     let pinToManager = {};
@@ -899,14 +1179,24 @@ function normalizeKey(value) {
   const matches = [...raw.matchAll(regex)];
 
   if (matches.length) {
-    return matches.map(m => ({
-      full: `${m[1].trim()} | ${m[2].trim()}`
-    }));
+    return matches.map(m => {
+      const code = (m[1] || "").trim();
+      const fallbackText = (m[2] || "").trim();
+      const mapped = INDICATORS_MAP[code] || {};
+      const textValue = mapped.text || fallbackText || code;
+      const domain = mapped.domain || "غير محدد";
+      return { code, text: textValue, domain, full: code ? `${code} | ${textValue}` : textValue };
+    });
   }
 
-  return [{
-    full: raw
-  }];
+  return raw.split(",").map(s => s.trim()).filter(Boolean).map(item => {
+    const match = item.match(/([0-9]+(?:-[0-9]+)+)/);
+    const code = match ? match[1] : "";
+    const mapped = code ? (INDICATORS_MAP[code] || {}) : {};
+    const textValue = mapped.text || item;
+    const domain = mapped.domain || "غير محدد";
+    return { code, text: textValue, domain, full: code ? `${code} | ${textValue}` : textValue };
+  });
 }
 
     function findBestLinkInRow(raw) {
@@ -1283,6 +1573,46 @@ function getManagerDisplayName(managerKey) {
       return window.innerWidth <= 720;
     }
 
+
+    function groupIndicatorsByDomain(indicators) {
+      const grouped = {};
+      indicators.forEach(ind => {
+        const domain = ind.domain || "غير محدد";
+        if (!grouped[domain]) grouped[domain] = [];
+        grouped[domain].push(ind);
+      });
+      return grouped;
+    }
+
+    function getDomainOrder() {
+      return ["الإدارة المدرسية", "التعليم والتعلم", "نواتج التعلم", "البيئة المدرسية", "غير محدد"];
+    }
+
+    
+
+    function buildDomainSummaryHtml(domainCounts) {
+      const domains = getDomainOrder().filter(domain => (domainCounts[domain] || 0) > 0);
+      if (!domains.length) return "";
+      return `
+        <div class="summary-box">
+          <h4>🧭 توزيع المؤشرات حسب المجالات</h4>
+          <div class="domain-summary-grid">
+            ${domains.map(domain => {
+              const count = domainCounts[domain] || 0;
+              const percent = ((count / TOTAL_INDICATORS) * 100).toFixed(2);
+              return `
+                <div class="domain-mini">
+                  <div class="domain-mini-name">${escapeHtml(domain)}</div>
+                  <div class="domain-mini-num">${count}</div>
+                  <div class="domain-mini-percent">${percent}% من 44</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
     function renderMoreCardsButton(totalCards, showingCards) {
       const wrap = document.getElementById("moreCardsWrap");
       if (!wrap) return;
@@ -1482,6 +1812,7 @@ function getManagerDisplayName(managerKey) {
             totalCount: 0,
             link: "",
             indicators: [],
+            domainCounts: {},
             status: "لم ينفذ"
           };
         }
@@ -1509,15 +1840,22 @@ function getManagerDisplayName(managerKey) {
         if (split.length) {
           split.forEach(item => {
             supervisors[name].indicators.push({
-              text: item.full,
+              code: item.code || "",
+              text: item.text || item.full || "بدون اسم مؤشر",
+              domain: item.domain || "غير محدد",
               status: status || "لم ينفذ"
             });
+            const domainKey = item.domain || "غير محدد";
+            supervisors[name].domainCounts[domainKey] = (supervisors[name].domainCounts[domainKey] || 0) + 1;
           });
         } else {
           supervisors[name].indicators.push({
+            code: "",
             text: "بدون اسم مؤشر",
+            domain: "غير محدد",
             status: status || "لم ينفذ"
           });
+          supervisors[name].domainCounts["غير محدد"] = (supervisors[name].domainCounts["غير محدد"] || 0) + 1;
         }
 
         if (row.__link && !supervisors[name].link) supervisors[name].link = row.__link;
@@ -1555,10 +1893,23 @@ function getManagerDisplayName(managerKey) {
           iconClass = "status-not-done";
         }
 
-        const indicatorsHtml = sup.indicators.map(ind => `
-            <div class="indicator-item">
-              <div class="indicator-text">${escapeHtml(ind.text)}</div>
-              <span class="indicator-status ${iconClass}">${icon} ${escapeHtml(ind.status)}</span>
+        const groupedIndicators = groupIndicatorsByDomain(sup.indicators);
+        const domainOrder = getDomainOrder();
+        const indicatorsHtml = domainOrder
+          .filter(domain => groupedIndicators[domain] && groupedIndicators[domain].length)
+          .map(domain => `
+            <div class="domain-block">
+              <div class="domain-title">${escapeHtml(domain)} (${groupedIndicators[domain].length})</div>
+              ${groupedIndicators[domain].map(ind => `
+                <div class="indicator-item">
+                  <div class="indicator-main">
+                    ${ind.code ? `<div class="indicator-code">${escapeHtml(ind.code)}</div>` : ``}
+                    <div class="indicator-text">${escapeHtml(ind.text)}</div>
+                    <span class="indicator-domain-badge">${escapeHtml(ind.domain || "غير محدد")}</span>
+                  </div>
+                  <span class="indicator-status ${iconClass}">${icon} ${escapeHtml(ind.status)}</span>
+                </div>
+              `).join("")}
             </div>
           `).join("");
 
@@ -1571,7 +1922,7 @@ function getManagerDisplayName(managerKey) {
             </div>
 
             <button class="toggle-btn" onclick="toggleIndicators(${index})">
-              📋 عرض ${btnText} (${sup.totalCount}) ▼
+              📋 عرض ${btnText} حسب المجالات (${sup.totalCount}) ▼
             </button>
 
             <div id="indicators-${index}" class="indicators-list">
@@ -1598,6 +1949,14 @@ function getManagerDisplayName(managerKey) {
               <div class="big-number">${totalDoneAll}</div>
               <div class="small-text">من ${TOTAL_INDICATORS} مؤشر = ${totalPercent}%</div>
             </div>
+
+            <div class="achievement-box">
+              <div class="achievement-title">🎯 نسبة الإنجاز الكلية</div>
+              <div class="achievement-value">${totalPercent}%</div>
+              
+            </div>
+
+            ${buildDomainSummaryHtml(sup.domainCounts)}
 
             <div class="progress-section">
               <div class="progress-item">
