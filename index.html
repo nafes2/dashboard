@@ -636,7 +636,6 @@
       </div>
     </div>
 
-    <div class="display-label" id="sortingHint">ترتيب البطاقات: لم ينفذ ← جاري التنفيذ ← تم التنفيذ</div>
     <div id="cards" class="cards-grid"></div>
     <div id="moreCardsWrap" class="more-cards-wrap"></div>
 
@@ -1526,18 +1525,7 @@ function getManagerDisplayName(managerKey) {
 
       updateTopStats(shownRows, supervisors);
 
-      const statusPriority = {
-        "لم ينفذ": 0,
-        "جار التنفيذ": 1,
-        "تم التنفيذ": 2
-      };
-
-      const supervisorList = Object.values(supervisors).sort((a, b) => {
-        const pa = statusPriority[a.status] ?? 99;
-        const pb = statusPriority[b.status] ?? 99;
-        if (pa !== pb) return pa - pb;
-        return a.name.localeCompare(b.name, "ar");
-      });
+      const supervisorList = Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name, "ar"));
       const mobileLimit = 4;
       const displayedList = (isMobileView() && !appData.mobileExpanded) ? supervisorList.slice(0, mobileLimit) : supervisorList;
 
