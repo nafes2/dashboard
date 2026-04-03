@@ -372,6 +372,28 @@
       text-align: center;
     }
 
+    .duplicate-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(239, 68, 68, .16);
+      border: 1px solid rgba(239, 68, 68, .35);
+      color: #fff5f5;
+    }
+
+    .duplicate-title {
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .duplicate-item {
+      font-size: .92rem;
+      line-height: 1.9;
+      text-align: center;
+    }
+
+
     .achievement-title {
       font-size: 1.15rem;
       margin-bottom: 8px;
@@ -556,6 +578,33 @@
       font-size: 1rem;
     }
 
+    .wa-templates {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .wa-mini-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      padding: 10px 4px;
+      font-size: .80rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .note-textarea::placeholder {
       color: rgba(255,255,255,.72);
     }
@@ -674,6 +723,32 @@
     }
 
     @media (max-width: 720px) {
+      .wa-templates {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .wa-mini-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      padding: 10px 4px;
+      font-size: .80rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
       body { padding: 14px; }
       header h1 { font-size: 1.9rem; }
       .term-btn { min-width: 170px; min-height: 78px; }
@@ -684,6 +759,7 @@
       .cards-grid { grid-template-columns: 1fr; gap: 14px; }
       .filter-row { width: 100%; }
       .more-cards-btn { width: 100%; }
+      .wa-templates { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -749,6 +825,8 @@
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=338445358&single=true&output=csv";
     const MANAGERS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=719031885&single=true&output=csv";
     const TIME_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=978733615&single=true&output=csv";
+    const INDICATORS_URL = "https://docs.google.com/spreadsheets/d/17Bf1TEoRC2h_uWh8eZOEo-Fus5lgVzalyU9ByR1o/gviz/tq?tqx=out:csv&sheet=IndicatorsMap";
+    const SUPERVISORS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnnHioONFpJvLo1r7JvLt-kxipITtodS7ulzL-gPbi4vFPrKvkaDOVmZexOI2SZ_Gr5BXm212kdprT/pub?gid=132149077&single=true&output=csv";
 
     const TOTAL_INDICATORS = 44;
     const TOTAL_WEEKS_PER_TERM = 16;
@@ -771,7 +849,7 @@
       "الرابع عشر": 14, "الخامس عشر": 15, "السادس عشر": 16
     };
 
-    const INDICATORS_MAP = {
+    const FALLBACK_INDICATORS_MAP = {
   "1-1-1-1": {
     "text": "تضع المدرسة خطة تشغيلية مكتملة العناصر وفق أهداف تطويرية محددة",
     "domain": "الإدارة المدرسية"
@@ -950,6 +1028,10 @@
   }
 };
 
+
+    let indicatorsMap = { ...FALLBACK_INDICATORS_MAP };
+    let domainTotals = {};
+
     let selectedManager = "";
     let managerMap = {};
     let pinToManager = {};
@@ -963,7 +1045,11 @@
       mobileExpanded: false
     };
 
+    let displayedList = [];
+    let currentSupervisorIndex = 0;
     let isDataLoaded = false;
+    let lastViewportWidth = window.innerWidth;
+    let resizeTimer = null;
 
     function normalizeArabicDigits(value) {
       return String(value || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim();
@@ -1076,6 +1162,30 @@ function normalizeKey(value) {
       return digits;
     }
 
+    function hasValidFormLink(value) {
+      const v = String(value || "").trim();
+      return !!v && v !== "غير متاح" && /^https?:\/\//i.test(v);
+    }
+
+    function cleanWhatsAppPhone(phone) {
+      let cleanPhone = String(phone || "").replace(/[^\d]/g, "");
+      if (cleanPhone.startsWith("05")) cleanPhone = "966" + cleanPhone.substring(1);
+      else if (cleanPhone.startsWith("5")) cleanPhone = "966" + cleanPhone;
+      cleanPhone = cleanPhone.replace(/[^\d]/g, "");
+      return cleanPhone;
+    }
+
+    function getTemplateTitle(termText, weekText) {
+      const cleanTerm = String(termText || "").trim();
+      const cleanWeek = String(weekText || "").trim();
+
+      if (!cleanTerm && !cleanWeek) return "";
+      if (!cleanTerm) return `الأسبوع ${cleanWeek}`;
+      if (!cleanWeek) return cleanTerm;
+
+      return `${cleanTerm} - الأسبوع ${cleanWeek}`;
+    }
+
     function parseArabicDate(value) {
       const s = normalizeArabicDigits(value || "");
       if (!s) return null;
@@ -1182,7 +1292,7 @@ function normalizeKey(value) {
     return matches.map(m => {
       const code = (m[1] || "").trim();
       const fallbackText = (m[2] || "").trim();
-      const mapped = INDICATORS_MAP[code] || {};
+      const mapped = indicatorsMap[code] || {};
       const textValue = mapped.text || fallbackText || code;
       const domain = mapped.domain || "غير محدد";
       return { code, text: textValue, domain, full: code ? `${code} | ${textValue}` : textValue };
@@ -1275,6 +1385,108 @@ function normalizeKey(value) {
         start: parseArabicDate(row["البداية"]),
         end: parseArabicDate(row["النهاية"])
       })).filter(r => r.termName && r.start && r.end);
+    }
+
+    async function loadIndicatorsMap() {
+      try {
+        const text = await fetchText(INDICATORS_URL);
+        const rows = parseCSV(text);
+
+        const map = {};
+        const totals = {};
+
+        rows.forEach(row => {
+          const code = String(
+            row["رقم المؤشر"] ??
+            row["indicator_code"] ??
+            row["code"] ??
+            ""
+          ).trim();
+
+          const indicatorText = String(
+            row["نص المؤشر"] ??
+            row["indicator_text"] ??
+            row["text"] ??
+            ""
+          ).trim();
+
+          const domain = String(
+            row["المجال"] ??
+            row["domain"] ??
+            ""
+          ).trim() || "غير محدد";
+
+          if (!code) return;
+          map[code] = {
+            text: indicatorText || code,
+            domain
+          };
+          totals[domain] = (totals[domain] || 0) + 1;
+        });
+
+        indicatorsMap = Object.keys(map).length ? map : { ...FALLBACK_INDICATORS_MAP };
+        domainTotals = Object.keys(totals).length ? totals : {};
+      } catch (error) {
+        console.warn("تعذر تحميل IndicatorsMap، سيتم استخدام النسخة الاحتياطية.", error);
+        indicatorsMap = { ...FALLBACK_INDICATORS_MAP };
+        domainTotals = {};
+        Object.values(indicatorsMap).forEach(item => {
+          const domain = item.domain || "غير محدد";
+          domainTotals[domain] = (domainTotals[domain] || 0) + 1;
+        });
+      }
+    }
+
+    async function loadSupervisorsPhones() {
+      try {
+        const text = await fetchText(SUPERVISORS_URL);
+        const rows = parseCSV(text);
+        const phoneMap = {};
+
+        rows.forEach(row => {
+          const name = String(
+            row["supervisor"] ??
+            row["اسم المشرف"] ??
+            row["المشرف"] ??
+            row["name"] ??
+            ""
+          ).trim();
+
+          const managerKey = normalizeKey(
+            row["manager_key"] ??
+            row["معرف المدير"] ??
+            row["key"] ??
+            ""
+          );
+
+          const phone = normalizePhone(
+            row["phone"] ??
+            row["رقم الجوال"] ??
+            row["الجوال"] ??
+            row["الهاتف"] ??
+            ""
+          );
+
+          if (!name || !phone) return;
+          const nk = normalizeKey(name);
+          phoneMap[`${nk}||${managerKey}`] = phone;
+          if (!phoneMap[nk]) phoneMap[nk] = phone;
+        });
+
+        supervisorPhoneMap = phoneMap;
+      } catch (error) {
+        console.warn("تعذر تحميل أرقام المشرفين من ورقة Supervisors.", error);
+        supervisorPhoneMap = {};
+      }
+    }
+
+    function getSupervisorPhone(supervisorName, managerKey, rowPhone) {
+      const direct = normalizePhone(rowPhone || "");
+      if (direct) return direct;
+
+      const nk = normalizeKey(supervisorName || "");
+      const mk = normalizeKey(managerKey || "");
+      return supervisorPhoneMap[`${nk}||${mk}`] || supervisorPhoneMap[nk] || "";
     }
 
     function getTermInfoByDate(dateObj) {
@@ -1429,7 +1641,7 @@ function getManagerDisplayName(managerKey) {
     async function loadData() {
       try {
         isDataLoaded = false;
-        await Promise.all([loadManagers(), loadTimeSheet()]);
+        await Promise.all([loadManagers(), loadTimeSheet(), loadIndicatorsMap(), loadSupervisorsPhones()]);
 
         const text = await fetchText(SHEET_URL);
         const rows = parseCSV(text);
@@ -1445,6 +1657,7 @@ function getManagerDisplayName(managerKey) {
         renderWeeks();
         renderSupervisorFilter();
         renderCards();
+        window.scrollTo(0, 0);
         updateTimestamp();
       } catch (error) {
         console.error(error);
@@ -1591,23 +1804,35 @@ function getManagerDisplayName(managerKey) {
     
 
     function buildDomainSummaryHtml(domainCounts) {
-      const domains = getDomainOrder().filter(domain => (domainCounts[domain] || 0) > 0);
+      const domains = getDomainOrder()
+        .map(domain => {
+          const count = domainCounts[domain] || 0;
+          const total = domainTotals[domain] || 0;
+          const percent = total ? (count / total) * 100 : 0;
+          return { domain, count, total, percent };
+        })
+        .filter(item => item.count > 0);
+
       if (!domains.length) return "";
+
+      domains.sort((a, b) => b.percent - a.percent);
+
       return `
         <div class="summary-box">
-          <h4>🧭 توزيع المؤشرات حسب المجالات</h4>
+          <h4>🧭 التقدم داخل المجالات</h4>
           <div class="domain-summary-grid">
-            ${domains.map(domain => {
-              const count = domainCounts[domain] || 0;
-              const percent = ((count / TOTAL_INDICATORS) * 100).toFixed(2);
-              return `
-                <div class="domain-mini">
-                  <div class="domain-mini-name">${escapeHtml(domain)}</div>
-                  <div class="domain-mini-num">${count}</div>
-                  <div class="domain-mini-percent">${percent}% من 44</div>
+            ${domains.map(item => `
+              <div class="domain-mini">
+                <div class="domain-mini-name">${escapeHtml(item.domain)}</div>
+                <div class="domain-mini-num">${item.count} من ${item.total || 0}</div>
+                <div class="domain-mini-percent">${item.percent.toFixed(2)}%</div>
+                <div style="margin-top:8px;">
+                  <div style="background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; height: 8px;">
+                    <div style="width:${Math.max(0, Math.min(item.percent, 100))}%; height:100%; background: linear-gradient(90deg,#00c853,#64dd17);"></div>
+                  </div>
                 </div>
-              `;
-            }).join("")}
+              </div>
+            `).join("")}
           </div>
         </div>
       `;
@@ -1789,10 +2014,31 @@ function getManagerDisplayName(managerKey) {
         const name = row.__supervisor;
         if (!name) return;
         if (appData.currentSupervisor && name !== appData.currentSupervisor) return;
-        if (!supervisorTotals[name]) supervisorTotals[name] = { totalDoneAll: 0 };
-        if (normalizeStatus(row.__status) === "done") {
-          supervisorTotals[name].totalDoneAll += splitIndicators(row.__indicatorText).length || 1;
+
+        if (!supervisorTotals[name]) {
+          supervisorTotals[name] = {
+            totalDoneAll: 0,
+            uniqueDoneCodes: new Set(),
+            duplicateDoneCodes: new Set()
+          };
         }
+
+        if (normalizeStatus(row.__status) === "done") {
+          const items = splitIndicators(row.__indicatorText);
+          items.forEach(item => {
+            const code = String(item.code || "").trim();
+            if (!code) return;
+            if (supervisorTotals[name].uniqueDoneCodes.has(code)) {
+              supervisorTotals[name].duplicateDoneCodes.add(code);
+            } else {
+              supervisorTotals[name].uniqueDoneCodes.add(code);
+            }
+          });
+        }
+      });
+
+      Object.keys(supervisorTotals).forEach(name => {
+        supervisorTotals[name].totalDoneAll = supervisorTotals[name].uniqueDoneCodes.size;
       });
 
       const supervisors = {};
@@ -1805,7 +2051,8 @@ function getManagerDisplayName(managerKey) {
           supervisors[name] = {
             name,
             managerName: row.__managerName || "",
-            phone: row.__phone || "",
+            managerKey: row.__managerKey || "",
+            phone: getSupervisorPhone(name, row.__managerKey || "", row.__phone || ""),
             doneCount: 0,
             pendingCount: 0,
             notDoneCount: 0,
@@ -1813,6 +2060,7 @@ function getManagerDisplayName(managerKey) {
             link: "",
             indicators: [],
             domainCounts: {},
+            duplicateCodes: [],
             status: "لم ينفذ"
           };
         }
@@ -1865,9 +2113,11 @@ function getManagerDisplayName(managerKey) {
 
       const supervisorList = Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name, "ar"));
       const mobileLimit = 4;
-      const displayedList = (isMobileView() && !appData.mobileExpanded) ? supervisorList.slice(0, mobileLimit) : supervisorList;
+      displayedList = (isMobileView() && !appData.mobileExpanded) ? supervisorList.slice(0, mobileLimit) : supervisorList;
 
       displayedList.forEach((sup, index) => {
+        sup.duplicateCodes = [...(supervisorTotals[sup.name]?.duplicateDoneCodes || new Set())];
+
         const totalDoneAll = supervisorTotals[sup.name]?.totalDoneAll || 0;
         const weekPercentNum = sup.totalCount ? (sup.doneCount / sup.totalCount) * 100 : 0;
         const totalPercentNum = (totalDoneAll / TOTAL_INDICATORS) * 100;
@@ -1945,23 +2195,30 @@ function getManagerDisplayName(managerKey) {
             </div>
 
             <div class="summary-box">
-              <h4>📊 إجمالي المؤشرات المنفذة (جميع أسابيع ${TERM_LABELS[appData.currentTerm]})</h4>
+              <h4>📊 التقدم التراكمي للمؤشرات المنفذة (جميع أسابيع ${TERM_LABELS[appData.currentTerm]})</h4>
               <div class="big-number">${totalDoneAll}</div>
               <div class="small-text">من ${TOTAL_INDICATORS} مؤشر = ${totalPercent}%</div>
             </div>
 
             <div class="achievement-box">
-              <div class="achievement-title">🎯 نسبة الإنجاز الكلية</div>
+              <div class="achievement-title">🎯 التقدم الكلي</div>
               <div class="achievement-value">${totalPercent}%</div>
               
             </div>
 
             ${buildDomainSummaryHtml(sup.domainCounts)}
 
+            ${sup.duplicateCodes.length ? `
+              <div class="duplicate-box">
+                <div class="duplicate-title">⚠️ تنبيه: توجد مؤشرات مكررة ولم تُحسب</div>
+                ${sup.duplicateCodes.map(code => `<div class="duplicate-item">${escapeHtml(code)}</div>`).join("")}
+              </div>
+            ` : ``}
+
             <div class="progress-section">
               <div class="progress-item">
                 <div class="progress-label">
-                  <span>نسبة الإنجاز في الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
+                  <span>أداء الأسبوع ${WEEK_NAMES[appData.currentWeek]}</span>
                   <span>${weekPercent}%</span>
                 </div>
                 <div class="progress">
@@ -1971,7 +2228,7 @@ function getManagerDisplayName(managerKey) {
 
               <div class="progress-item">
                 <div class="progress-label">
-                  <span>النسبة من إجمالي المؤشرات (44)</span>
+                  <span>التقدم الكلي من إجمالي المؤشرات (44)</span>
                   <span>${totalPercent}%</span>
                 </div>
                 <div class="progress">
@@ -1986,10 +2243,19 @@ function getManagerDisplayName(managerKey) {
             }
 
             <div class="note-box">
-              <textarea id="note-${index}" class="note-textarea" placeholder="✍️ اكتب الملاحظة هنا..."></textarea>
-              <button class="whatsapp-btn" onclick="sendWhatsApp('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(sup.managerName)}',${index})">
-                📲 إرسال الملاحظة عبر واتساب
-              </button>
+              <div class="small-text" style="margin-bottom:6px;">اختر قالب رسالة واتساب</div>
+              <div class="small-text" style="font-size:.92rem; opacity:.85; margin-bottom:12px;">عند الضغط سيفتح واتساب بهذه الصياغة الجاهزة</div>
+              ${hasValidFormLink(sup.link || "") ? `
+                <textarea id="note-${index}" class="note-textarea" placeholder="اكتب الملاحظة هنا..."></textarea>
+                <div class="wa-templates">
+                  <button class="wa-mini-btn" onclick="sendWhatsAppNote('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(TERM_LABELS[appData.currentTerm])}','${escapeJs(WEEK_NAMES[appData.currentWeek])}','note-${index}')">📝 ملاحظة (بعد الكتابة)</button>
+                  <button class="wa-mini-btn" onclick="sendWhatsAppTemplate('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(TERM_LABELS[appData.currentTerm])}','${escapeJs(WEEK_NAMES[appData.currentWeek])}','praise')">👏 إشادة (إرسال مباشر)</button>
+                </div>
+              ` : `
+                <div class="wa-templates">
+                  <button class="wa-mini-btn" onclick="sendWhatsAppTemplate('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(TERM_LABELS[appData.currentTerm])}','${escapeJs(WEEK_NAMES[appData.currentWeek])}','reminder')">🔔 تذكير (إرسال مباشر)</button>
+                </div>
+              `}
             </div>
           `;
         container.appendChild(card);
@@ -1998,23 +2264,89 @@ function getManagerDisplayName(managerKey) {
       renderMoreCardsButton(supervisorList.length, displayedList.length);
     }
 
-    function sendWhatsApp(phone, supervisorName, managerName, index) {
-      const noteEl = document.getElementById(`note-${index}`);
-      const note = noteEl ? noteEl.value.trim() : "";
+    function buildWhatsAppMessage(type, supervisorName, termText, weekText, noteText = "") {
+      const title = getTemplateTitle(termText, weekText);
+      const cleanNote = String(noteText || "").trim();
 
-      if (!phone) {
-        alert("لا يوجد رقم جوال لهذا المشرف");
+      if (type === "reminder") {
+        return `السلام عليكم ورحمة الله وبركاته
+
+الأستاذ/ة: ${supervisorName}
+
+نفيدكم بأن استمارة ${title} لم تُرفع حتى تاريخه.
+
+نأمل منكم استكمال المتابعة ورفع المطلوب في الوقت المحدد، شاكرين لكم تعاونكم.`;
+      }
+
+      if (type === "note") {
+        return `السلام عليكم ورحمة الله وبركاته
+
+الأستاذ/ة: ${supervisorName}
+
+نثمن حرصكم، ونفيدكم بوجود ملاحظة على الاستمارة المرفوعة الخاصة بـ ${title}.
+
+📌 الملاحظة:
+${cleanNote}
+
+نأمل مراجعة الملحوظة والعمل بموجبها، والتواصل عند الحاجة.
+
+شاكرين لكم تعاونكم.`;
+      }
+
+      if (type === "praise") {
+        return `السلام عليكم ورحمة الله وبركاته
+
+الأستاذ/ة: ${supervisorName}
+
+نقدم لكم جزيل الشكر على استكمال بيانات الاستمارة الخاصة بـ ${title}، ونثمن دقة العمل وحسن المتابعة.
+
+بارك الله فيكم، وشاكرين لكم تعاونكم.`;
+      }
+
+      return "";
+    }
+
+    function normalizeWhatsAppPhone(phone) {
+      let cleanPhone = String(phone || "").replace(/\D/g, "");
+      if (cleanPhone.startsWith("00")) cleanPhone = cleanPhone.slice(2);
+      if (cleanPhone.startsWith("05")) cleanPhone = "966" + cleanPhone.substring(1);
+      else if (cleanPhone.startsWith("5")) cleanPhone = "966" + cleanPhone;
+      return cleanPhone;
+    }
+
+    function sendWhatsAppTemplate(phone, supervisorName, termText, weekText, type) {
+      const cleanPhone = normalizeWhatsAppPhone(phone);
+      if (!cleanPhone || cleanPhone.length < 9) {
+        alert("رقم الجوال غير صالح");
         return;
       }
 
-      if (!note) {
+      const message = buildWhatsAppMessage(type, supervisorName, termText, weekText);
+      if (!message) {
+        alert("تعذر إنشاء الرسالة");
+        return;
+      }
+
+      const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
+    }
+
+    function sendWhatsAppNote(phone, supervisorName, termText, weekText, noteElementId) {
+      const cleanPhone = normalizeWhatsAppPhone(phone);
+      if (!cleanPhone || cleanPhone.length < 9) {
+        alert("رقم الجوال غير صالح");
+        return;
+      }
+
+      const noteElement = document.getElementById(noteElementId);
+      const cleanNote = String(noteElement?.value || "").trim();
+      if (!cleanNote) {
         alert("اكتب الملاحظة أولاً");
         return;
       }
 
-      const intro = managerName ? `مرحباً ${supervisorName}\n\nمعك ${managerName}` : `مرحباً ${supervisorName}`;
-      const message = `${intro}\n\n📌 ملاحظة حول الاستمارة:\n${note}`;
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      const message = buildWhatsAppMessage("note", supervisorName, termText, weekText, cleanNote);
+      const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
       window.open(url, "_blank");
     }
 
@@ -2049,8 +2381,19 @@ function getManagerDisplayName(managerKey) {
       }
 
       window.addEventListener("resize", () => {
-        renderMoreCardsButton(0, 0);
-        renderCards();
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const widthChanged = Math.abs(window.innerWidth - lastViewportWidth) > 80;
+          const activeTag = document.activeElement ? document.activeElement.tagName : "";
+          const isTyping = activeTag === "TEXTAREA" || activeTag === "INPUT";
+
+          if (!widthChanged && isTyping) return;
+
+          if (widthChanged) {
+            lastViewportWidth = window.innerWidth;
+            renderCards();
+          }
+        }, 120);
       });
 
       const pinInput = document.getElementById("pinInput");
