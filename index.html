@@ -2247,7 +2247,10 @@ function getManagerDisplayName(managerKey) {
               <div class="small-text" style="margin-bottom:6px;">اختر قالب رسالة واتساب</div>
               <div class="small-text" style="font-size:.92rem; opacity:.85; margin-bottom:12px;">عند الضغط سيفتح واتساب بهذه الصياغة الجاهزة</div>
               ${hasValidFormLink(sup.link || "") ? `
-                <textarea id="note-${index}" class="note-textarea" placeholder="اكتب الملاحظة هنا..."></textarea>
+                <textarea id="note-${index}" class="note-textarea" placeholder="اكتب ملاحظاتك على الاستمارة هنا..."></textarea>
+                <div class="small-text" style="margin-top:6px; font-size:.85rem; opacity:.8; margin-bottom:10px;">
+                  الإشادة: لا تحتاج كتابة — اضغط (إشادة) لإرسال رسالة جاهزة
+                </div>
                 <div class="wa-templates">
                   <button class="wa-mini-btn" onclick="sendWhatsAppNote('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(TERM_LABELS[appData.currentTerm])}','${escapeJs(WEEK_NAMES[appData.currentWeek])}','note-${index}')">📝 ملاحظة (بعد الكتابة)</button>
                   <button class="wa-mini-btn" onclick="sendWhatsAppTemplate('${escapeJs(sup.phone)}','${escapeJs(sup.name)}','${escapeJs(TERM_LABELS[appData.currentTerm])}','${escapeJs(WEEK_NAMES[appData.currentWeek])}','praise')">👏 إشادة (إرسال مباشر)</button>
