@@ -1659,6 +1659,7 @@ function getManagerDisplayName(managerKey) {
         renderCards();
         window.scrollTo(0, 0);
         updateTimestamp();
+        forceScrollTopSoft();
       } catch (error) {
         console.error(error);
         showError("تعذر تحميل البيانات");
@@ -1689,6 +1690,7 @@ function getManagerDisplayName(managerKey) {
           loginBtn.disabled = true;
           loginBtn.textContent = "جار التحميل...";
           await loadData();
+      forceScrollTopSoft();
         }
 
         selectedManager = pinToManager[pin];
@@ -1703,6 +1705,7 @@ function getManagerDisplayName(managerKey) {
         renderWeeks();
         renderSupervisorFilter();
         renderCards();
+        forceScrollTopSoft();
 
         loginBtn.disabled = false;
         loginBtn.textContent = "دخول";
@@ -1728,6 +1731,7 @@ function getManagerDisplayName(managerKey) {
       updateManagerBadge();
       renderCards();
       updateTopStats([], {});
+      forceScrollTopSoft();
     }
 
     function updateManagerBadge() {
@@ -1964,6 +1968,7 @@ function getManagerDisplayName(managerKey) {
       if (!selectedManager) {
         container.innerHTML = "";
         updateTopStats([], {});
+      forceScrollTopSoft();
         return;
       }
 
@@ -1976,6 +1981,7 @@ function getManagerDisplayName(managerKey) {
           </div>
         `;
         updateTopStats([], {});
+      forceScrollTopSoft();
         return;
       }
 
@@ -1991,6 +1997,7 @@ function getManagerDisplayName(managerKey) {
           </div>
         `;
         updateTopStats([], {});
+      forceScrollTopSoft();
         return;
       }
 
@@ -2007,6 +2014,7 @@ function getManagerDisplayName(managerKey) {
           </div>
         `;
         updateTopStats([], {});
+      forceScrollTopSoft();
         return;
       }
 
@@ -2354,6 +2362,22 @@ ${cleanNote}
       window.open(url, "_blank");
     }
 
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+
+    function forceScrollTop() {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
+    function forceScrollTopSoft() {
+      setTimeout(forceScrollTop, 0);
+      setTimeout(forceScrollTop, 120);
+      setTimeout(forceScrollTop, 300);
+    }
+
     function showError(msg) {
       document.getElementById("cards").innerHTML = `
         <div class="error-box">
@@ -2415,6 +2439,7 @@ ${cleanNote}
       localStorage.removeItem("manager");
       selectedManager = sessionStorage.getItem("manager") || "";
       await loadData();
+      forceScrollTopSoft();
     });
   </script>
 </body>
