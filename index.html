@@ -2060,21 +2060,31 @@
     async function loadSettings(){
       try {
         const text = await fetchText(SETTINGS_URL);
-        const rows = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
-          const parts = line.split(",");
-          return {
-            key: String(parts[0] || "").replace(/^"|"$/g, "").trim(),
-            value: String(parts[1] || "").replace(/^"|"$/g, "").trim()
-          };
-        });
+        let settings = {};
 
+        const parsedRows = parseCSV(text);
+        if (parsedRows.length) {
+          parsedRows.forEach(row => {
+            const key = String(row.key || row.Key || row.setting || row.Setting || row.name || "").trim();
+            const value = String(row.value || row.Value || row.setting_value || row.SettingValue || row.text || "").trim();
+            if (key) settings[key] = value;
+          });
+        }
 
+        if (!Object.keys(settings).length) {
+          text.split(/\r?\n/)
+            .map(line => line.trim())
+            .filter(Boolean)
+            .forEach(line => {
+              const parts = line.split(",");
+              const key = String(parts[0] || "").replace(/^"|"$/g, "").trim();
+              const value = String(parts.slice(1).join(",") || "").replace(/^"|"$/g, "").trim();
+              if (key && key.toLowerCase() !== "key") settings[key] = value;
+            });
+        }
 
-
-        const settings = {};
-        rows.forEach(row => { if (row.key) settings[row.key] = row.value; });
-        appSettings.centerLine = settings.center_line || "";
-        appSettings.teamLine = settings.team_line || "";
+        appSettings.centerLine = settings.center_line || settings.center || "";
+        appSettings.teamLine = settings.team_line || settings.team || "";
       } catch (error) {
         console.warn("تعذر تحميل ورقة Settings.", error);
         appSettings.centerLine = "";
@@ -2324,13 +2334,9 @@
 
         await loadData();
         syncCurrentWeekToAvailableData();
-        document.getElementById("loginOverlay").style.display = "none";
-        updateManagerBadge();
-        renderWelcomeBanner();
-        renderTerms();
         renderWeeks();
-        renderSupervisorFilter();
         renderCards();
+        document.getElementById("loginOverlay").style.display = "none";
         showWelcomeToast();
         setTimeout(() => showWelcomeToast(), 150);
         errorBox.style.display = "none";
@@ -2609,11 +2615,10 @@
 
 
 
-    function updateTopStats(filteredData){
+    function calculateStatusTotals(rows){
       let done = 0, pending = 0, notDone = 0;
 
-
-      filteredData.forEach(row => {
+      rows.forEach(row => {
         const countToAdd = splitIndicators(row.__indicatorText).length || 1;
         const st = normalizeStatus(row.__status);
         if (st === "done") done += countToAdd;
@@ -2621,16 +2626,22 @@
         else notDone += countToAdd;
       });
 
+      return {
+        done,
+        pending,
+        notDone,
+        totalIndicators: done + pending + notDone
+      };
+    }
 
-      const totalIndicators = done + pending + notDone;
+    function updateTopStats(filteredData){
+      const { done, pending, notDone, totalIndicators } = calculateStatusTotals(filteredData);
       document.getElementById("topSupervisors").textContent = totalIndicators;
-
 
       const topSupervisorsLabel = document.getElementById("topSupervisorsLabel");
       if (topSupervisorsLabel) {
         topSupervisorsLabel.textContent = "مجموع المؤشرات في هذا الأسبوع";
       }
-
 
       document.getElementById("topDone").textContent = done;
       document.getElementById("topPending").textContent = pending;
@@ -2710,24 +2721,8 @@
 
     function getExecutiveSummaryText(supervisorList, shownRows){
       const supervisorCount = supervisorList.length;
-      let done = 0, pending = 0, notDone = 0;
-
-
-
-
-      shownRows.forEach(row => {
-        const countToAdd = splitIndicators(row.__indicatorText).length || 1;
-        const st = normalizeStatus(row.__status);
-        if (st === "done") done += countToAdd;
-        else if (st === "pending") pending += countToAdd;
-        else notDone += countToAdd;
-      });
-
-
-
-
-      const total = done + pending + notDone;
-      const percent = calcPercent(done, total);
+      const { done, pending, notDone, totalIndicators } = calculateStatusTotals(shownRows);
+      const percent = calcPercent(done, totalIndicators);
       const filterText = appData.currentSupervisor ? ` مع التركيز على ${appData.currentSupervisor}` : "";
       return `يعرض هذا الملخص أداء ${supervisorCount} ${getManagerGender() === "female" ? "من المشرفات" : "من المشرفين"} في ${TERM_LABELS[appData.currentTerm]} خلال الأسبوع ${WEEK_NAMES[appData.currentWeek]}${filterText}. نسبة الإنجاز الحالية ${percent.toFixed(2)}%، بعدد ${done} تم التنفيذ، و${pending} جاري التنفيذ، و${notDone} لم ينفذ.`;
     }
@@ -2743,17 +2738,7 @@
       if (!grid) return;
 
 
-      let done = 0, pending = 0, notDone = 0;
-      shownRows.forEach(row => {
-        const countToAdd = splitIndicators(row.__indicatorText).length || 1;
-        const st = normalizeStatus(row.__status);
-        if (st === "done") done += countToAdd;
-        else if (st === "pending") pending += countToAdd;
-        else notDone += countToAdd;
-      });
-
-
-      const totalIndicators = done + pending + notDone;
+      const { done, pending, notDone, totalIndicators } = calculateStatusTotals(shownRows);
       const completion = calcPercent(done, totalIndicators);
       const activeLinks = supervisorList.filter(s => hasValidFormLink(s.link)).length;
       const delayedSupervisors = supervisorList.filter(s => s.doneCount === 0).length;
@@ -2770,9 +2755,9 @@
       const cards = [
         {
           icon:"👥",
-          label:getManagerGender() === "female" ? "عدد المشرفات التابعات" : "عدد المشرفين التابعين",
+          label:getManagerGender() === "female" ? "عدد مشرفات الدعم" : "عدد مشرفي الدعم",
           value:getManagedSupervisorCount(),
-          sub:"عدد المشرفين الظاهرين في هذا العرض"
+          sub:""
         },
         {
           icon:"✅",
@@ -2824,7 +2809,7 @@
           <div class="kpi-icon">${item.icon}</div>
           <div class="kpi-label">${escapeHtml(item.label)}</div>
           <div class="kpi-value">${escapeHtml(item.value)}</div>
-          <div class="kpi-sub">${escapeHtml(item.sub)}</div>
+          ${item.sub ? `<div class="kpi-sub">${escapeHtml(item.sub)}</div>` : ``}
         </div>
       `).join("");
     }
