@@ -872,7 +872,7 @@
 
 
     .stat-number{display:block;font-size:2rem;font-weight:900;margin-bottom:4px}
-    .stat-label{font-size:1rem;opacity:.96}
+    .stat-label{display:block;font-size:1rem;line-height:1.5;opacity:.96;word-break:keep-all;white-space:normal}
 
 
 
@@ -1598,6 +1598,7 @@
     function normalizeStatus(status){ const s = String(status || "").trim(); if (s.includes("تم")) return "done"; if (s.includes("جار")) return "pending"; return "notdone"; }
     function normalizeKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g, " "); }
     function normalizeTermText(value){ return String(value || "").replace(/\u200f|\u200e|\u202a|\u202b|\u202c|\u202d|\u202e/g, "").replace(/\s+/g, " ").trim(); }
+    function normalizeHeader(value){ return String(value || "").replace(/[\u200f\u200e\u202a-\u202e]/g, "").replace(/[ـ_]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(); }
     function escapeHtml(value){ return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
     function escapeAttr(value){ return escapeHtml(value); }
     function escapeJs(value){ return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'"); }
@@ -1679,9 +1680,20 @@
 
 
     function getValueByKeys(row, keys){
+      if (!row || !keys || !keys.length) return "";
       for (const key of keys) {
         if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
           return String(row[key]).trim();
+        }
+      }
+      const normalizedRow = {};
+      Object.keys(row || {}).forEach(k => {
+        normalizedRow[normalizeHeader(k)] = row[k];
+      });
+      for (const key of keys) {
+        const nk = normalizeHeader(key);
+        if (normalizedRow[nk] !== undefined && normalizedRow[nk] !== null && String(normalizedRow[nk]).trim() !== "") {
+          return String(normalizedRow[nk]).trim();
         }
       }
       return "";
@@ -1818,13 +1830,10 @@
 
 
     function getWeekNumberFromRow(raw){
-      const weekText = getValueByKeys(raw, ["رقم الأسبوع","الأسبوع","اسم الأسبوع","week","week_name","week_number"]);
+      const weekText = getValueByKeys(raw, ["الأسبوع الصحيح","الاسبوع الصحيح","رقم الأسبوع","الأسبوع","اسم الأسبوع","week","week_name","week_number"]);
       const text = normalizeArabicDigits(weekText || "");
       const directNum = parseInt(text, 10);
       if (!isNaN(directNum) && directNum >= 1 && directNum <= 16) return directNum;
-
-
-
 
       const orderedWeekNames = Object.keys(WEEK_NAME_TO_NUMBER).sort((a, b) => b.length - a.length);
       for (const name of orderedWeekNames) {
@@ -1893,6 +1902,7 @@
         "إرفاق الملف (File responses)",
         "File responses",
         "(File responses)",
+        "File responses ",
         "رابط الاستمارة",
         "الرابط",
         "رابط",
@@ -1952,6 +1962,40 @@
 
 
 
+    function parseWeekNumberText(value){
+      const text = normalizeArabicDigits(value || "");
+      if (!text) return null;
+      const direct = text.match(/(\d{1,2})/);
+      if (direct) return Number(direct[1]);
+      const names = {
+        "الأول":1,"الاول":1,
+        "الثاني":2,
+        "الثالث":3,
+        "الرابع":4,
+        "الخامس":5,
+        "السادس":6,
+        "السابع":7,
+        "الثامن":8,
+        "التاسع":9,
+        "العاشر":10,
+        "الحادي عشر":11,
+        "الحادى عشر":11,
+        "الثاني عشر":12,
+        "الثانى عشر":12,
+        "الثالث عشر":13,
+        "الرابع عشر":14,
+        "الخامس عشر":15,
+        "السادس عشر":16
+      };
+      for (const [label, num] of Object.entries(names)) {
+        if (text.includes(label)) return num;
+      }
+      return null;
+    }
+
+
+
+
     async function loadTimeSheet(){
       const text = await fetchText(TIME_URL);
       const rows = parseCSV(text);
@@ -1959,13 +2003,35 @@
 
 
 
-      timeRows = rows.map(row => ({
-        termName: String(row["الفصل"] || "").trim(),
-        start: parseArabicDate(row["البداية"]),
-        end: parseArabicDate(row["النهاية"])
-      })).filter(r => r.termName && r.start && r.end);
+      timeRows = rows.map(row => {
+        const termName = String(row["الفصل"] || row["term"] || "").trim();
+        const weekName = String(row["الأسبوع"] || row["الاسبوع"] || row["week"] || "").trim();
+        const start = parseArabicDate(row["من"] || row["البداية"] || row["start"]);
+        const end = parseArabicDate(row["إلى"] || row["الى"] || row["النهاية"] || row["end"]);
+        const weekNum = parseWeekNumberText(weekName);
+        return { termName, weekName, weekNum, start, end };
+      }).filter(r => r.termName && r.start && r.end);
     }
 
+
+
+
+    function getTimeMatchInfo(dateObj){
+      if (!dateObj || !timeRows.length) return null;
+      const d = new Date(dateObj);
+      d.setHours(12,0,0,0);
+      for (const row of timeRows) {
+        const start = new Date(row.start);
+        const end = new Date(row.end);
+        start.setHours(12,0,0,0);
+        end.setHours(12,0,0,0);
+        if (d >= start && d <= end) {
+          const termNum = String(row.termName || '').includes('الثاني') ? 2 : 1;
+          return { termNum, weekNum: Number(row.weekNum || 0), termName: row.termName || '', weekName: row.weekName || '' };
+        }
+      }
+      return null;
+    }
 
 
 
@@ -2122,9 +2188,12 @@
 
       for (const row of timeRows) {
         if (d >= row.start && d <= row.end) {
+          const termNum = row.termName.includes("الثاني") ? 2 : 1;
           return {
-            termNum: row.termName.includes("الثاني") ? 2 : 1,
-            termName: row.termName
+            termNum,
+            termName: row.termName,
+            weekNum: Number(row.weekNum || 0),
+            weekName: row.weekName || ""
           };
         }
       }
@@ -2136,9 +2205,9 @@
 
     function detectCurrentTermAndWeekFromToday(){
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setHours(12, 0, 0, 0);
       let currentTerm = 1;
-      let termStart = null;
+      let currentWeek = 1;
 
 
 
@@ -2146,7 +2215,7 @@
       for (const row of timeRows) {
         if (today >= row.start && today <= row.end) {
           currentTerm = row.termName.includes("الثاني") ? 2 : 1;
-          termStart = row.start;
+          currentWeek = Number(row.weekNum || 1) || 1;
           break;
         }
       }
@@ -2155,12 +2224,7 @@
 
 
       appData.currentTerm = currentTerm;
-      if (termStart) {
-        const diffDays = Math.floor((today - termStart) / (1000 * 60 * 60 * 24));
-        appData.currentWeek = Math.min(16, Math.max(1, Math.floor(diffDays / 7) + 1));
-      } else {
-        appData.currentWeek = 1;
-      }
+      appData.currentWeek = currentWeek;
     }
 
 
@@ -2214,14 +2278,20 @@
       const status = getValueByKeys(raw, ["الحالة","status"]) || "لم ينفذ";
       const indicatorNumber = getValueByKeys(raw, ["رقم المؤشر","رقم_المؤشر","indicator_number"]);
       const indicatorText = getValueByKeys(raw, ["المؤشر","المؤشرات","اسم المؤشر","نص المؤشر","indicator_text"]);
-      const combinedIndicator = [indicatorNumber, indicatorText].filter(Boolean).join(" - ") || indicatorText || indicatorNumber || "";
+      const cleanIndicatorNumber = String(indicatorNumber || "").replace(/[\u200e\u200f\u202a-\u202e]/g, "").trim();
+      const cleanIndicatorText = String(indicatorText || "").replace(/[\u200e\u200f\u202a-\u202e]/g, "").trim();
+      const escapedIndicatorNumber = cleanIndicatorNumber.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const duplicatePrefixRegex = cleanIndicatorNumber ? new RegExp("^\\s*" + escapedIndicatorNumber + "\\s*(?:\\||-|—|–)?\\s*") : null;
+      const textWithoutDuplicateCode = duplicatePrefixRegex ? cleanIndicatorText.replace(duplicatePrefixRegex, "").trim() : cleanIndicatorText;
+      const combinedIndicator = textWithoutDuplicateCode ? `${cleanIndicatorNumber || ""} | ${textWithoutDuplicateCode}`.replace(/^\s*\|\s*/, "").trim() : (cleanIndicatorNumber || cleanIndicatorText || "");
       const responseDate = getResponseDate(raw);
-      const detectedTerm = getTermInfoByDate(responseDate);
-      const explicitTermNum = getExplicitTermNumber(raw);
-      const termNum = explicitTermNum || (detectedTerm ? detectedTerm.termNum : 1);
-
-
-
+      const explicitResolvedTermText = normalizeTermText(getValueByKeys(raw, ["الفصل الدراسي","الفصل الصحيح","الفصل"]));
+      const explicitResolvedWeekText = getValueByKeys(raw, ["الأسبوع الصحيح","الاسبوع الصحيح","رقم الأسبوع","الأسبوع","اسم الأسبوع","week","week_name","week_number"]);
+      const explicitTermNum = explicitResolvedTermText.includes("الثاني") ? 2 : ((explicitResolvedTermText.includes("الأول") || explicitResolvedTermText.includes("الاول")) ? 1 : null);
+      const explicitWeekNum = parseWeekNumberText(explicitResolvedWeekText) || getWeekNumberFromRow(raw);
+      const timeInfo = getTimeMatchInfo(responseDate);
+      const resolvedWeekNum = (timeInfo && timeInfo.weekNum) || explicitWeekNum;
+      const termNum = (timeInfo && timeInfo.termNum) || explicitTermNum || getExplicitTermNumber(raw) || 1;
 
       return {
         ...raw,
@@ -2230,12 +2300,13 @@
         __managerName: managerName,
         __managerKey: managerKey,
         __status: status,
+        __indicatorRaw: combinedIndicator,
         __indicatorText: combinedIndicator,
         __link: findBestLinkInRow(raw),
         __phone: normalizePhone(getValueByKeys(raw, ["رقم الجوال","الجوال","الهاتف"])),
         __responseDate: responseDate,
         __term: termNum,
-        __weekNum: getWeekNumberFromRow(raw)
+        __weekNum: resolvedWeekNum
       };
     }
 
@@ -2520,7 +2591,7 @@
 
 
       rows.forEach((row, index) => {
-        const indicators = splitIndicators(row.__indicatorText);
+        const indicators = splitIndicators(row.__indicatorRaw || row.__indicatorText);
         const items = indicators.length ? indicators : [{
           code: row.__indicatorCode || "",
           text: String(row.__indicatorText || "").trim() || "بدون مؤشر",
@@ -2552,7 +2623,7 @@
           if (!existing || currentOrder >= existingOrder) {
             latestMap.set(mapKey, {
               ...row,
-              __indicatorText: item.full || item.text || item.code || "بدون مؤشر",
+              __indicatorText: item.text || item.code || "بدون مؤشر",
               __indicatorCode: item.code || "",
               __indicatorDomain: item.domain || "غير محدد",
               __indicatorSubdomain: item.subdomain || ""
@@ -2570,6 +2641,53 @@
 
 
 
+
+
+    function getLatestTermIndicatorRows(rows){
+      const latestMap = new Map();
+
+      rows.forEach((row, index) => {
+        const indicators = splitIndicators(row.__indicatorRaw || row.__indicatorText);
+        const items = indicators.length ? indicators : [{
+          code: row.__indicatorCode || "",
+          text: String(row.__indicatorText || "").trim() || "بدون مؤشر",
+          domain: row.__indicatorDomain || "غير محدد",
+          subdomain: row.__indicatorSubdomain || "",
+          full: String(row.__indicatorText || "").trim() || "بدون مؤشر"
+        }];
+
+        items.forEach(item => {
+          const supervisorKey = normalizeKey(row.__supervisor || "");
+          const indicatorKey = getIndicatorIdentity(item);
+          if (!supervisorKey || !indicatorKey) return;
+
+          const mapKey = `${supervisorKey}|${indicatorKey}`;
+          const currentTime = row.__responseDate instanceof Date && !isNaN(row.__responseDate) ? row.__responseDate.getTime() : -1;
+          const currentOrder = Number(row.__sourceIndex ?? index);
+          const existing = latestMap.get(mapKey);
+          const existingTime = existing && existing.__responseDate instanceof Date && !isNaN(existing.__responseDate) ? existing.__responseDate.getTime() : -1;
+          const existingOrder = existing ? Number(existing.__sourceIndex ?? -1) : -1;
+          const shouldReplace = !existing || currentTime > existingTime || (currentTime === existingTime && currentOrder >= existingOrder);
+
+          if (shouldReplace) {
+            latestMap.set(mapKey, {
+              ...row,
+              __indicatorText: item.text || item.code || "بدون مؤشر",
+              __indicatorCode: item.code || "",
+              __indicatorDomain: item.domain || "غير محدد",
+              __indicatorSubdomain: item.subdomain || ""
+            });
+          }
+        });
+      });
+
+      return Array.from(latestMap.values()).sort((a, b) => {
+        const at = a.__responseDate instanceof Date && !isNaN(a.__responseDate) ? a.__responseDate.getTime() : -1;
+        const bt = b.__responseDate instanceof Date && !isNaN(b.__responseDate) ? b.__responseDate.getTime() : -1;
+        if (at !== bt) return at - bt;
+        return Number(a.__sourceIndex || 0) - Number(b.__sourceIndex || 0);
+      });
+    }
     function isMobileView(){
       return window.innerWidth <= 720;
     }
@@ -2591,7 +2709,77 @@
 
 
     function getDomainOrder(){
-      return ["الإدارة المدرسية", "التعليم والتعلم", "نواتج التعلم", "البيئة المدرسية", "غير محدد"];
+      const preferred = [
+        "الإدارة المدرسية",
+        "التعليم والتعلم",
+        "نواتج التعلم",
+        "البيئة المدرسية",
+        "المجتمع المدرسي",
+        "التدريس",
+        "التوجيه الطلابي",
+        "الأنشطة المدرسية",
+        "التطوير المؤسسي",
+        "الأمن والسلامة",
+        "المبنى المدرسي",
+        "غير محدد"
+      ];
+
+      const discovered = new Set();
+
+      Object.values(indicatorsMap || {}).forEach(item => {
+        const domain = String(item?.domain || "").trim();
+        if (domain) discovered.add(domain);
+      });
+
+      Object.keys(domainTotals || {}).forEach(domain => {
+        domain = String(domain || "").trim();
+        if (domain) discovered.add(domain);
+      });
+
+      const result = [];
+      preferred.forEach(domain => {
+        if (discovered.has(domain) || domain === "غير محدد") result.push(domain);
+      });
+
+      [...discovered].sort((a,b)=>a.localeCompare(b,'ar')).forEach(domain => {
+        if (!result.includes(domain)) result.push(domain);
+      });
+
+      if (!result.includes("غير محدد")) result.push("غير محدد");
+      return result;
+    }
+
+
+    function getLeastDomainInfo(domainCounts){
+      const order = getDomainOrder().filter(name => name !== "غير محدد");
+      const counts = {};
+      order.forEach(domain => {
+        counts[domain] = Number(domainCounts?.[domain] || 0);
+      });
+
+      const positiveDomains = order.filter(domain => counts[domain] > 0);
+      if (!positiveDomains.length) {
+        return {
+          label: "لا يوجد بيانات",
+          count: 0,
+          isZero: false,
+          isTie: false,
+          tieCount: 0,
+          noData: true
+        };
+      }
+
+      const minCount = Math.min(...positiveDomains.map(domain => counts[domain]));
+      const winners = positiveDomains.filter(domain => counts[domain] === minCount);
+      return {
+        label: winners[0] || "لا يوجد بيانات",
+        count: Number.isFinite(minCount) ? minCount : 0,
+        isZero: false,
+        isTie: winners.length > 1,
+        tieCount: winners.length,
+        noData: false,
+        positiveCount: positiveDomains.length
+      };
     }
 
 
@@ -2761,8 +2949,24 @@
       };
     }
 
-    function updateTopStats(filteredData){
-      const { done, pending, notDone, totalIndicators } = calculateStatusTotals(filteredData);
+    function updateTopStats(sourceData){
+      let done = 0, pending = 0, notDone = 0, totalIndicators = 0;
+
+      if (Array.isArray(sourceData) && sourceData.length && Object.prototype.hasOwnProperty.call(sourceData[0], "doneCount")) {
+        sourceData.forEach(item => {
+          done += Number(item.doneCount || 0);
+          pending += Number(item.pendingCount || 0);
+          notDone += Number(item.notDoneCount || 0);
+          totalIndicators += Number(item.totalCount || 0);
+        });
+      } else {
+        const totals = calculateStatusTotals(Array.isArray(sourceData) ? sourceData : []);
+        done = totals.done;
+        pending = totals.pending;
+        notDone = totals.notDone;
+        totalIndicators = totals.totalIndicators;
+      }
+
       document.getElementById("topSupervisors").textContent = totalIndicators;
 
       const topSupervisorsLabel = document.getElementById("topSupervisorsLabel");
@@ -2850,8 +3054,15 @@
       const supervisorCount = supervisorList.length;
       const { done, pending, notDone, totalIndicators } = calculateStatusTotals(shownRows);
       const percent = calcPercent(done, totalIndicators);
-      const filterText = appData.currentSupervisor ? ` مع التركيز على ${appData.currentSupervisor}` : "";
-      return `يعرض هذا الملخص أداء ${supervisorCount} ${getManagerGender() === "female" ? "من المشرفات" : "من المشرفين"} في ${TERM_LABELS[appData.currentTerm]} خلال الأسبوع ${WEEK_NAMES[appData.currentWeek]}${filterText}. نسبة الإنجاز الحالية ${percent.toFixed(2)}%، بعدد ${done} تم التنفيذ، و${pending} جاري التنفيذ، و${notDone} لم ينفذ.`;
+      const selectedSupervisorText = appData.currentSupervisor
+        ? (getManagerGender() === "female" ? ` للمشرفة ${appData.currentSupervisor}` : ` للمشرف ${appData.currentSupervisor}`)
+        : "";
+      const audienceText = appData.currentSupervisor
+        ? ""
+        : (supervisorCount === 1
+            ? (getManagerGender() === "female" ? " لمشرفة واحدة" : " لمشرف واحد")
+            : ` لعدد ${supervisorCount} ${getManagerGender() === "female" ? "من المشرفات" : "من المشرفين"}`);
+      return `يعرض هذا الملخص الأداء${audienceText} في ${TERM_LABELS[appData.currentTerm]} خلال الأسبوع ${WEEK_NAMES[appData.currentWeek]}${selectedSupervisorText}. نسبة الإنجاز الحالية ${percent.toFixed(2)}%، حيث تم تنفيذ ${done}، و${pending} جارٍ التنفيذ، و${notDone} لم يُنفذ.`;
     }
 
 
@@ -2870,7 +3081,13 @@
       const activeLinks = supervisorList.filter(s => hasValidFormLink(s.link)).length;
       const delayedSupervisors = supervisorList.filter(s => s.doneCount === 0).length;
       const avgPerSupervisor = supervisorList.length ? (done / supervisorList.length) : 0;
-      const best = [...supervisorList].sort((a, b) => b.weekPercentNum - a.weekPercentNum)[0];
+      const latestTermRowsForCard = getFilteredWeekRows(getLatestIndicatorRows(getVisibleData()));
+      const termDomainCountsForCard = {};
+      latestTermRowsForCard.forEach(row => {
+        const domainKey = row.__indicatorDomain || "غير محدد";
+        termDomainCountsForCard[domainKey] = (termDomainCountsForCard[domainKey] || 0) + 1;
+      });
+      const leastDomainInfo = getLeastDomainInfo(termDomainCountsForCard);
 
 
       heroValue.textContent = `${completion.toFixed(2)}%`;
@@ -2878,6 +3095,16 @@
       heroText.textContent = getExecutiveSummaryText(supervisorList, shownRows);
       renderWelcomeBanner();
 
+
+      const isAllSupervisorsView = !appData.currentSupervisor;
+      const domainCardLabel = leastDomainInfo.noData
+        ? "لا توجد بيانات"
+        : (leastDomainInfo.positiveCount === 1
+            ? (isAllSupervisorsView ? "المجال الأبرز لدى الفريق" : "المجال النشط")
+            : (isAllSupervisorsView ? "المجالات الأقل تداولًا لدى المشرفين" : "أقل المجالات نشاطًا"));
+      const domainCardSub = leastDomainInfo.noData
+        ? "لا توجد بيانات مسجلة لهذا العرض"
+        : `عدد المؤشرات فيه: ${leastDomainInfo.count}`;
 
       const cards = [
         {
@@ -2905,10 +3132,10 @@
           sub:"مشرفون بلا تنفيذ في هذا الأسبوع"
         },
         {
-          icon:"🏅",
-          label:"أفضل أداء",
-          value:best ? `${best.weekPercentNum.toFixed(0)}%` : "0%",
-          sub:best ? best.name : "لا توجد بيانات"
+          icon:"🧭",
+          label:domainCardLabel,
+          value:leastDomainInfo.label,
+          sub:domainCardSub
         },
         {
           icon:"📈",
@@ -3153,28 +3380,21 @@
 
 
       const supervisorTotals = {};
-      filteredData.forEach(row => {
+      const latestAllTermRows = getFilteredWeekRows(getLatestTermIndicatorRows(filteredData));
+      latestAllTermRows.forEach(row => {
         const name = row.__supervisor;
         if (!name) return;
         if (appData.currentSupervisor && name !== appData.currentSupervisor) return;
-
-
-
 
         if (!supervisorTotals[name]) {
           supervisorTotals[name] = { totalDoneAll:0, uniqueDoneCodes:new Set(), duplicateDoneCodes:new Set() };
         }
 
-
-
-
         if (normalizeStatus(row.__status) === "done") {
-          splitIndicators(row.__indicatorText).forEach(item => {
-            const code = String(item.code || "").trim();
-            if (!code) return;
-            if (supervisorTotals[name].uniqueDoneCodes.has(code)) supervisorTotals[name].duplicateDoneCodes.add(code);
-            else supervisorTotals[name].uniqueDoneCodes.add(code);
-          });
+          const code = String(row.__indicatorCode || "").trim();
+          if (!code) return;
+          if (supervisorTotals[name].uniqueDoneCodes.has(code)) supervisorTotals[name].duplicateDoneCodes.add(code);
+          else supervisorTotals[name].uniqueDoneCodes.add(code);
         }
       });
 
@@ -3188,7 +3408,7 @@
 
 
 
-      const latestTermRows = getFilteredWeekRows(getLatestIndicatorRows(filteredData));
+      const latestTermRows = latestAllTermRows;
       const supervisorTermDomainCounts = {};
       latestTermRows.forEach(row => {
         const name = row.__supervisor;
@@ -3202,12 +3422,9 @@
 
 
       const supervisors = {};
-      shownRows.forEach(row => {
+      latestTermRows.forEach(row => {
         const name = row.__supervisor;
         if (!name) return;
-
-
-
 
         if (!supervisors[name]) {
           supervisors[name] = {
@@ -3228,17 +3445,15 @@
             weekPercentNum: 0
           };
         }
+      });
 
+      shownRows.forEach(row => {
+        const name = row.__supervisor;
+        if (!name || !supervisors[name]) return;
 
-
-
-        const split = splitIndicators(row.__indicatorText);
-        const countToAdd = split.length || 1;
+        const countToAdd = 1;
         const status = row.__status || "";
         supervisors[name].totalCount += countToAdd;
-
-
-
 
         const st = normalizeStatus(status);
         if (st === "done") {
@@ -3252,34 +3467,25 @@
           if (!supervisors[name].status || supervisors[name].status === "لم ينفذ") supervisors[name].status = "لم ينفذ";
         }
 
+        const item = {
+          code: row.__indicatorCode || "",
+          text: row.__indicatorText || "بدون اسم مؤشر",
+          domain: row.__indicatorDomain || "غير محدد",
+          subdomain: row.__indicatorSubdomain || "",
+          status: status || "لم ينفذ"
+        };
+        supervisors[name].indicators.push(item);
+        const domainKey = item.domain || "غير محدد";
+        supervisors[name].domainCounts[domainKey] = (supervisors[name].domainCounts[domainKey] || 0) + 1;
 
-
-
-        if (split.length) {
-          split.forEach(item => {
-            supervisors[name].indicators.push({
-              code: item.code || "",
-              text: item.text || item.full || "بدون اسم مؤشر",
-              domain: item.domain || "غير محدد",
-              subdomain: item.subdomain || "",
-              status: status || "لم ينفذ"
-            });
-            const domainKey = item.domain || "غير محدد";
-            supervisors[name].domainCounts[domainKey] = (supervisors[name].domainCounts[domainKey] || 0) + 1;
-          });
-        }
-
-
-
-
-        if (row.__link && !supervisors[name].link) supervisors[name].link = row.__link;
+        if (row.__link) supervisors[name].link = row.__link;
       });
 
 
 
 
-      updateTopStats(shownRows);
       const supervisorList = Object.values(supervisors).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+      updateTopStats(supervisorList);
       supervisorList.forEach(s => {
         s.weekPercentNum = calcPercent(s.doneCount, s.totalCount);
         s.termDomainCounts = supervisorTermDomainCounts[s.name] || {};
@@ -3387,9 +3593,9 @@
 
 
           <div class="stats-grid">
-            <div class="stat-box done"><span class="stat-number">${sup.doneCount}</span><div class="stat-label">✅ تم</div></div>
-            <div class="stat-box pending"><span class="stat-number">${sup.pendingCount}</span><div class="stat-label">⏳ جاري</div></div>
-            <div class="stat-box notdone"><span class="stat-number">${sup.notDoneCount}</span><div class="stat-label">❌ لم ينفذ</div></div>
+            <div class="stat-box done"><span class="stat-number">${sup.doneCount}</span><div class="stat-label">إجمالي تم التنفيذ</div></div>
+            <div class="stat-box pending"><span class="stat-number">${sup.pendingCount}</span><div class="stat-label">إجمالي جاري التنفيذ</div></div>
+            <div class="stat-box notdone"><span class="stat-number">${sup.notDoneCount}</span><div class="stat-label">إجمالي لم ينفذ</div></div>
           </div>
 
 
@@ -3434,7 +3640,7 @@
               <div class="progress"><div class="bar ${barClass}" style="width:${Math.max(weekPercentNum, 3)}%">${weekPercent}%</div></div>
             </div>
             <div class="progress-item">
-              <div class="progress-label"><span>المجال الأكثر تركيزًا في هذا الفصل</span><span>${focusPercent}%</span></div>
+              <div class="progress-label"><span>تركيز العمل</span><span>${focusPercent}%</span></div>
               <div class="progress"><div class="bar purple" style="width:${Math.max(focusInfo.percent, 3)}%">${escapeHtml(focusInfo.barText)}</div></div>
             </div>
           </div>
@@ -3442,7 +3648,7 @@
 
 
 
-          ${sup.link ? `<a class="link-btn" href="${escapeAttr(sup.link)}" target="_blank">🔗 فتح الاستمارة</a>` : `<button class="link-btn disabled" disabled>🔗 غير متاح</button>`}
+          ${sup.link ? `<a class="link-btn" href="${escapeAttr(sup.link)}" target="_blank">🔗 شواهد الأداء</a>` : `<button class="link-btn disabled" disabled>🔗 غير متاح</button>`}
 
 
 
@@ -3486,87 +3692,36 @@
 
     function buildWhatsAppMessage(type, supervisorName, termText, weekText, noteText = ""){
       const title = getTemplateTitle(termText, weekText);
-      const cleanNote = String(noteText || "").trim();
-
-
-
+      const cleanNote = String(noteText || "").trim().replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
 
       if (type === "reminder") {
-        return `السلام عليكم ورحمة الله وبركاته
-
-
-
-
-الأستاذ/ة: ${supervisorName}
-
-
-
-
-نفيدكم بأن استمارة ${title} لم تُرفع حتى تاريخه.
-
-
-
-
-نأمل منكم استكمال الدعم المقدم ورفع المطلوب في الوقت المحدد، شاكرين لكم تعاونكم.`;
+        return [
+          "السلام عليكم ورحمة الله وبركاته",
+          `الأستاذ/ة: ${supervisorName}`,
+          `نفيدكم بأن استمارة ${title} لم تُرفع حتى تاريخه.`,
+          "نأمل منكم استكمال الدعم المقدم ورفع المطلوب في الوقت المحدد، شاكرين لكم تعاونكم."
+        ].join("\n\n");
       }
-
-
-
 
       if (type === "note") {
-        return `السلام عليكم ورحمة الله وبركاته
-
-
-
-
-الأستاذ/ة: ${supervisorName}
-
-
-
-
-نثمن حرصكم، ونفيدكم بوجود ملاحظة على الاستمارة المرفوعة الخاصة بـ ${title}.
-
-
-
-
-📌 الملاحظة:
-${cleanNote}
-
-
-
-
-نأمل مراجعة الملحوظة والعمل بموجبها، والتواصل عند الحاجة أو اعادة رفع الاستمارة إذا لزم الأمر.
-
-
-
-
-شاكرين لكم تعاونكم.`;
+        return [
+          "السلام عليكم ورحمة الله وبركاته",
+          `الأستاذ/ة: ${supervisorName}`,
+          `نثمن حرصكم، ونفيدكم بوجود ملاحظة على الاستمارة المرفوعة الخاصة بـ ${title}.`,
+          `📌 الملاحظة:\n${cleanNote}`,
+          "نأمل مراجعة الملحوظة والعمل بموجبها، والتواصل عند الحاجة أو إعادة رفع الاستمارة إذا لزم الأمر.",
+          "شاكرين لكم تعاونكم."
+        ].join("\n\n");
       }
-
-
-
 
       if (type === "praise") {
-        return `السلام عليكم ورحمة الله وبركاته
-
-
-
-
-الأستاذ/ة: ${supervisorName}
-
-
-
-
-نقدم لكم جزيل الشكر على استكمال بيانات الاستمارة الخاصة بـ ${title}، ونثمن دقة العمل وحسن المتابعة.
-
-
-
-
-بارك الله فيكم، وشاكرين لكم تعاونكم.`;
+        return [
+          "السلام عليكم ورحمة الله وبركاته",
+          `الأستاذ/ة: ${supervisorName}`,
+          `نقدم لكم جزيل الشكر على استكمال بيانات الاستمارة الخاصة بـ ${title}، ونثمن دقة العمل وحسن المتابعة.`,
+          "بارك الله فيكم، وشاكرين لكم تعاونكم."
+        ].join("\n\n");
       }
-
-
-
 
       return "";
     }
